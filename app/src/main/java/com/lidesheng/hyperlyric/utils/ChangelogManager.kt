@@ -11,10 +11,11 @@ object ChangelogManager {
         return listOf(
             ChangelogItem(
                 version = "5.10-1928",
-                title = "",
-                summary = "- 优化日志页面和日志内容\n" +
-                        "- 修复焦点通知aod显示内容错误\n" +
+                title = "以后更新节奏放缓",
+                summary = "- 新增shizuku绕过焦点通知限制\n" +
+                        "- 优化日志页面和日志内容\n" +
                         "- 优化bottomsheet页面样式\n" +
+                        "- 修复焦点通知aod显示内容错误\n" +
                         "- 修复ai翻译引发的错误"
             ),
             ChangelogItem(

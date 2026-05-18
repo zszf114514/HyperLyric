@@ -21,3 +21,6 @@
 # --- Lyricon Receiver ---
 -keep class io.github.proify.lyricon.lyric.model.** { *; }
 -keep interface io.github.proify.lyricon.provider.** { *; }
+
+# --- Shizuku User Service ---
+-keep class com.lidesheng.hyperlyric.service.utils.shizuku.PrivilegedServiceImpl { *; }

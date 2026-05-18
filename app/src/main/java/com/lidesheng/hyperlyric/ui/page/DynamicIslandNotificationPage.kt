@@ -57,6 +57,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 import com.lidesheng.hyperlyric.ui.page.lyricnotification.LyricNotificationConfigTab
 import com.lidesheng.hyperlyric.ui.page.lyricnotification.LyricNotificationWhitelistTab
+import com.lidesheng.hyperlyric.service.utils.shizuku.ShizukuManager
 
 @SuppressLint("BatteryLife")
 @Composable
@@ -135,6 +136,8 @@ fun DynamicIslandNotificationPage() {
     val msgAutostartFailed = stringResource(R.string.toast_autostart_failed)
     val msgBatteryIgnored = stringResource(R.string.toast_battery_ignored)
     val msgBatteryFailed = stringResource(R.string.toast_battery_failed)
+    val msgShizukuNotRunning = stringResource(R.string.toast_shizuku_not_running)
+    val msgShizukuPermissionRequired = stringResource(R.string.toast_shizuku_permission_required)
 
     LaunchedEffect(Unit) { DynamicLyricData.initWhitelist(context) }
 
@@ -145,6 +148,15 @@ fun DynamicIslandNotificationPage() {
     var showDeleteWhitelistDialog by remember { mutableStateOf(false) }
     var tempWhitelistInput by remember { mutableStateOf("") }
     var packageToDelete by remember { mutableStateOf("") }
+
+    var bypassFocusLimitEnabled by remember {
+        mutableStateOf(
+            prefs.getBoolean(
+                ServiceConstants.KEY_BYPASS_FOCUS_NOTIFICATION_LIMIT,
+                ServiceConstants.DEFAULT_BYPASS_FOCUS_NOTIFICATION_LIMIT
+            )
+        )
+    }
 
     var disableLyricSplitEnabled by remember {
         mutableStateOf(
@@ -471,6 +483,38 @@ fun DynamicIslandNotificationPage() {
                             onSongInfoHighlightColorToggle = { checked ->
                                 songInfoHighlightColorEnabled = checked
                                 prefs.edit { putBoolean(ServiceConstants.KEY_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR, checked) }
+                            },
+                            bypassFocusLimitEnabled = bypassFocusLimitEnabled,
+                            onBypassFocusLimitToggle = { checked ->
+                                if (checked) {
+                                    coroutineScope.launch {
+                                        if (!ShizukuManager.isShizukuServiceRunning()) {
+                                            bypassFocusLimitEnabled = false
+                                            prefs.edit { putBoolean(ServiceConstants.KEY_BYPASS_FOCUS_NOTIFICATION_LIMIT, false) }
+                                            snackbarHostState.showSnackbar(
+                                                message = msgShizukuNotRunning,
+                                                duration = SnackbarDuration.Custom(2000L)
+                                            )
+                                            return@launch
+                                        }
+ 
+                                        val hasPermission = ShizukuManager.checkShizukuPermission()
+                                        if (hasPermission) {
+                                            bypassFocusLimitEnabled = true
+                                            prefs.edit { putBoolean(ServiceConstants.KEY_BYPASS_FOCUS_NOTIFICATION_LIMIT, true) }
+                                        } else {
+                                            bypassFocusLimitEnabled = false
+                                            prefs.edit { putBoolean(ServiceConstants.KEY_BYPASS_FOCUS_NOTIFICATION_LIMIT, false) }
+                                            snackbarHostState.showSnackbar(
+                                                message = msgShizukuPermissionRequired,
+                                                duration = SnackbarDuration.Custom(2000L)
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    bypassFocusLimitEnabled = false
+                                    prefs.edit { putBoolean(ServiceConstants.KEY_BYPASS_FOCUS_NOTIFICATION_LIMIT, false) }
+                                }
                             }
                         )
                     }

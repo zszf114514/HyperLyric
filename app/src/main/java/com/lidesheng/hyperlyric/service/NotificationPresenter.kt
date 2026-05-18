@@ -18,6 +18,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import com.lidesheng.hyperlyric.service.utils.shizuku.ShizukuManager
 
 /**
  * 通知展示调度中心。
@@ -34,6 +35,15 @@ class NotificationPresenter(
     private var lastUiState: NotificationManagerHelper.UiState? = null
     private var pauseDebounceJob: Job? = null
     private val pauseDebounceMs = 150L
+
+    private var networkCutJob: Job? = null
+    private val networkCutMutex = kotlinx.coroutines.sync.Mutex()
+    private val networkCutDurationMs = 100L
+    private var networkCutSeq = 0L
+
+    private val isBypassFocusLimitEnabled: Boolean
+        get() = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
+            .getBoolean(ServiceConstants.KEY_BYPASS_FOCUS_NOTIFICATION_LIMIT, ServiceConstants.DEFAULT_BYPASS_FOCUS_NOTIFICATION_LIMIT)
 
     private val isDisableLyricSplit: Boolean
         get() = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
@@ -181,7 +191,38 @@ class NotificationPresenter(
             1 -> {
                 // 焦点通知
                 val focusNotification = NotificationManagerHelper.buildFocusNotification(context, uiState, actualShowProgress)
-                notifyWrapper(NotificationManagerHelper.FOCUS_NOTIFICATION_ID, focusNotification)
+                if (isBypassFocusLimitEnabled) {
+                    networkCutJob?.cancel()
+                    val seq = ++networkCutSeq
+                    networkCutJob = scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                        networkCutMutex.lock()
+                        try {
+                            // 1. 闪断 XMSF 联网
+                            ShizukuManager.setXmsfNetworkingEnabled(context, false)
+                            
+                            // 2. 极速在主线程发射通知
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                notifyWrapper(NotificationManagerHelper.FOCUS_NOTIFICATION_ID, focusNotification)
+                            }
+                            
+                            // 3. 保持盲区防抖窗口 (100ms)
+                            try {
+                                kotlinx.coroutines.delay(networkCutDurationMs)
+                            } catch (_: kotlinx.coroutines.CancellationException) {
+                                // 被新发生的发送任务 cancel，自动延续断网状态
+                            }
+                            
+                            // 4. 到期安全自动恢复网络
+                            if (seq == networkCutSeq) {
+                                ShizukuManager.setXmsfNetworkingEnabled(context, true)
+                            }
+                        } finally {
+                            networkCutMutex.unlock()
+                        }
+                    }
+                } else {
+                    notifyWrapper(NotificationManagerHelper.FOCUS_NOTIFICATION_ID, focusNotification)
+                }
                 NotificationManagerHelper.cancelNormalNotification(notificationManager)
             }
         }
@@ -199,5 +240,12 @@ class NotificationPresenter(
         NotificationManagerHelper.cancelFocusNotification(notificationManager)
         NotificationManagerHelper.cancelNormalNotification(notificationManager)
         lastUiState = null
+
+        if (isBypassFocusLimitEnabled) {
+            networkCutJob?.cancel()
+            scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                ShizukuManager.setXmsfNetworkingEnabled(context, true)
+            }
+        }
     }
 }

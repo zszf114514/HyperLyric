@@ -64,7 +64,9 @@ fun LazyListScope.configSections(
     onlineLyricEnabled: Boolean,
     onOnlineLyricToggle: (Boolean) -> Unit,
     onlineLyricCacheLimit: Int,
-    onCacheLimitClick: () -> Unit
+    onCacheLimitClick: () -> Unit,
+    bypassFocusLimitEnabled: Boolean,
+    onBypassFocusLimitToggle: (Boolean) -> Unit
 ) {
     // Notification Type
     item(key = "notification_type") {
@@ -256,6 +258,14 @@ fun LazyListScope.configSections(
                     title = stringResource(R.string.title_battery_optimization),
                     onClick = onBatteryOptimizationClick
                 )
+                AnimatedVisibility(visible = notificationType == 1) {
+                    SwitchPreference(
+                        title = stringResource(R.string.title_bypass_focus_limit),
+                        summary = stringResource(R.string.summary_bypass_focus_limit),
+                        checked = bypassFocusLimitEnabled,
+                        onCheckedChange = onBypassFocusLimitToggle
+                    )
+                }
                 if (BuildConfig.ONLINE_FEATURES_ENABLED) {
                     SwitchPreference(
                         title = stringResource(R.string.title_online_lyric),

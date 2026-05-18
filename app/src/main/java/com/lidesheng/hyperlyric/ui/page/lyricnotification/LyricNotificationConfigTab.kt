@@ -44,7 +44,9 @@ fun LyricNotificationConfigTab(
     onlineLyricEnabled: Boolean,
     onOnlineLyricToggle: (Boolean) -> Unit,
     onlineLyricCacheLimit: Int,
-    onCacheLimitClick: () -> Unit
+    onCacheLimitClick: () -> Unit,
+    bypassFocusLimitEnabled: Boolean,
+    onBypassFocusLimitToggle: (Boolean) -> Unit
 ) {
     LazyColumn(
         state = lazyListState,
@@ -87,7 +89,9 @@ fun LyricNotificationConfigTab(
             onlineLyricEnabled = onlineLyricEnabled,
             onOnlineLyricToggle = onOnlineLyricToggle,
             onlineLyricCacheLimit = onlineLyricCacheLimit,
-            onCacheLimitClick = onCacheLimitClick
+            onCacheLimitClick = onCacheLimitClick,
+            bypassFocusLimitEnabled = bypassFocusLimitEnabled,
+            onBypassFocusLimitToggle = onBypassFocusLimitToggle
         )
     }
 }

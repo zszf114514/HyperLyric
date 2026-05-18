@@ -22,6 +22,7 @@ object Constants {
     const val KEY_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR = "key_notification_song_info_highlight_color"
     const val KEY_ONLINE_LYRIC_CACHE_LIMIT = "key_online_lyric_cache_limit"
     const val KEY_ONLINE_LYRIC_ENABLED = "key_online_lyric_enabled"
+    const val KEY_BYPASS_FOCUS_NOTIFICATION_LIMIT = "key_bypass_focus_notification_limit"
 
     // ================= DEFAULTS =================
     const val DEFAULT_NOTIFICATION_TYPE = 0
@@ -40,4 +41,5 @@ object Constants {
     const val DEFAULT_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR = false
     const val DEFAULT_ONLINE_LYRIC_CACHE_LIMIT = 200
     const val DEFAULT_ONLINE_LYRIC_ENABLED = false
+    const val DEFAULT_BYPASS_FOCUS_NOTIFICATION_LIMIT = false
 }
