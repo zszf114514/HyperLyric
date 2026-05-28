@@ -34,6 +34,7 @@ import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.lidesheng.hyperlyric.ui.utils.Constants as UIConstants
 import com.lidesheng.hyperlyric.service.Constants as ServiceConstants
+import com.lidesheng.hyperlyric.lyric.ConfigRepository
 import com.lidesheng.hyperlyric.lyric.DynamicLyricData
 import com.lidesheng.hyperlyric.R
 import com.lidesheng.hyperlyric.ui.navigation.LocalNavigator
@@ -139,9 +140,9 @@ fun DynamicIslandNotificationPage() {
     val msgShizukuNotRunning = stringResource(R.string.toast_shizuku_not_running)
     val msgShizukuPermissionRequired = stringResource(R.string.toast_shizuku_permission_required)
 
-    LaunchedEffect(Unit) { DynamicLyricData.initWhitelist(context) }
+    LaunchedEffect(Unit) { ConfigRepository.initWhitelist(context) }
 
-    val whitelistSet by DynamicLyricData.whitelistState.collectAsState()
+    val whitelistSet by ConfigRepository.whitelistState.collectAsState()
     val whitelist = remember(whitelistSet) { whitelistSet.toList() }
 
     var showAddWhitelistDialog by remember { mutableStateOf(false) }
@@ -327,7 +328,7 @@ fun DynamicIslandNotificationPage() {
             onDismiss = { showAddWhitelistDialog = false },
             onConfirm = { input ->
                 if (input.isNotBlank()) {
-                    val success = DynamicLyricData.addPackageToWhitelist(context, input)
+                    val success = ConfigRepository.addPackageToWhitelist(context, input)
                     if (success) {
                         showAddWhitelistDialog = false
                     } else {
@@ -354,7 +355,7 @@ fun DynamicIslandNotificationPage() {
             title = stringResource(R.string.dialog_delete_whitelist_title),
             onDismiss = { showDeleteWhitelistDialog = false },
             onConfirm = {
-                DynamicLyricData.removePackageFromWhitelist(context, packageToDelete)
+                ConfigRepository.removePackageFromWhitelist(context, packageToDelete)
                 showDeleteWhitelistDialog = false
             }
         )

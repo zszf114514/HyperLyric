@@ -7,6 +7,7 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.service.notification.NotificationListenerService
 import com.lidesheng.hyperlyric.common.lyric.LyricSplitter
+import com.lidesheng.hyperlyric.lyric.ConfigRepository
 import com.lidesheng.hyperlyric.lyric.DynamicLyricData
 import com.lidesheng.hyperlyric.service.source.AppLyricSink
 import com.lidesheng.hyperlyric.service.source.MetadataSource
@@ -34,7 +35,7 @@ class LiveLyricService : NotificationListenerService() {
         val textPaint = createTextPaint()
         val lyricSplitter = LyricSplitter(textPaint, resources.displayMetrics)
 
-        DynamicLyricData.initWhitelist(this)
+        ConfigRepository.initWhitelist(this)
 
         val componentName = ComponentName(this, LiveLyricService::class.java)
         metadataSource = MetadataSource(this, serviceScope, componentName)
@@ -46,7 +47,7 @@ class LiveLyricService : NotificationListenerService() {
             combine(
                 DynamicLyricData.musicState,
                 DynamicLyricData.progressFlow.onStart { emit(0f) },
-                DynamicLyricData.whitelistState
+                ConfigRepository.whitelistState
             ) { state, _, _ -> state }.collect { state ->
                 notificationPresenter.updateState(state, force = false)
             }

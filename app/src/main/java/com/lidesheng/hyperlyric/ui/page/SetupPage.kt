@@ -39,6 +39,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.lidesheng.hyperlyric.ui.utils.Constants
+import com.lidesheng.hyperlyric.lyric.ConfigRepository
 import com.lidesheng.hyperlyric.lyric.DynamicLyricData
 import com.lidesheng.hyperlyric.lyric.commonMusicApps
 import kotlinx.coroutines.delay
@@ -284,10 +285,10 @@ fun PermissionPage() {
 @Composable
 fun WhitelistPage() {
     val context = LocalContext.current
-    val whitelistSet by DynamicLyricData.whitelistState.collectAsState()
+    val whitelistSet by ConfigRepository.whitelistState.collectAsState()
     
     LaunchedEffect(Unit) {
-        DynamicLyricData.initWhitelist(context)
+        ConfigRepository.initWhitelist(context)
     }
 
     Scaffold(
@@ -324,9 +325,9 @@ fun WhitelistPage() {
                             summary = pkg,
                             onClick = {
                                 if (isChecked) {
-                                    DynamicLyricData.removePackageFromWhitelist(context, pkg)
+                                            ConfigRepository.removePackageFromWhitelist(context, pkg)
                                 } else {
-                                    DynamicLyricData.addPackageToWhitelist(context, pkg)
+                                            ConfigRepository.addPackageToWhitelist(context, pkg)
                                 }
                             },
                             endActions = {
@@ -335,9 +336,9 @@ fun WhitelistPage() {
                                     onClick = {
                                         val checked = !isChecked
                                         if (checked) {
-                                            DynamicLyricData.addPackageToWhitelist(context, pkg)
+                                    ConfigRepository.addPackageToWhitelist(context, pkg)
                                         } else {
-                                            DynamicLyricData.removePackageFromWhitelist(context, pkg)
+                                    ConfigRepository.removePackageFromWhitelist(context, pkg)
                                         }
                                     }
                                 )

@@ -66,6 +66,7 @@ import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import com.lidesheng.hyperlyric.ui.component.TextInputDialog
 import com.lidesheng.hyperlyric.ui.component.SimpleDialog
+import com.lidesheng.hyperlyric.lyric.ConfigRepository
 import com.lidesheng.hyperlyric.lyric.DynamicLyricData
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -86,8 +87,8 @@ fun LyricProviderPage() {
     val pullToRefreshState = rememberPullToRefreshState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val addedSet by DynamicLyricData.hookAddedState.collectAsState()
-    val activeSet by DynamicLyricData.hookWhitelistState.collectAsState()
+    val addedSet by ConfigRepository.hookAddedState.collectAsState()
+    val activeSet by ConfigRepository.hookWhitelistState.collectAsState()
     val manualWhitelist = remember(addedSet, providerUiState.value.modules) {
         val providerPkgs = providerUiState.value.modules.map { it.packageInfo.packageName }.toSet()
         val coveredTargetPkgs = providerUiState.value.modules.flatMap { 
@@ -111,7 +112,7 @@ fun LyricProviderPage() {
 
     LaunchedEffect(Unit) { 
         LyricProviderManager.loadProviders(context, providerUiStateFlow)
-        DynamicLyricData.initWhitelist(context)
+        ConfigRepository.initWhitelist(context)
     }
 
     // 处理插件开关的持久化与“初见开启”逻辑
@@ -127,7 +128,7 @@ fun LyricProviderPage() {
                     // 同步开启关联 App 的 Hook 状态
                     val targets = LyricProviderManager.providerToTargetMap[pkg] ?: listOf(pkg)
                     targets.forEach { target ->
-                        DynamicLyricData.toggleHookStatus(context, target, true)
+                        ConfigRepository.toggleHookStatus(context, target, true)
                     }
                 } else {
                     providerStates[pkg] = providerPrefs.getBoolean(pkg, true)
@@ -143,7 +144,7 @@ fun LyricProviderPage() {
         // 只有当确定执行过加载，且加载结束时，才执行清理
         if (!providerUiState.value.isLoading && hasLoadedOnce) {
             val providerPkgs = providerUiState.value.modules.map { it.packageInfo.packageName }.toSet()
-            DynamicLyricData.cleanupOrphanedPackages(context, providerPkgs)
+            ConfigRepository.cleanupOrphanedPackages(context, providerPkgs)
         }
     }
 
@@ -156,7 +157,7 @@ fun LyricProviderPage() {
         onDismiss = { showAddDialog = false },
         onConfirm = { input ->
             if (input.isNotBlank()) {
-                val success = DynamicLyricData.addPackageToHookList(context, input)
+                val success = ConfigRepository.addPackageToHookList(context, input)
                 if (success) showAddDialog = false
                 else coroutineScope.launch {
                     snackbarHostState.showSnackbar(
@@ -180,7 +181,7 @@ fun LyricProviderPage() {
         title = stringResource(id = R.string.dialog_delete_whitelist_title),
         onDismiss = { showDeleteDialog = false },
         onConfirm = {
-            DynamicLyricData.removePackageFromHookPage(context, packageToDelete)
+            ConfigRepository.removePackageFromHookPage(context, packageToDelete)
             showDeleteDialog = false
         }
     )
@@ -317,7 +318,7 @@ private fun LazyListScope.providerSections(
                                 onProviderToggle(packageName, isChecked)
                                 val targets = LyricProviderManager.providerToTargetMap[packageName] ?: listOf(packageName)
                                 targets.forEach { target ->
-                                    DynamicLyricData.toggleHookStatus(context, target, isChecked)
+                                    ConfigRepository.toggleHookStatus(context, target, isChecked)
                                 }
                             },
                             title = module.label,
@@ -387,7 +388,7 @@ private fun LazyListScope.providerSections(
                 SuperSwitchPreference(
                     checked = activeSet.contains(packageName),
                     onCheckedChange = { isChecked ->
-                        DynamicLyricData.toggleHookStatus(context, packageName, isChecked)
+                                ConfigRepository.toggleHookStatus(context, packageName, isChecked)
                     },
                     title = packageName,
                     onClick = { onDeleteManual(packageName) }

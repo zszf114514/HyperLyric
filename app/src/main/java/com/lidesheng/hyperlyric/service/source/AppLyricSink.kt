@@ -5,6 +5,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.graphics.toColorInt
 import com.lidesheng.hyperlyric.common.image.AlbumImageHelper
 import com.lidesheng.hyperlyric.common.lyric.LyricSplitter
+import com.lidesheng.hyperlyric.lyric.ConfigRepository
 import com.lidesheng.hyperlyric.lyric.DynamicLyricData
 import com.lidesheng.hyperlyric.lyric.LrcLine
 import com.lidesheng.hyperlyric.lyric.LyricProviderFactory
@@ -87,7 +88,7 @@ class AppLyricSink(
         val sp = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
         val enableDynamicIsland = sp.getBoolean(RootConstants.KEY_HOOK_ENABLE_DYNAMIC_ISLAND, RootConstants.DEFAULT_HOOK_ENABLE_DYNAMIC_ISLAND)
         val pauseListening = !enableDynamicIsland
-        val isWhitelisted = DynamicLyricData.whitelistState.value.contains(data.currentPackageName)
+        val isWhitelisted = ConfigRepository.whitelistState.value.contains(data.currentPackageName)
         LogManager.d("AppLyricSink", "processSyncData: 超级岛开关=$enableDynamicIsland, 白名单通过=$isWhitelisted, pkg=${data.currentPackageName}")
 
         if (pauseListening || !isWhitelisted) {
