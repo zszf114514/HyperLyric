@@ -8,15 +8,15 @@ class RootLyricSink(
 ) : LyricSink {
 
     override fun onSongChanged(song: Any?) {
-        // LyriconSource 直接操作 LyriconDataBridge，不经过 Sink
+        // Song 更新由 LyriconSource 直接操作 LyriconDataBridge
     }
 
     override fun onLyricLine(line: Any?) {
-        // LyriconSource 直接操作 LyriconDataBridge，不经过 Sink
+        // 逐字歌词由 LyriconSource 直接操作 LyriconDataBridge
     }
 
     override fun onPlainText(text: String?) {
-        // LyriconSource 直接操作 LyriconDataBridge，不经过 Sink
+        // 纯文本由 LyriconSource 直接操作 LyriconDataBridge
     }
 
     override fun onStop() {

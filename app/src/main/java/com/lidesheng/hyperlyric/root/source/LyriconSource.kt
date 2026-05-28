@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.SharedPreferences
 import com.lidesheng.hyperlyric.lyric.source.LyricSink
 import com.lidesheng.hyperlyric.lyric.source.LyricSource
-import com.lidesheng.hyperlyric.root.HookEntry
 import com.lidesheng.hyperlyric.root.HookIslandLyric
 import com.lidesheng.hyperlyric.root.HookIslandSpaceGateLyric
 import com.lidesheng.hyperlyric.root.LyriconDataBridge
@@ -45,6 +44,7 @@ class LyriconSource : LyricSource {
     }
 
     override fun stop() {
+        sink?.onStop()
         sink = null
         HookLogger.i("LyriconSource", "Lyricon 数据源已停止")
     }
@@ -90,17 +90,19 @@ class LyriconSource : LyricSource {
     private fun registerActivePlayerListener() {
         ActivePlayerDispatcher.addActivePlayerListener(object : ActivePlayerListener {
             override fun onActiveProviderChanged(providerInfo: ProviderInfo?) {
-                LyriconDataBridge.clearAll()
+                sink?.onStop()
                 LyriconDataBridge.activePackageName = providerInfo?.playerPackageName
             }
 
             override fun onSongChanged(song: Song?) {
                 LyriconDataBridge.updateSong(song, prefs)
+                sink?.onSongChanged(song)
                 getRenderer().refreshActiveIsland()
             }
 
             override fun onPlaybackStateChanged(isPlaying: Boolean) {
                 LyriconDataBridge.isPlaying = isPlaying
+                sink?.onPlaybackStateChanged(isPlaying)
                 getRenderer().onPlaybackStateChanged(isPlaying)
             }
 
@@ -109,6 +111,7 @@ class LyriconSource : LyricSource {
                 if (lyricChanged) {
                     getRenderer().updateLyricLine()
                 }
+                sink?.onPositionChanged(position)
                 getRenderer().updatePosition(position)
             }
 
@@ -116,6 +119,7 @@ class LyriconSource : LyricSource {
 
             override fun onSendText(text: String?) {
                 LyriconDataBridge.updateLyric(text)
+                sink?.onPlainText(text)
                 getRenderer().updateLyricLine()
             }
 

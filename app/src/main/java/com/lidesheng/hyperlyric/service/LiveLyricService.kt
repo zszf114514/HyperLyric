@@ -40,7 +40,7 @@ class LiveLyricService : NotificationListenerService() {
         metadataSource = MetadataSource(this, serviceScope, componentName)
         appLyricSink = AppLyricSink(this, serviceScope, lyricSplitter, notificationPresenter)
 
-        appLyricSink.startCollecting(metadataSource.lyricUpdateFlow)
+        appLyricSink.startCollecting(metadataSource.lyricUpdateFlow, metadataSource.newSongFlow)
 
         serviceScope.launch {
             combine(

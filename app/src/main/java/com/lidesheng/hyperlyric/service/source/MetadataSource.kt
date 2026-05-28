@@ -22,7 +22,8 @@ class MetadataSource(
     private val scope: CoroutineScope,
     private val componentName: ComponentName
 ) {
-    private lateinit var mediaSessionManager: MediaSessionManager
+    private var mediaSessionManager: MediaSessionManager? = null
+    private var activeSessionsListener: MediaSessionManager.OnActiveSessionsChangedListener? = null
     private val currentControllers = mutableListOf<MediaController>()
     private var bitmapRetryJob: Job? = null
     private var bitmapRetryCount = 0
@@ -33,6 +34,9 @@ class MetadataSource(
 
     val lyricUpdateFlow =
         MutableSharedFlow<SyncData>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    val newSongFlow =
+        MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     private val mediaCallback = object : MediaController.Callback() {
         override fun onMetadataChanged(metadata: MediaMetadata?) {
@@ -59,14 +63,17 @@ class MetadataSource(
     }
 
     fun connect() {
+        if (mediaSessionManager != null) return
         try {
-            mediaSessionManager =
-                context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
-            mediaSessionManager.addOnActiveSessionsChangedListener({ controllers ->
+            val manager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+            val listener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
                 updateCurrentController(controllers)
-            }, componentName)
+            }
+            manager.addOnActiveSessionsChangedListener(listener, componentName)
+            mediaSessionManager = manager
+            activeSessionsListener = listener
 
-            updateCurrentController(mediaSessionManager.getActiveSessions(componentName))
+            updateCurrentController(manager.getActiveSessions(componentName))
             LogManager.d(TAG, "媒体会话监听注册成功")
         } catch (e: Exception) {
             LogManager.e(TAG, "媒体会话监听注册失败", e)
@@ -76,6 +83,11 @@ class MetadataSource(
     fun disconnect() {
         unregisterAllControllers()
         cancelBitmapRetry()
+        activeSessionsListener?.let { listener ->
+            mediaSessionManager?.removeOnActiveSessionsChangedListener(listener)
+        }
+        activeSessionsListener = null
+        mediaSessionManager = null
     }
 
     fun clearState() {
@@ -89,7 +101,9 @@ class MetadataSource(
     }
 
     private fun refreshActiveSessions() {
-        updateCurrentController(mediaSessionManager.getActiveSessions(componentName))
+        mediaSessionManager?.let { manager ->
+            updateCurrentController(manager.getActiveSessions(componentName))
+        }
     }
 
     private fun updateCurrentController(controllers: List<MediaController>?) {
@@ -192,6 +206,7 @@ class MetadataSource(
             DynamicLyricData.updateBitmaps(null, null)
 
             cancelBitmapRetry()
+            newSongFlow.tryEmit(Unit)
         }
 
         val albumBitmap = if (isNewSong) {

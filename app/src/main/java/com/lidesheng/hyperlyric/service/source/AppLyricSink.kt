@@ -1,9 +1,6 @@
 package com.lidesheng.hyperlyric.service.source
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Typeface
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.graphics.toColorInt
 import com.lidesheng.hyperlyric.common.image.AlbumImageHelper
@@ -15,6 +12,7 @@ import com.lidesheng.hyperlyric.lyric.LyricSearchParams
 import com.lidesheng.hyperlyric.service.NotificationPresenter
 import com.lidesheng.hyperlyric.utils.LogManager
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -32,26 +30,14 @@ class AppLyricSink(
     private val lyricSplitter: LyricSplitter,
     private val notificationPresenter: NotificationPresenter
 ) {
-    private val islandBitmapHeight = 128
-
     private var currentSongIdentifier = ""
     private var cachedNotificationEnabled = false
     private var lastPermissionCheckTime = 0L
     private val permissionCheckInterval = 30_000L
 
-    private val textPaint by lazy {
-        Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.WHITE
-            typeface = Typeface.DEFAULT_BOLD
-            textAlign = Paint.Align.LEFT
-            textSize = 100f
-            val rawHeight = fontMetrics.descent - fontMetrics.ascent
-            textSize = 100f * (islandBitmapHeight.toFloat() / rawHeight)
-        }
-    }
-
     private val lyricProvider by lazy { LyricProviderFactory.create(context) }
 
+    private var collectJob: Job? = null
     private var tickerJob: Job? = null
     private var progressJob: Job? = null
     private var isCurrentlyPlaying: Boolean = false
@@ -63,13 +49,21 @@ class AppLyricSink(
     private var lastDispatchedIsPlaying = false
     private var lastDispatchedShowAlbum = false
 
-    fun startCollecting(lyricUpdateFlow: Flow<SyncData>) {
-        scope.launch {
+    fun startCollecting(lyricUpdateFlow: Flow<SyncData>, newSongFlow: Flow<Unit>) {
+        collectJob = scope.launch(Dispatchers.Default) {
             lyricUpdateFlow.debounce(200.milliseconds).collectLatest { data -> processSyncData(data) }
+        }
+        scope.launch {
+            newSongFlow.collect {
+                tickerJob?.cancel()
+                progressJob?.cancel()
+            }
         }
     }
 
     fun stop() {
+        collectJob?.cancel()
+        collectJob = null
         tickerJob?.cancel()
         progressJob?.cancel()
     }
@@ -85,6 +79,11 @@ class AppLyricSink(
     }
 
     private suspend fun processSyncData(data: SyncData) {
+        if (data.currentPackageName.isEmpty()) {
+            clearState()
+            return
+        }
+
         val sp = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
         val enableDynamicIsland = sp.getBoolean(RootConstants.KEY_HOOK_ENABLE_DYNAMIC_ISLAND, RootConstants.DEFAULT_HOOK_ENABLE_DYNAMIC_ISLAND)
         val pauseListening = !enableDynamicIsland
