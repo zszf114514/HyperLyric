@@ -13,6 +13,7 @@ import com.lidesheng.hyperlyric.root.utils.Constants as RootConstants
 import com.lidesheng.hyperlyric.root.utils.DynamicFinder
 import com.lidesheng.hyperlyric.root.utils.LyricStyleHelper
 import com.lidesheng.hyperlyric.common.media.MediaMetadataHelper
+import com.lidesheng.hyperlyric.root.source.IslandRenderer
 import com.lidesheng.hyperlyric.root.utils.TranslationHelper
 import io.github.libxposed.api.XposedInterface.Chain
 import io.github.libxposed.api.XposedInterface.Hooker
@@ -22,7 +23,7 @@ import io.github.proify.lyricon.lyric.view.RichLyricLineView
 import io.github.proify.lyricon.lyric.view.yoyo.YoYoPresets
 import io.github.proify.lyricon.lyric.view.yoyo.animateUpdate
 
-object HookIslandLyric {
+object HookIslandLyric : IslandRenderer {
     lateinit var module: XposedModule
 
     var activeIslandPkgNames = java.util.Collections.synchronizedMap(java.util.WeakHashMap<View, String>())
@@ -389,7 +390,7 @@ object HookIslandLyric {
         view.setStyle(style)
     }
 
-    fun refreshActiveIsland() {
+    override fun refreshActiveIsland() {
         HookLogger.d("HookIslandLyric","HookIslandLyric : 正在刷新超级岛")
         val iterator = activeIslandPkgNames.entries.iterator()
         val activePkg = LyriconDataBridge.activePackageName ?: return
@@ -427,7 +428,7 @@ object HookIslandLyric {
         }
     }
 
-    fun updateLyricLine() {
+    override fun updateLyricLine() {
         HookLogger.d("HookIslandLyric","HookIslandLyric : 正在更新歌词行")
         val iterator = activeIslandPkgNames.entries.iterator()
         val activePkg = LyriconDataBridge.activePackageName ?: return
@@ -497,7 +498,7 @@ object HookIslandLyric {
     /**
      * 播放进度同步到 RichLyricLineView，驱动逐字/逐音节高亮
      */
-    fun updatePosition(position: Long) {
+    override fun updatePosition(position: Long) {
         val iterator = activeIslandPkgNames.entries.iterator()
         val activePkg = LyriconDataBridge.activePackageName ?: return
         
@@ -525,7 +526,7 @@ object HookIslandLyric {
     /**
      * 播放/暂停状态变化回调
      */
-    fun onPlaybackStateChanged(isPlaying: Boolean) {
+    override fun onPlaybackStateChanged(isPlaying: Boolean) {
         HookLogger.d("HookIslandLyric","HookIslandLyric : 播放状态变更: isPlaying=$isPlaying")
         val prefs = (module as HookEntry).prefs
         val behavior = prefs.getInt(RootConstants.KEY_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE, RootConstants.DEFAULT_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE)

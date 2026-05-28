@@ -1,27 +1,24 @@
 package com.lidesheng.hyperlyric.root
 
-import com.lidesheng.hyperlyric.root.aitrans.AITranslator
+import com.lidesheng.hyperlyric.root.source.LyriconSource
+import com.lidesheng.hyperlyric.root.source.RootLyricSink
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import com.lidesheng.hyperlyric.ui.utils.Constants as UIConstants
 import com.lidesheng.hyperlyric.root.utils.Constants as RootConstants
-import io.github.proify.lyricon.app.bridge.AppBridgeConstants
-import io.github.proify.lyricon.app.bridge.LyriconBridge
 import io.github.libxposed.api.XposedInterface.Chain
 import io.github.libxposed.api.XposedInterface.Hooker
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
-import io.github.proify.lyricon.central.BridgeCentral
-import io.github.proify.lyricon.central.provider.player.ActivePlayerDispatcher
-import io.github.proify.lyricon.central.provider.player.ActivePlayerListener
-import io.github.proify.lyricon.central.util.ScreenStateMonitor
-import io.github.proify.lyricon.lyric.model.Song
-import io.github.proify.lyricon.provider.ProviderInfo
 
 class HookEntry : XposedModule() {
 
     companion object {
         var activeMode = 0
+        val lyriconSource = LyriconSource()
+        @JvmStatic
+        var instance: HookEntry? = null
+            private set
     }
 
     private var _prefs: android.content.SharedPreferences? = null
@@ -36,6 +33,7 @@ class HookEntry : XposedModule() {
 
     override fun onModuleLoaded(param: ModuleLoadedParam) {
         super.onModuleLoaded(param)
+        instance = this
         com.lidesheng.hyperlyric.root.utils.HookLogger.module = this
         HookLogger.i("HookEntry","ModuleInit : 模块已加载")
     }
@@ -155,85 +153,16 @@ class HookEntry : XposedModule() {
             val app = chain.thisObject as? android.app.Application
             if (app != null) {
                 try {
-                    initializeLyricon(app)
-                    registerActivePlayerListener()
-                    HookLogger.i("HookEntry","ModuleInit : 系统环境初始化完成")
+                    val renderer = if (activeMode == 1) HookIslandSpaceGateLyric else HookIslandLyric
+                    val entry = instance!!
+                    lyriconSource.initialize(app, entry.prefs, activeMode)
+                    lyriconSource.start(RootLyricSink(renderer))
+                    HookLogger.i("HookEntry", "ModuleInit : 系统环境初始化完成")
                 } catch (e: Exception) {
                     HookLogger.e("HookEntry", "ModuleInit : 系统环境初始化失败", e)
                 }
             }
             return chain.proceed()
         }
-
-        private fun initializeLyricon(app: android.app.Application) {
-            ScreenStateMonitor.initialize(app)
-            BridgeCentral.initialize(app)
-            BridgeCentral.sendBootCompleted()
-            AITranslator.init(app)
-            initBridgeRouting(app)
-        }
-
-        private fun initBridgeRouting(app: android.app.Application) {
-            LyriconBridge.routing(app) {
-                onCommand(AppBridgeConstants.REQUEST_UPDATE_LYRIC_STYLE) {
-                    HookLogger.d("HookEntry","Bridge : 接收到样式更新请求")
-                    if (activeMode == 1) HookIslandSpaceGateLyric.refreshActiveIsland() else HookIslandLyric.refreshActiveIsland()
-                }
-                onCommand("com.lidesheng.hyperlyric.REFRESH_ISLAND") {
-                    HookLogger.d("HookEntry","Bridge : 接收到超级岛刷新请求")
-                    if (activeMode == 1) HookIslandSpaceGateLyric.refreshActiveIsland() else HookIslandLyric.refreshActiveIsland()
-                }
-                onCommand("com.lidesheng.hyperlyric.UPDATE_LYRIC_ANIM") {
-                    HookLogger.d("HookEntry","Bridge : 接收到歌词动画刷新请求")
-                    if (activeMode == 1) HookIslandSpaceGateLyric.refreshActiveIsland() else HookIslandLyric.refreshActiveIsland()
-                }
-            }
-        }
-
-        private fun registerActivePlayerListener() {
-            ActivePlayerDispatcher.addActivePlayerListener(object : ActivePlayerListener {
-                override fun onActiveProviderChanged(providerInfo: ProviderInfo?) {
-                    LyriconDataBridge.clearAll()
-                    LyriconDataBridge.activePackageName = providerInfo?.playerPackageName
-                }
-
-                override fun onSongChanged(song: Song?) {
-                    val hookEntry = if (activeMode == 1) HookIslandSpaceGateLyric.module as? HookEntry else HookIslandLyric.module as? HookEntry
-                    LyriconDataBridge.updateSong(song, hookEntry?.prefs)
-                    if (activeMode == 1) HookIslandSpaceGateLyric.refreshActiveIsland() else HookIslandLyric.refreshActiveIsland()
-                }
-
-                override fun onPlaybackStateChanged(isPlaying: Boolean) {
-                    LyriconDataBridge.isPlaying = isPlaying
-                    if (activeMode == 1) HookIslandSpaceGateLyric.onPlaybackStateChanged(isPlaying) else HookIslandLyric.onPlaybackStateChanged(isPlaying)
-                }
-
-                override fun onPositionChanged(position: Long) {
-                    val lyricChanged = LyriconDataBridge.updatePosition(position)
-                    if (lyricChanged) {
-                        if (activeMode == 1) HookIslandSpaceGateLyric.updateLyricLine() else HookIslandLyric.updateLyricLine()
-                    }
-                    if (activeMode == 1) HookIslandSpaceGateLyric.updatePosition(position) else HookIslandLyric.updatePosition(position)
-                }
-
-                override fun onSeekTo(position: Long) {}
-
-                override fun onSendText(text: String?) {
-                    LyriconDataBridge.updateLyric(text)
-                    if (activeMode == 1) HookIslandSpaceGateLyric.updateLyricLine() else HookIslandLyric.updateLyricLine()
-                }
-
-                override fun onDisplayTranslationChanged(isDisplayTranslation: Boolean) {
-                    LyriconDataBridge.isDisplayTranslation = isDisplayTranslation
-                    if (activeMode == 1) HookIslandSpaceGateLyric.refreshActiveIsland() else HookIslandLyric.refreshActiveIsland()
-                }
-
-                override fun onDisplayRomaChanged(displayRoma: Boolean) {
-                    LyriconDataBridge.isDisplayRoma = displayRoma
-                    if (activeMode == 1) HookIslandSpaceGateLyric.refreshActiveIsland() else HookIslandLyric.refreshActiveIsland()
-                }
-            })
-        }
-
     }
 }

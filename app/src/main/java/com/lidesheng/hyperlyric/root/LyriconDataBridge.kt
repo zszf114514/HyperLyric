@@ -59,6 +59,9 @@ object LyriconDataBridge {
     @Volatile
     var isDisplayRoma: Boolean = true
 
+    /** AI 翻译完成后的回调，由 LyriconSource 设置 */
+    var onAiTranslationComplete: (() -> Unit)? = null
+
     /** 标记 isDisplayTranslation 是否由 AI 翻译置 true，用于 AI 关闭后正确复位 */
     private var aiSetDisplayTranslation: Boolean = false
 
@@ -131,7 +134,7 @@ object LyriconDataBridge {
 
                     isDisplayTranslation = true
                     aiSetDisplayTranslation = true
-                    HookIslandLyric.refreshActiveIsland()
+                    onAiTranslationComplete?.invoke()
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
