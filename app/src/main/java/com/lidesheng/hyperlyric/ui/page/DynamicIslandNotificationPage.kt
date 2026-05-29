@@ -32,8 +32,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import androidx.core.net.toUri
-import com.lidesheng.hyperlyric.ui.utils.Constants as UIConstants
-import com.lidesheng.hyperlyric.service.Constants as ServiceConstants
+import com.lidesheng.hyperlyric.common.ServiceConstants
+import com.lidesheng.hyperlyric.common.UIConstants
 import com.lidesheng.hyperlyric.lyric.ConfigRepository
 import com.lidesheng.hyperlyric.lyric.DynamicLyricData
 import com.lidesheng.hyperlyric.R

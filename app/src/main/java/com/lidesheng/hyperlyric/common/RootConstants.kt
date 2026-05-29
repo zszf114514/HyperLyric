@@ -1,6 +1,6 @@
-package com.lidesheng.hyperlyric.root.utils
+package com.lidesheng.hyperlyric.common
 
-object Constants {
+object RootConstants {
     // ================= HOOK & SUPER ISLAND KEYS =================
     const val KEY_HOOK_ENABLE_SUPER_ISLAND = "key_hook_enable_super_island"
     const val KEY_HOOK_ENABLE_DYNAMIC_ISLAND = "key_hook_enable_dynamic_island"
@@ -18,7 +18,7 @@ object Constants {
     const val KEY_HOOK_ISLAND_LEFT_CONTENT_MAX_WIDTH = "key_hook_island_left_content_max_width"
     const val KEY_HOOK_ISLAND_RIGHT_CONTENT_MAX_WIDTH = "key_hook_island_right_content_max_width"
     const val KEY_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE = "key_hook_island_behavior_after_pause"
-    
+
     const val KEY_HOOK_MAX_LEFT_WIDTH = "key_hook_max_left_width"
     const val KEY_HOOK_REMOVE_FOCUS_WHITELIST = "key_hook_remove_focus_whitelist"
     const val KEY_HOOK_REMOVE_ISLAND_WHITELIST = "key_hook_remove_island_whitelist"
@@ -151,10 +151,10 @@ object Constants {
     const val DEFAULT_HOOK_AI_TRANS_TARGET_LANG = "中文"
     const val DEFAULT_HOOK_AI_TRANS_MODEL = "mimo-v2-flash"
     const val DEFAULT_HOOK_AI_TRANS_BASE_URL = "https://api.xiaomimimo.com/v1/"
-    const val DEFAULT_HOOK_AI_TRANS_PROMPT = """你是一个歌词翻译专家，遵循“信雅达”原则进行创作。
+    const val DEFAULT_HOOK_AI_TRANS_PROMPT = """你是一个歌词翻译专家，遵循"信雅达"原则进行创作。
 
 ## 核心：信雅达 (Cultural Transcreation)
-- 信/灵魂对位：深度理解原文背景与世界观。严禁句式套用，必须打破语序，以目标语言的意向逻辑重塑内核，确保“神不散”。
+- 信/灵魂对位：深度理解原文背景与世界观。严禁句式套用，必须打破语序，以目标语言的意向逻辑重塑内核，确保"神不散"。
 - 雅/审美重构：捕获隐喻，拒绝平铺直叙。根据曲风炼字，民谣讲究留白意境，摇滚追求文化冲击。
 - 达/呼吸转译：彻底消除翻译腔。译文须契合旋律起伏与呼吸断句，确保副歌具备跨文化的传播记忆点。
 
@@ -165,6 +165,5 @@ object Constants {
 ## 节奏与技术
 - 等时对齐：音节/字数必须严丝合缝适配节拍，严禁在短拍堆砌文字。
 - 动态押韵：除 Rap/特定流行强求押韵外，优先保证情绪流转自然。严禁为押韵损毁隐喻或文化美感。
-- 解构再造：拆碎原文逻辑，以母语者直觉进行“意象创作”，使译文像原创作品般自然。"""
+- 解构再造：拆碎原文逻辑，以母语者直觉进行"意象创作"，使译文像原创作品般自然。"""
 }
-

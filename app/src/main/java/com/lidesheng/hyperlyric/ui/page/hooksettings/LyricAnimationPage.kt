@@ -22,8 +22,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.lidesheng.hyperlyric.R
-import com.lidesheng.hyperlyric.ui.utils.Constants as UIConstants
-import com.lidesheng.hyperlyric.root.utils.Constants as RootConstants
+import com.lidesheng.hyperlyric.common.RootConstants
+import com.lidesheng.hyperlyric.common.UIConstants
 import com.lidesheng.hyperlyric.common.PrefsBridge
 import com.lidesheng.hyperlyric.ui.navigation.LocalNavigator
 import com.lidesheng.hyperlyric.ui.utils.BlurredBar

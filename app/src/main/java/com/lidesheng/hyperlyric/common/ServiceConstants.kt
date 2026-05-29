@@ -1,6 +1,6 @@
-package com.lidesheng.hyperlyric.service
+package com.lidesheng.hyperlyric.common
 
-object Constants {
+object ServiceConstants {
     // ================= NOTIFICATION KEYS =================
     const val KEY_NOTIFICATION_WHITELIST = "key_notification_whitelist_packages"
     const val KEY_NOTIFICATION_TYPE = "key_notification_type"
@@ -10,7 +10,7 @@ object Constants {
     const val KEY_ISLAND_LEFT_ICON_FOCUS = "key_island_left_icon_focus"
     const val KEY_NOTIFICATION_TITLE_STYLE = "key_normal_notification_title_style"
     const val KEY_NOTIFICATION_CLICK_ACTION = "key_notification_click_action"
-    
+
     // Decoupled Island-like keys for Notification Page
     const val KEY_NOTIFICATION_SHOW_PROGRESS = "key_notification_show_progress"
     const val KEY_NOTIFICATION_PROGRESS_COLOR = "key_notification_progress_color"
@@ -30,7 +30,7 @@ object Constants {
     const val DEFAULT_ISLAND_LEFT_ICON = 0 // 0=music note, 1=rounded album, 2=circular album, 3=none
     const val DEFAULT_NOTIFICATION_TITLE_STYLE = 4
     const val DEFAULT_NOTIFICATION_CLICK_ACTION = 0
-    
+
     const val DEFAULT_NOTIFICATION_SHOW_PROGRESS = true
     const val DEFAULT_NOTIFICATION_PROGRESS_COLOR = true
     const val DEFAULT_NOTIFICATION_ALBUM = true

@@ -3,7 +3,7 @@ package com.lidesheng.hyperlyric.root
 import android.app.Application
 import android.content.Context
 import com.lidesheng.hyperlyric.common.PrefsBridge
-import com.lidesheng.hyperlyric.ui.utils.Constants as UIConstants
+import com.lidesheng.hyperlyric.common.UIConstants
 import com.lidesheng.hyperlyric.utils.LogManager
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper

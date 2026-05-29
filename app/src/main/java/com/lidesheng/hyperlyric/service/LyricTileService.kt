@@ -1,6 +1,6 @@
 package com.lidesheng.hyperlyric.service
-import com.lidesheng.hyperlyric.ui.utils.Constants as UIConstants
-import com.lidesheng.hyperlyric.root.utils.Constants as RootConstants
+import com.lidesheng.hyperlyric.common.RootConstants
+import com.lidesheng.hyperlyric.common.UIConstants
 
 
 import android.service.quicksettings.Tile

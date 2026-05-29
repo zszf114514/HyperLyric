@@ -8,7 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.lidesheng.hyperlyric.root.utils.CoverColorHelper
-import com.lidesheng.hyperlyric.root.utils.Constants as RootConstants
+import com.lidesheng.hyperlyric.common.RootConstants
 
 import com.lidesheng.hyperlyric.root.source.IslandRenderer
 import com.lidesheng.hyperlyric.root.utils.DynamicFinder

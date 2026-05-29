@@ -3,7 +3,7 @@ package com.lidesheng.hyperlyric.root
 import android.content.Context
 import android.os.Bundle
 import com.lidesheng.hyperlyric.root.utils.HookLogger
-import com.lidesheng.hyperlyric.root.utils.Constants as RootConstants
+import com.lidesheng.hyperlyric.common.RootConstants
 import io.github.libxposed.api.XposedInterface.Chain
 import io.github.libxposed.api.XposedInterface.Hooker
 import io.github.libxposed.api.XposedModule

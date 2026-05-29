@@ -5,7 +5,7 @@ import android.util.Log
 import com.lidesheng.hyperlyric.R
 import com.lidesheng.hyperlyric.common.HyperLogger
 import com.lidesheng.hyperlyric.ui.page.log.LogEntry
-import com.lidesheng.hyperlyric.ui.utils.Constants as UIConstants
+import com.lidesheng.hyperlyric.common.UIConstants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader

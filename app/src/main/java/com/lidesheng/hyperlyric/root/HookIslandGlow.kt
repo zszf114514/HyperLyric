@@ -6,7 +6,7 @@ import android.content.SharedPreferences
 import android.view.View
 import com.lidesheng.hyperlyric.root.utils.CoverColorHelper
 import com.lidesheng.hyperlyric.root.utils.HookLogger
-import com.lidesheng.hyperlyric.root.utils.Constants as RootConstants
+import com.lidesheng.hyperlyric.common.RootConstants
 import io.github.libxposed.api.XposedModule
 
 /**

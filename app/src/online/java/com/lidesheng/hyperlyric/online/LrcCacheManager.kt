@@ -1,8 +1,8 @@
 package com.lidesheng.hyperlyric.online
 
 import android.content.Context
-import com.lidesheng.hyperlyric.ui.utils.Constants as UIConstants
-import com.lidesheng.hyperlyric.service.Constants as ServiceConstants
+import com.lidesheng.hyperlyric.common.ServiceConstants
+import com.lidesheng.hyperlyric.common.UIConstants
 import com.lidesheng.hyperlyric.utils.LogManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

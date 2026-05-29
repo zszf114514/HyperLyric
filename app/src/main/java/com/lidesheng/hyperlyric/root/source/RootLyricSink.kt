@@ -5,7 +5,7 @@ import com.lidesheng.hyperlyric.lyric.source.LyricSink
 import com.lidesheng.hyperlyric.root.LyriconDataBridge
 import com.lidesheng.hyperlyric.root.aitrans.AITranslator
 import com.lidesheng.hyperlyric.root.utils.HookLogger
-import com.lidesheng.hyperlyric.root.utils.Constants as RootConstants
+import com.lidesheng.hyperlyric.common.RootConstants
 import io.github.proify.lyricon.lyric.model.Song
 import io.github.proify.lyricon.lyric.model.interfaces.IRichLyricLine
 import io.github.proify.lyricon.lyric.style.AiTranslationConfigs
@@ -60,7 +60,7 @@ class RootLyricSink(
         activeAiTranslationJob?.cancel()
         activeAiTranslationJob = null
         aiSetDisplayTranslation = false
-        LyriconDataBridge.clearAll()
+        LyriconDataBridge.clearState()
         renderer.refreshActiveIsland()
     }
 

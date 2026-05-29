@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.lidesheng.hyperlyric.common.UIConstants
 import top.yukonga.miuix.kmp.theme.ThemeController
 
 object ThemeUtils {
@@ -23,22 +24,22 @@ object ThemeUtils {
     @Composable
     fun MiuixThemeWrapper(content: @Composable () -> Unit) {
         val context = LocalContext.current
-        val prefs = remember { context.getSharedPreferences(Constants.PREF_NAME, Context.MODE_PRIVATE) }
+        val prefs = remember { context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE) }
         
         var themeMode by remember { 
-            mutableIntStateOf(prefs.getInt(Constants.KEY_THEME_MODE, Constants.DEFAULT_THEME_MODE)) 
+            mutableIntStateOf(prefs.getInt(UIConstants.KEY_THEME_MODE, UIConstants.DEFAULT_THEME_MODE)) 
         }
         var monetColorIndex by remember { 
-            mutableIntStateOf(prefs.getInt(Constants.KEY_MONET_COLOR, Constants.DEFAULT_MONET_COLOR)) 
+            mutableIntStateOf(prefs.getInt(UIConstants.KEY_MONET_COLOR, UIConstants.DEFAULT_MONET_COLOR)) 
         }
 
         val listener = remember { 
             SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
-                if (key == Constants.KEY_THEME_MODE) {
-                    themeMode = p.getInt(Constants.KEY_THEME_MODE, Constants.DEFAULT_THEME_MODE)
+                if (key == UIConstants.KEY_THEME_MODE) {
+                    themeMode = p.getInt(UIConstants.KEY_THEME_MODE, UIConstants.DEFAULT_THEME_MODE)
                 }
-                if (key == Constants.KEY_MONET_COLOR) {
-                    monetColorIndex = p.getInt(Constants.KEY_MONET_COLOR, Constants.DEFAULT_MONET_COLOR)
+                if (key == UIConstants.KEY_MONET_COLOR) {
+                    monetColorIndex = p.getInt(UIConstants.KEY_MONET_COLOR, UIConstants.DEFAULT_MONET_COLOR)
                 }
             }
         }

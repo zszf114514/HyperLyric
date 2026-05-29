@@ -10,9 +10,9 @@ import android.content.IntentFilter
 import android.media.AudioManager
 import android.os.PowerManager
 import android.view.KeyEvent
-import com.lidesheng.hyperlyric.ui.utils.Constants as UIConstants
-import com.lidesheng.hyperlyric.service.Constants as ServiceConstants
-import com.lidesheng.hyperlyric.root.utils.Constants as RootConstants
+import com.lidesheng.hyperlyric.common.RootConstants
+import com.lidesheng.hyperlyric.common.ServiceConstants
+import com.lidesheng.hyperlyric.common.UIConstants
 import com.lidesheng.hyperlyric.lyric.ConfigRepository
 import com.lidesheng.hyperlyric.lyric.DynamicLyricData
 import kotlinx.coroutines.CoroutineScope

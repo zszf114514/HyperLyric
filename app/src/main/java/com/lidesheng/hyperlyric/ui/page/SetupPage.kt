@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
-import com.lidesheng.hyperlyric.ui.utils.Constants
+import com.lidesheng.hyperlyric.common.UIConstants
 import com.lidesheng.hyperlyric.lyric.ConfigRepository
 import com.lidesheng.hyperlyric.lyric.DynamicLyricData
 import com.lidesheng.hyperlyric.lyric.commonMusicApps
@@ -67,15 +67,15 @@ fun SetupPage(onNavigateToMain: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { 4 })
-    val prefs = remember { context.getSharedPreferences(Constants.PREF_NAME, Context.MODE_PRIVATE) }
+    val prefs = remember { context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE) }
     
     var workMode by remember { 
-        val initialMode = prefs.getInt(Constants.KEY_WORK_MODE, Constants.DEFAULT_WORK_MODE)
+        val initialMode = prefs.getInt(UIConstants.KEY_WORK_MODE, UIConstants.DEFAULT_WORK_MODE)
         mutableIntStateOf(initialMode) 
     }
     
     val onFinish = {
-        prefs.edit { putBoolean(Constants.KEY_SETUP_COMPLETED, true) }
+        prefs.edit { putBoolean(UIConstants.KEY_SETUP_COMPLETED, true) }
         onNavigateToMain()
     }
 
@@ -144,7 +144,7 @@ fun SetupPage(onNavigateToMain: () -> Unit) {
                     selectedMode = workMode,
                     onModeSelected = { 
                         workMode = it
-                        prefs.edit { putInt(Constants.KEY_WORK_MODE, it) }
+                        prefs.edit { putInt(UIConstants.KEY_WORK_MODE, it) }
                     }
                 )
                 1 -> if (workMode == 0) DisclaimerPage() else PermissionPage()

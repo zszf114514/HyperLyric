@@ -1,7 +1,6 @@
 package com.lidesheng.hyperlyric.lyric.source
 
 import android.content.SharedPreferences
-import com.lidesheng.hyperlyric.root.LyriconDataBridge
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 
 class SourceManager(
@@ -9,7 +8,8 @@ class SourceManager(
     private val prefs: SharedPreferences,
     private val sink: LyricSink,
     private val prefKey: String,
-    private val defaultSourceId: String
+    private val defaultSourceId: String,
+    private val stateResetter: StateResetter
 ) {
     private var activeSource: LyricSource? = null
 
@@ -33,7 +33,7 @@ class SourceManager(
         if (current?.id == sourceId) return
 
         current?.stop()
-        LyriconDataBridge.clearAll()
+        stateResetter.clearState()
 
         val source = sources.find { it.id == sourceId && it.isAvailable() }
         if (source == null) {

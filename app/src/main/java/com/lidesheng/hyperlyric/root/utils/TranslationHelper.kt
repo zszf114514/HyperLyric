@@ -1,20 +1,21 @@
 package com.lidesheng.hyperlyric.root.utils
 
 import android.content.SharedPreferences
+import com.lidesheng.hyperlyric.common.RootConstants
 import io.github.proify.lyricon.lyric.model.interfaces.IRichLyricLine
 
 object TranslationHelper {
 
     fun isTranslationDisabled(prefs: SharedPreferences): Boolean {
-        return prefs.getBoolean(Constants.KEY_HOOK_DISABLE_TRANSLATION, Constants.DEFAULT_HOOK_DISABLE_TRANSLATION)
+        return prefs.getBoolean(RootConstants.KEY_HOOK_DISABLE_TRANSLATION, RootConstants.DEFAULT_HOOK_DISABLE_TRANSLATION)
     }
 
     fun isTranslationOnly(prefs: SharedPreferences): Boolean {
-        return prefs.getBoolean(Constants.KEY_HOOK_TRANSLATION_ONLY, Constants.DEFAULT_HOOK_TRANSLATION_ONLY)
+        return prefs.getBoolean(RootConstants.KEY_HOOK_TRANSLATION_ONLY, RootConstants.DEFAULT_HOOK_TRANSLATION_ONLY)
     }
 
     fun isSwapTranslation(prefs: SharedPreferences): Boolean {
-        return prefs.getBoolean(Constants.KEY_HOOK_SWAP_TRANSLATION, Constants.DEFAULT_HOOK_SWAP_TRANSLATION)
+        return prefs.getBoolean(RootConstants.KEY_HOOK_SWAP_TRANSLATION, RootConstants.DEFAULT_HOOK_SWAP_TRANSLATION)
     }
 
     fun applyTranslationOnly(line: IRichLyricLine): IRichLyricLine {

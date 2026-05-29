@@ -1,5 +1,6 @@
 package com.lidesheng.hyperlyric.root
 
+import com.lidesheng.hyperlyric.lyric.source.StateResetter
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import io.github.proify.lyricon.lyric.model.RichLyricLine
 import io.github.proify.lyricon.lyric.model.Song
@@ -10,7 +11,7 @@ import io.github.proify.lyricon.lyric.view.SongPreprocessor
 import io.github.proify.lyricon.lyric.view.TimedLine
 import io.github.proify.lyricon.lyric.view.TitleSlot
 
-object LyriconDataBridge {
+object LyriconDataBridge : StateResetter {
 
     val versionCounter = java.util.concurrent.atomic.AtomicInteger(0)
 
@@ -121,7 +122,7 @@ object LyriconDataBridge {
         currentLyric = line.text
     }
 
-    fun clearAll() {
+    override fun clearState() {
         currentSong = null
         currentSongName = null
         currentLyric = null

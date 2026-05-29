@@ -21,9 +21,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
-import com.lidesheng.hyperlyric.root.utils.Constants as RootConstants
-import com.lidesheng.hyperlyric.service.Constants as ServiceConstants
-import com.lidesheng.hyperlyric.ui.utils.Constants as UIConstants
+import com.lidesheng.hyperlyric.common.RootConstants
+import com.lidesheng.hyperlyric.common.ServiceConstants
+import com.lidesheng.hyperlyric.common.UIConstants
 
 class AppLyricSink(
     private val context: Context,

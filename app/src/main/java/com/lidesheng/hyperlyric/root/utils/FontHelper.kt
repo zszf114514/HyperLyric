@@ -1,6 +1,7 @@
 package com.lidesheng.hyperlyric.root.utils
 
 import android.content.SharedPreferences
+import com.lidesheng.hyperlyric.common.RootConstants
 import android.graphics.Typeface
 import java.io.File
 
@@ -9,10 +10,10 @@ object FontHelper {
     private val loggedFontFailures = mutableSetOf<String>()
 
     fun loadTypeface(prefs: SharedPreferences): Typeface {
-        val fontWeight = prefs.getInt(Constants.KEY_HOOK_FONT_WEIGHT, Constants.DEFAULT_HOOK_FONT_WEIGHT)
-        val fontItalic = prefs.getBoolean(Constants.KEY_HOOK_FONT_ITALIC, Constants.DEFAULT_HOOK_FONT_ITALIC)
+        val fontWeight = prefs.getInt(RootConstants.KEY_HOOK_FONT_WEIGHT, RootConstants.DEFAULT_HOOK_FONT_WEIGHT)
+        val fontItalic = prefs.getBoolean(RootConstants.KEY_HOOK_FONT_ITALIC, RootConstants.DEFAULT_HOOK_FONT_ITALIC)
 
-        val customFontPath = prefs.getString(Constants.KEY_HOOK_CUSTOM_FONT_PATH, null)
+        val customFontPath = prefs.getString(RootConstants.KEY_HOOK_CUSTOM_FONT_PATH, null)
         var baseTf: Typeface? = null
 
         if (!customFontPath.isNullOrBlank()) {

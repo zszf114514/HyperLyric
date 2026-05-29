@@ -1,6 +1,6 @@
-package com.lidesheng.hyperlyric.ui.utils
+package com.lidesheng.hyperlyric.common
 
-object Constants {
+object UIConstants {
     const val PREF_NAME = "com.lidesheng.hyperlyric_preferences"
 
     // ================= APP CORE KEYS =================

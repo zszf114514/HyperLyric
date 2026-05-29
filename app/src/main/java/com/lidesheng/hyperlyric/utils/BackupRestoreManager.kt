@@ -19,9 +19,9 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import com.lidesheng.hyperlyric.ui.utils.Constants as UIConstants
-import com.lidesheng.hyperlyric.root.utils.Constants as RootConstants
-import com.lidesheng.hyperlyric.service.Constants as ServiceConstants
+import com.lidesheng.hyperlyric.common.RootConstants
+import com.lidesheng.hyperlyric.common.ServiceConstants
+import com.lidesheng.hyperlyric.common.UIConstants
 
 object BackupRestoreManager {
     suspend fun buildBackupJson(context: Context): String = withContext(Dispatchers.IO) {

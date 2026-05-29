@@ -5,8 +5,8 @@ import com.lidesheng.hyperlyric.root.source.LyriconSource
 import com.lidesheng.hyperlyric.root.source.RootLyricSink
 import com.lidesheng.hyperlyric.root.source.SuperLyricSource
 import com.lidesheng.hyperlyric.root.utils.HookLogger
-import com.lidesheng.hyperlyric.ui.utils.Constants as UIConstants
-import com.lidesheng.hyperlyric.root.utils.Constants as RootConstants
+import com.lidesheng.hyperlyric.common.RootConstants
+import com.lidesheng.hyperlyric.common.UIConstants
 import io.github.libxposed.api.XposedInterface.Chain
 import io.github.libxposed.api.XposedInterface.Hooker
 import io.github.libxposed.api.XposedModule
@@ -171,7 +171,8 @@ class HookEntry : XposedModule() {
                         prefs = entry.prefs,
                         sink = sink,
                         prefKey = RootConstants.KEY_HOOK_LYRIC_SOURCE,
-                        defaultSourceId = RootConstants.DEFAULT_HOOK_LYRIC_SOURCE
+                        defaultSourceId = RootConstants.DEFAULT_HOOK_LYRIC_SOURCE,
+                        stateResetter = LyriconDataBridge
                     )
                     sourceManager?.start()
 
