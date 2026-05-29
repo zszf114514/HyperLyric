@@ -1,4 +1,4 @@
-package com.lidesheng.hyperlyric.ui.page.hooksettings
+﻿package com.lidesheng.hyperlyric.ui.page.hooksettings
 
 import android.content.Context
 import android.content.Intent
@@ -29,7 +29,7 @@ import com.lidesheng.hyperlyric.ui.navigation.LocalNavigator
 import com.lidesheng.hyperlyric.ui.utils.BlurredBar
 import com.lidesheng.hyperlyric.ui.utils.pageScrollModifiers
 import com.lidesheng.hyperlyric.ui.utils.rememberBlurBackdrop
-import io.github.proify.lyricon.lyric.view.yoyo.YoYoPresets
+import com.lidesheng.hyperlyric.lyric.view.yoyo.YoYoPresets
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -171,3 +171,4 @@ private fun LazyListScope.animationPageSections() {
         }
     }
 }
+

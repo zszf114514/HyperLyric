@@ -1,4 +1,4 @@
-package com.lidesheng.hyperlyric.root.source
+﻿package com.lidesheng.hyperlyric.root.source
 
 import android.content.SharedPreferences
 import com.lidesheng.hyperlyric.lyric.source.LyricSink
@@ -6,10 +6,10 @@ import com.lidesheng.hyperlyric.root.LyriconDataBridge
 import com.lidesheng.hyperlyric.root.aitrans.AITranslator
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import com.lidesheng.hyperlyric.common.RootConstants
-import io.github.proify.lyricon.lyric.model.Song
-import io.github.proify.lyricon.lyric.model.interfaces.IRichLyricLine
-import io.github.proify.lyricon.lyric.style.AiTranslationConfigs
-import io.github.proify.lyricon.lyric.style.AiTranslationProvider
+import com.lidesheng.hyperlyric.lyric.model.Song
+import com.lidesheng.hyperlyric.lyric.model.interfaces.IRichLyricLine
+import com.lidesheng.hyperlyric.lyric.style.AiTranslationConfigs
+import com.lidesheng.hyperlyric.lyric.style.AiTranslationProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -164,3 +164,5 @@ class RootLyricSink(
         return !isLetterOrDigit() && !isWhitespace()
     }
 }
+
+

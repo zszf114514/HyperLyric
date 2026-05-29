@@ -7,7 +7,7 @@
 
 package io.github.proify.android.extensions
 
-import com.lidesheng.hyperlyric.utils.LogManager
+import android.util.Log
 import java.io.File
 import java.io.FileInputStream
 import java.security.MessageDigest
@@ -31,7 +31,7 @@ fun File.md5(): String {
         }
         return digest.digest().joinToString("") { "%02x".format(it) }
     } catch (e: Exception) {
-        LogManager.e("FileExtensions", "文件哈希计算失败", e)
+        Log.e("FileExtensions", "文件哈希计算失败: ${e.message}")
         return ""
     }
 }

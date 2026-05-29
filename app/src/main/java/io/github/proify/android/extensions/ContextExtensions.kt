@@ -12,9 +12,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
-import io.github.proify.lyricon.common.util.safe
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
+
+private fun SharedPreferences.safe(): SharedPreferences = this
 
 private fun Context.tryMigratePrefsFromDeviceProtected(name: String) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return

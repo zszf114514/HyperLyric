@@ -1,8 +1,8 @@
-package com.lidesheng.hyperlyric.root.aitrans
+﻿package com.lidesheng.hyperlyric.root.aitrans
 
 import io.github.proify.android.extensions.md5
-import io.github.proify.lyricon.lyric.model.Song
-import io.github.proify.lyricon.lyric.style.AiTranslationConfigs
+import com.lidesheng.hyperlyric.lyric.model.Song
+import com.lidesheng.hyperlyric.lyric.style.AiTranslationConfigs
 
 internal object AITranslationKey {
     fun calculate(configs: AiTranslationConfigs, song: Song, lines: List<String>): String {
@@ -16,3 +16,5 @@ internal object AITranslationKey {
         }.md5()
     }
 }
+
+

@@ -1,4 +1,4 @@
-package com.lidesheng.hyperlyric.root.source
+﻿package com.lidesheng.hyperlyric.root.source
 
 import android.app.Application
 import android.content.SharedPreferences
@@ -9,13 +9,13 @@ import com.lidesheng.hyperlyric.root.HookIslandSpaceGateLyric
 import com.lidesheng.hyperlyric.root.LyriconDataBridge
 import com.lidesheng.hyperlyric.root.aitrans.AITranslator
 import com.lidesheng.hyperlyric.root.utils.HookLogger
-import io.github.proify.lyricon.app.bridge.AppBridgeConstants
-import io.github.proify.lyricon.app.bridge.LyriconBridge
-import io.github.proify.lyricon.central.BridgeCentral
-import io.github.proify.lyricon.central.provider.player.ActivePlayerDispatcher
-import io.github.proify.lyricon.central.provider.player.ActivePlayerListener
-import io.github.proify.lyricon.central.util.ScreenStateMonitor
-import io.github.proify.lyricon.lyric.model.Song
+import com.lidesheng.hyperlyric.root.bridge.AppBridgeConstants
+import com.lidesheng.hyperlyric.root.bridge.LyriconBridge
+import com.lidesheng.hyperlyric.root.lyricon.central.BridgeCentral
+import com.lidesheng.hyperlyric.root.lyricon.central.provider.player.ActivePlayerDispatcher
+import com.lidesheng.hyperlyric.root.lyricon.central.provider.player.ActivePlayerListener
+import com.lidesheng.hyperlyric.root.lyricon.central.util.ScreenStateMonitor
+import com.lidesheng.hyperlyric.lyric.model.Song
 import io.github.proify.lyricon.provider.ProviderInfo
 
 class LyriconSource : LyricSource {
@@ -135,3 +135,6 @@ class LyriconSource : LyricSource {
         })
     }
 }
+
+
+

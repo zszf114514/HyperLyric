@@ -1,4 +1,4 @@
-package com.lidesheng.hyperlyric.root.source
+﻿package com.lidesheng.hyperlyric.root.source
 
 import com.hchen.superlyricapi.ISuperLyricReceiver
 import com.hchen.superlyricapi.SuperLyricData
@@ -9,7 +9,7 @@ import com.lidesheng.hyperlyric.lyric.source.LyricSink
 import com.lidesheng.hyperlyric.lyric.source.LyricSource
 import com.lidesheng.hyperlyric.common.media.MediaMetadataHelper
 import com.lidesheng.hyperlyric.root.utils.HookLogger
-import io.github.proify.lyricon.lyric.model.LyricWord
+import com.lidesheng.hyperlyric.lyric.model.LyricWord
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -17,7 +17,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import io.github.proify.lyricon.lyric.model.RichLyricLine
+import com.lidesheng.hyperlyric.lyric.model.RichLyricLine
 
 class SuperLyricSource : LyricSource {
 
@@ -191,3 +191,4 @@ class SuperLyricSource : LyricSource {
         private const val TAG = "SuperLyricSource"
     }
 }
+

@@ -1,11 +1,11 @@
-package com.lidesheng.hyperlyric.root.aitrans
+﻿package com.lidesheng.hyperlyric.root.aitrans
 
 import android.util.Log
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import io.github.proify.android.extensions.json
 import io.github.proify.android.extensions.toJson
-import io.github.proify.lyricon.lyric.model.Song
-import io.github.proify.lyricon.lyric.style.AiTranslationConfigs
+import com.lidesheng.hyperlyric.lyric.model.Song
+import com.lidesheng.hyperlyric.lyric.style.AiTranslationConfigs
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -109,3 +109,5 @@ internal object OpenAiTranslationClient {
         return text.any { it.isLetter() }
     }
 }
+
+

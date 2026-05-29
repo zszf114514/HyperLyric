@@ -1,8 +1,8 @@
-package com.lidesheng.hyperlyric.root.aitrans
+﻿package com.lidesheng.hyperlyric.root.aitrans
 
 import android.util.Log
 import com.lidesheng.hyperlyric.root.utils.HookLogger
-import io.github.proify.lyricon.lyric.model.Song
+import com.lidesheng.hyperlyric.lyric.model.Song
 
 /** Applies validated translation items back to lyric lines. */
 internal object AITranslationApplicator {
@@ -28,3 +28,4 @@ internal object AITranslationApplicator {
         return song.copy(lyrics = newLyrics)
     }
 }
+

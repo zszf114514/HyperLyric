@@ -1,8 +1,8 @@
-package com.lidesheng.hyperlyric.root.utils
+﻿package com.lidesheng.hyperlyric.root.utils
 
 import android.content.SharedPreferences
 import com.lidesheng.hyperlyric.common.RootConstants
-import io.github.proify.lyricon.lyric.model.interfaces.IRichLyricLine
+import com.lidesheng.hyperlyric.lyric.model.interfaces.IRichLyricLine
 
 object TranslationHelper {
 
@@ -22,7 +22,7 @@ object TranslationHelper {
         val translation = line.translation
         if (translation.isNullOrBlank()) return line
 
-        return io.github.proify.lyricon.lyric.model.RichLyricLine(
+        return com.lidesheng.hyperlyric.lyric.model.RichLyricLine(
             begin = line.begin,
             end = line.end,
             duration = line.duration,
@@ -41,7 +41,7 @@ object TranslationHelper {
         val translation = line.translation
         if (translation.isNullOrBlank()) return line
 
-        return io.github.proify.lyricon.lyric.model.RichLyricLine(
+        return com.lidesheng.hyperlyric.lyric.model.RichLyricLine(
             begin = line.begin,
             end = line.end,
             duration = line.duration,
@@ -56,3 +56,4 @@ object TranslationHelper {
         )
     }
 }
+

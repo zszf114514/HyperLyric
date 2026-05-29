@@ -1,7 +1,7 @@
-package com.lidesheng.hyperlyric.root.aitrans
+﻿package com.lidesheng.hyperlyric.root.aitrans
 
-import io.github.proify.lyricon.lyric.model.Song
-import io.github.proify.lyricon.lyric.style.AiTranslationConfigs
+import com.lidesheng.hyperlyric.lyric.model.Song
+import com.lidesheng.hyperlyric.lyric.style.AiTranslationConfigs
 import java.util.Locale
 
 internal object AITranslationPrompt {
@@ -17,3 +17,5 @@ internal object AITranslationPrompt {
         return AiTranslationConfigs.getPrompt(target, title, artist, prompt)
     }
 }
+
+

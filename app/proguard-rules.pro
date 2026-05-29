@@ -19,9 +19,12 @@
 -keepclassmembers @kotlinx.serialization.Serializable class * { *; }
 -keep class com.lidesheng.hyperlyric.online.** { *; }
 
-# --- Lyricon Receiver ---
--keep class io.github.proify.lyricon.lyric.model.** { *; }
+# --- 歌词数据模型（Parcelable + Serializable）---
+-keep class com.lidesheng.hyperlyric.lyric.model.** { *; }
+
+# --- Lyricon Provider (AIDL 契约，保持旧包名) ---
 -keep interface io.github.proify.lyricon.provider.** { *; }
+-keep class io.github.proify.lyricon.provider.ProviderInfo { *; }
 
 # --- Shizuku User Service ---
 -keep class com.lidesheng.hyperlyric.service.utils.shizuku.PrivilegedServiceImpl { *; }

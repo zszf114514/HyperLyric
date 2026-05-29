@@ -1,10 +1,10 @@
-package com.lidesheng.hyperlyric.root.aitrans
+﻿package com.lidesheng.hyperlyric.root.aitrans
 
 import android.content.Context
 import android.util.Log
 import com.lidesheng.hyperlyric.root.utils.HookLogger
-import io.github.proify.lyricon.lyric.model.Song
-import io.github.proify.lyricon.lyric.style.AiTranslationConfigs
+import com.lidesheng.hyperlyric.lyric.model.Song
+import com.lidesheng.hyperlyric.lyric.style.AiTranslationConfigs
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -104,3 +104,5 @@ object AITranslator {
         return AITranslationApplicator.apply(song, apiResults)
     }
 }
+
+

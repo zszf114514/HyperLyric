@@ -1,4 +1,4 @@
-package com.lidesheng.hyperlyric.root
+﻿package com.lidesheng.hyperlyric.root
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
@@ -18,10 +18,10 @@ import com.lidesheng.hyperlyric.root.utils.TranslationHelper
 import io.github.libxposed.api.XposedInterface.Chain
 import io.github.libxposed.api.XposedInterface.Hooker
 import io.github.libxposed.api.XposedModule
-import io.github.proify.lyricon.lyric.model.RichLyricLine
-import io.github.proify.lyricon.lyric.view.SpaceGateRichLyricLineView
-import io.github.proify.lyricon.lyric.view.yoyo.YoYoPresets
-import io.github.proify.lyricon.lyric.view.yoyo.animateUpdate
+import com.lidesheng.hyperlyric.lyric.model.RichLyricLine
+import com.lidesheng.hyperlyric.lyric.view.SpaceGateRichLyricLineView
+import com.lidesheng.hyperlyric.lyric.view.yoyo.YoYoPresets
+import com.lidesheng.hyperlyric.lyric.view.yoyo.animateUpdate
 
 object HookIslandSpaceGateLyric : IslandRenderer {
     lateinit var module: XposedModule
@@ -504,3 +504,5 @@ object HookIslandSpaceGateLyric : IslandRenderer {
         }
     }
 }
+
+

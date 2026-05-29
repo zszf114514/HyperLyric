@@ -1,7 +1,6 @@
 package io.github.proify.lyricon.provider;
 
 import android.os.SharedMemory;
-import io.github.proify.lyricon.lyric.model.Song;
 
 //添加新方法，必须放在最后，保证aidl签名顺序，确保各api版本兼容性
 interface IRemotePlayer {

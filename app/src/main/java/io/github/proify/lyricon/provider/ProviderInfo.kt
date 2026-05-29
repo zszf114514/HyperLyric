@@ -7,6 +7,8 @@
 package io.github.proify.lyricon.provider
 
 import android.os.Parcelable
+import com.lidesheng.hyperlyric.root.lyricon.provider.ProviderLogo
+import com.lidesheng.hyperlyric.root.lyricon.provider.ProviderMetadata
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 

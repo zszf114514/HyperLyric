@@ -1,4 +1,4 @@
-package com.lidesheng.hyperlyric.root.utils
+﻿package com.lidesheng.hyperlyric.root.utils
 
 import android.content.SharedPreferences
 import android.content.res.Resources
@@ -7,12 +7,12 @@ import android.graphics.Color
 import android.util.TypedValue
 import com.lidesheng.hyperlyric.root.LyriconDataBridge
 import com.lidesheng.hyperlyric.common.RootConstants
-import io.github.proify.lyricon.lyric.view.Highlight
-import io.github.proify.lyricon.lyric.view.LyricViewStyle
-import io.github.proify.lyricon.lyric.view.Marquee
-import io.github.proify.lyricon.lyric.view.TextLook
-import io.github.proify.lyricon.lyric.view.TitleSlot
-import io.github.proify.lyricon.lyric.view.WordMotion
+import com.lidesheng.hyperlyric.lyric.view.Highlight
+import com.lidesheng.hyperlyric.lyric.view.LyricViewStyle
+import com.lidesheng.hyperlyric.lyric.view.Marquee
+import com.lidesheng.hyperlyric.lyric.view.TextLook
+import com.lidesheng.hyperlyric.lyric.view.TitleSlot
+import com.lidesheng.hyperlyric.lyric.view.WordMotion
 
 /**
  * 歌词样式构建助手
@@ -117,3 +117,4 @@ object LyricStyleHelper {
         )
     }
 }
+

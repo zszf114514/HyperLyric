@@ -1,7 +1,7 @@
-package com.lidesheng.hyperlyric.ui.page.hooksettings
+﻿package com.lidesheng.hyperlyric.ui.page.hooksettings
 
 import android.content.Context
-import io.github.proify.lyricon.app.bridge.LyriconBridge
+import com.lidesheng.hyperlyric.root.bridge.LyriconBridge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -402,3 +402,4 @@ fun LyricSettingsPage() {
         }
     }
 }
+
