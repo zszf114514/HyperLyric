@@ -23,10 +23,6 @@ object RootConstants {
     const val KEY_HOOK_REMOVE_FOCUS_WHITELIST = "key_hook_remove_focus_whitelist"
     const val KEY_HOOK_REMOVE_ISLAND_WHITELIST = "key_hook_remove_island_whitelist"
 
-    // ================= DATA & WHITELIST KEYS =================
-    const val KEY_HOOK_WHITELIST = "key_hook_whitelist_packages"
-    const val KEY_HOOK_ADDED_LIST = "key_hook_added_packages"
-
     // ================= STYLE & TYPOGRAPHY KEYS =================
     const val KEY_HOOK_TEXT_SIZE = "key_hook_text_size"
     const val KEY_HOOK_TEXT_SIZE_RATIO = "key_hook_text_size_ratio"

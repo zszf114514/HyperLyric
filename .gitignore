@@ -8,6 +8,7 @@
 .cxx
 local.properties
 .idea
+.mimocode
 .agent/
 .claude/
 .codegraph
@@ -22,3 +23,5 @@ app/offline/
 app/online/
 app/src/androidTest
 app/src/test
+AGENTS.md
+CLAUDE.md

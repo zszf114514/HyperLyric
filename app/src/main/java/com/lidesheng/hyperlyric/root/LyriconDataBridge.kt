@@ -1,4 +1,4 @@
-﻿package com.lidesheng.hyperlyric.root
+package com.lidesheng.hyperlyric.root
 
 import com.lidesheng.hyperlyric.lyric.source.StateResetter
 import com.lidesheng.hyperlyric.root.utils.HookLogger
@@ -29,9 +29,6 @@ object LyriconDataBridge : StateResetter {
 
     @Volatile
     var activePackageName: String? = null
-
-    @Volatile
-    var isPlaying: Boolean = false
 
     /** 是否处于纯文本模式（椒盐音乐等通过 onSendText 推送） */
     @Volatile
@@ -127,7 +124,6 @@ object LyriconDataBridge : StateResetter {
         currentSongName = null
         currentLyric = null
         currentLyricLine = null
-        isPlaying = false
         activePackageName = null
         isTextMode = false
         isDisplayTranslation = true

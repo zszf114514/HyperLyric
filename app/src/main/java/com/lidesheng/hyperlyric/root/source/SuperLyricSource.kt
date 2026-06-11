@@ -1,4 +1,4 @@
-﻿package com.lidesheng.hyperlyric.root.source
+package com.lidesheng.hyperlyric.root.source
 
 import com.hchen.superlyricapi.ISuperLyricReceiver
 import com.hchen.superlyricapi.SuperLyricData
@@ -69,8 +69,8 @@ class SuperLyricSource : LyricSource {
             }
 
             override fun onStop(publisher: String, data: SuperLyricData) {
-                android.util.Log.d("SuperLyricSource", "★ onStop RAW: publisher=$publisher")
                 HookLogger.d(TAG, "onStop : 收到停止事件, publisher=$publisher")
+                sink?.onPlaybackStateChanged(false)
                 stopPositionPolling()
             }
         }

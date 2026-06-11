@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.media.MediaMetadata
 import android.media.session.MediaSessionManager
+import android.media.session.PlaybackState
 import com.lidesheng.hyperlyric.common.HyperLogger
 
 /**
@@ -55,6 +56,20 @@ object MediaMetadataHelper {
             controller?.playbackState?.position ?: -1
         } catch (_: Exception) {
             -1
+        }
+    }
+
+    /**
+     * 通过系统 MediaSession 判断指定包名是否正在播放。
+     */
+    fun isPackagePlaying(context: Context, packageName: String): Boolean {
+        if (packageName.isEmpty()) return false
+        return try {
+            val msm = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+            val controller = msm.getActiveSessions(null).find { it.packageName == packageName }
+            controller?.playbackState?.state == PlaybackState.STATE_PLAYING
+        } catch (_: Exception) {
+            false
         }
     }
 

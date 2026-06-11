@@ -1,4 +1,4 @@
-﻿package com.lidesheng.hyperlyric.root.source
+package com.lidesheng.hyperlyric.root.source
 
 import android.content.SharedPreferences
 import com.lidesheng.hyperlyric.lyric.source.LyricSink
@@ -45,7 +45,6 @@ class RootLyricSink(
 
     override fun onLyricLine(line: Any?) {
         if (line is IRichLyricLine) {
-            LyriconDataBridge.isPlaying = true
             LyriconDataBridge.updateLyricLine(line)
             renderer.updateLyricLine()
         }
@@ -72,7 +71,6 @@ class RootLyricSink(
     }
 
     override fun onPlaybackStateChanged(isPlaying: Boolean) {
-        LyriconDataBridge.isPlaying = isPlaying
         renderer.onPlaybackStateChanged(isPlaying)
     }
 

@@ -1,4 +1,4 @@
-﻿package com.lidesheng.hyperlyric.root
+package com.lidesheng.hyperlyric.root
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
@@ -93,16 +93,15 @@ object HookIslandLyric : IslandRenderer {
             runCatching {
                 val islandView = chain.thisObject as? ViewGroup ?: return@runCatching
                 val prefs = (module as HookEntry).prefs
+                val pkgName = activeIslandPkgNames[islandView]
+                val activePkg = LyriconDataBridge.activePackageName
                 val behavior = prefs.getInt(RootConstants.KEY_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE, RootConstants.DEFAULT_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE)
-                
-                if (!LyriconDataBridge.isPlaying && behavior == 0) {
+
+                if (activePkg.isNullOrEmpty() || (!MediaMetadataHelper.isPackagePlaying(islandView.context, activePkg) && behavior == 0)) {
                     return@runCatching
                 }
 
-                val pkgName = activeIslandPkgNames[islandView]
-                val activePkg = LyriconDataBridge.activePackageName
-                
-                if (pkgName != null && pkgName == activePkg && isPackageHookEnabled(activePkg)) {
+                if (pkgName != null && pkgName == activePkg) {
                     applySettings(islandView)
                     val leftMode = prefs.getInt(RootConstants.KEY_HOOK_ISLAND_CONTENT_LEFT, RootConstants.DEFAULT_HOOK_ISLAND_CONTENT_LEFT)
                     val rightMode = prefs.getInt(RootConstants.KEY_HOOK_ISLAND_CONTENT_RIGHT, RootConstants.DEFAULT_HOOK_ISLAND_CONTENT_RIGHT)
@@ -143,13 +142,12 @@ object HookIslandLyric : IslandRenderer {
                 val prefs = (module as HookEntry).prefs
                 val behavior = prefs.getInt(RootConstants.KEY_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE, RootConstants.DEFAULT_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE)
 
-                if (!LyriconDataBridge.isPlaying && behavior == 0) {
+                if (activePkg.isNullOrEmpty() || (!MediaMetadataHelper.isPackagePlaying(viewGroup.context, activePkg) && behavior == 0)) {
                     IslandViewHelper.clearInjectedViews(viewGroup)
                     return@runCatching
                 }
 
-                // 增加校验：包名匹配 且 在歌词白名单中开启
-                if (pkgName.isEmpty() || pkgName != activePkg || !isPackageHookEnabled(activePkg)) {
+                if (pkgName.isEmpty() || pkgName != activePkg) {
                     return@runCatching
                 }
 
@@ -172,18 +170,6 @@ object HookIslandLyric : IslandRenderer {
         }
     }
 
-
-    fun isPackageHookEnabled(packageName: String?): Boolean {
-        if (packageName.isNullOrEmpty()) return false
-        val prefs = (module as HookEntry).prefs
-        // 通过已添加列表判断用户是否配置过白名单
-        // 如果 addedList 为空，说明用户从未添加过任何应用，默认不放行
-        val addedList = prefs.getStringSet(RootConstants.KEY_HOOK_ADDED_LIST, null)
-        if (addedList.isNullOrEmpty()) return false
-        // 用户已配置过白名单，严格校验：只有在启用集合中的包名才放行
-        val whitelist = prefs.getStringSet(RootConstants.KEY_HOOK_WHITELIST, emptySet()) ?: emptySet()
-        return whitelist.contains(packageName)
-    }
 
     private fun triggerSystemRelayout(islandView: ViewGroup) {
         IslandViewHelper.triggerSystemRelayout(islandView)
@@ -395,9 +381,6 @@ object HookIslandLyric : IslandRenderer {
         val iterator = activeIslandPkgNames.entries.iterator()
         val activePkg = LyriconDataBridge.activePackageName ?: return
         
-        // 增加白名单校验
-        if (!isPackageHookEnabled(activePkg)) return
-
         while (iterator.hasNext()) {
             val entry = iterator.next()
             val cv = entry.key as? ViewGroup
@@ -432,9 +415,6 @@ object HookIslandLyric : IslandRenderer {
         HookLogger.d("HookIslandLyric","HookIslandLyric : 正在更新歌词行")
         val iterator = activeIslandPkgNames.entries.iterator()
         val activePkg = LyriconDataBridge.activePackageName ?: return
-
-        // 增加白名单校验
-        if (!isPackageHookEnabled(activePkg)) return
 
         while (iterator.hasNext()) {
             val entry = iterator.next()
@@ -502,9 +482,6 @@ object HookIslandLyric : IslandRenderer {
         val iterator = activeIslandPkgNames.entries.iterator()
         val activePkg = LyriconDataBridge.activePackageName ?: return
         
-        // 增加白名单校验
-        if (!isPackageHookEnabled(activePkg)) return
-
         while (iterator.hasNext()) {
             val entry = iterator.next()
             val cv = entry.key as? ViewGroup

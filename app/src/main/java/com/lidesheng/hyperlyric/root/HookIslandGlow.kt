@@ -78,7 +78,6 @@ object HookIslandGlow {
             // 校验：当前岛是否是正在播放的音乐 App
             val pkgName = getPkgNameFromView(view)
             if (pkgName.isEmpty() || pkgName != LyriconDataBridge.activePackageName) return
-            if (!HookIslandLyric.isPackageHookEnabled(pkgName)) return
 
             // 获取 template 字段
             val templateField = findFieldInHierarchy(view.javaClass, "template") ?: return

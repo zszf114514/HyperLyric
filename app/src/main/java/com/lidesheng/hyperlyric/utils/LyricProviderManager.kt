@@ -1,4 +1,4 @@
-﻿package com.lidesheng.hyperlyric.utils
+package com.lidesheng.hyperlyric.utils
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
@@ -43,25 +43,6 @@ data class ModuleCategory(
 )
 
 object LyricProviderManager {
-    val providerToTargetMap = mapOf(
-        "io.github.proify.lyricon.cmprovider" to listOf("com.netease.cloudmusic", "com.hihonor.cloudmusic"), //网易云、荣耀定制版网易云
-        "io.github.proify.lyricon.qmprovider" to listOf("com.tencent.qqmusic"), //QQ音乐
-        "io.github.proify.lyricon.kwprovider" to listOf("cn.kuwo.player"), //酷我音乐
-        "io.github.proify.lyricon.kgprovider" to listOf("com.kugou.android", "com.kugou.android.lite"), //酷狗、酷狗极速版
-        "io.github.proify.lyricon.spotifyprovider" to listOf("com.spotify.music"), //Spotify
-        "io.github.proify.lyricon.amprovider" to listOf("com.apple.android.music"), //Apple Music
-        "io.github.proify.lyricon.localprovider" to listOf("com.salt.music"), //椒盐音乐
-        "io.github.proify.lyricon.saltprovider" to listOf("com.salt.music"), //椒盐音乐
-        "io.github.proify.lyricon.qmhdprovider" to listOf("com.tencent.qqmusicpad"), //QQ音乐HD
-        "io.github.proify.lyricon.qishuiprovider" to listOf("com.luna.music"), //汽水音乐
-        "io.github.proify.lyricon.paprovider" to listOf("com.maxmpz.audioplayer"), //Poweramp
-        "io.github.proify.lyricon.musicfreeprovider" to listOf("fun.upup.musicfree"), //MusicFree
-        "io.github.proify.lyricon.lxprovider" to listOf("cn.toside.music.mobile", "com.ikunshare.music.mobile", "com.lxnetease.music.mobile"), //落雪、IKunMusic、LxNetease
-        "io.github.proify.lyricon.gramophoneprovider" to listOf("org.akanework.gramophone"), //Gramophone
-    )
-
-
-
 
     suspend fun loadProviders(context: Context, stateFlow: MutableStateFlow<ProviderUiState>) {
         stateFlow.update { it.copy(isLoading = true) }

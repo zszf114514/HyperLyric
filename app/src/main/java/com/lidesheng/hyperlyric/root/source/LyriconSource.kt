@@ -132,7 +132,6 @@ class LyriconSource : LyricSource {
         }
 
         override fun onPlaybackStateChanged(isPlaying: Boolean) {
-            LyriconDataBridge.isPlaying = isPlaying
             sink?.onPlaybackStateChanged(isPlaying)
             getRenderer().onPlaybackStateChanged(isPlaying)
         }

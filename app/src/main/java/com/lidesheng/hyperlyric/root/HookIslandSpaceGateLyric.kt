@@ -1,4 +1,4 @@
-﻿package com.lidesheng.hyperlyric.root
+package com.lidesheng.hyperlyric.root
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
@@ -95,16 +95,15 @@ object HookIslandSpaceGateLyric : IslandRenderer {
             runCatching {
                 val islandView = chain.thisObject as? ViewGroup ?: return@runCatching
                 val prefs = (module as HookEntry).prefs
+                val pkgName = activeIslandPkgNames[islandView]
+                val activePkg = LyriconDataBridge.activePackageName
                 val behavior = prefs.getInt(RootConstants.KEY_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE, RootConstants.DEFAULT_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE)
-                
-                if (!LyriconDataBridge.isPlaying && behavior == 0) {
+
+                if (activePkg.isNullOrEmpty() || (!MediaMetadataHelper.isPackagePlaying(islandView.context, activePkg) && behavior == 0)) {
                     return@runCatching
                 }
 
-                val pkgName = activeIslandPkgNames[islandView]
-                val activePkg = LyriconDataBridge.activePackageName
-                
-                if (pkgName != null && pkgName == activePkg && isPackageHookEnabled(activePkg)) {
+                if (pkgName != null && pkgName == activePkg) {
                     applySettings(islandView)
                     
                     // SpaceGate 模式硬编码强制使用模式 8（歌词穿梭），不跟随内容设置
@@ -144,12 +143,12 @@ object HookIslandSpaceGateLyric : IslandRenderer {
                 val prefs = (module as HookEntry).prefs
                 val behavior = prefs.getInt(RootConstants.KEY_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE, RootConstants.DEFAULT_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE)
 
-                if (!LyriconDataBridge.isPlaying && behavior == 0) {
+                if (activePkg.isNullOrEmpty() || (!MediaMetadataHelper.isPackagePlaying(viewGroup.context, activePkg) && behavior == 0)) {
                     IslandViewHelper.clearInjectedViews(viewGroup)
                     return@runCatching
                 }
 
-                if (pkgName.isEmpty() || pkgName != activePkg || !isPackageHookEnabled(activePkg)) {
+                if (pkgName.isEmpty() || pkgName != activePkg) {
                     return@runCatching
                 }
 
@@ -169,15 +168,6 @@ object HookIslandSpaceGateLyric : IslandRenderer {
 
             return result
         }
-    }
-
-    fun isPackageHookEnabled(packageName: String?): Boolean {
-        if (packageName.isNullOrEmpty()) return false
-        val prefs = (module as HookEntry).prefs
-        val addedList = prefs.getStringSet(RootConstants.KEY_HOOK_ADDED_LIST, null)
-        if (addedList.isNullOrEmpty()) return false
-        val whitelist = prefs.getStringSet(RootConstants.KEY_HOOK_WHITELIST, emptySet()) ?: emptySet()
-        return whitelist.contains(packageName)
     }
 
     private fun triggerSystemRelayout(islandView: ViewGroup) {
@@ -347,8 +337,6 @@ object HookIslandSpaceGateLyric : IslandRenderer {
         HookLogger.d("HookIslandSpaceGateLyric","HookIslandSpaceGate : 正在刷新超级岛")
         val iterator = activeIslandPkgNames.entries.iterator()
         val activePkg = LyriconDataBridge.activePackageName ?: return
-        
-        if (!isPackageHookEnabled(activePkg)) return
 
         while (iterator.hasNext()) {
             val entry = iterator.next()
@@ -383,8 +371,6 @@ object HookIslandSpaceGateLyric : IslandRenderer {
         HookLogger.d("HookIslandSpaceGateLyric","HookIslandSpaceGate : 正在更新歌词行")
         val iterator = activeIslandPkgNames.entries.iterator()
         val activePkg = LyriconDataBridge.activePackageName ?: return
-        
-        if (!isPackageHookEnabled(activePkg)) return
 
         while (iterator.hasNext()) {
             val entry = iterator.next()
@@ -447,8 +433,6 @@ object HookIslandSpaceGateLyric : IslandRenderer {
     override fun updatePosition(position: Long) {
         val iterator = activeIslandPkgNames.entries.iterator()
         val activePkg = LyriconDataBridge.activePackageName ?: return
-        
-        if (!isPackageHookEnabled(activePkg)) return
 
         while (iterator.hasNext()) {
             val entry = iterator.next()
