@@ -243,6 +243,7 @@
     <string name="title_ai_translation">OpenAI 翻译</string>
     <string name="title_ai_trans_basic">基础设置</string>
     <string name="title_ai_trans_auto_ignore_chinese">自动跳过中文歌词</string>
+    <string name="title_ai_trans_skip_existing">自动跳过已有翻译歌曲</string>
     <string name="label_ai_trans_api_key">API Key</string>
     <string name="label_ai_trans_model">模型名称</string>
     <string name="label_ai_trans_base_url">OpenAI API 地址</string>

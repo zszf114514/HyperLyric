@@ -44,6 +44,8 @@ fun LazyListScope.advancedSections(
     onAiTransEnabledChange: (Boolean) -> Unit,
     autoIgnoreChinese: Boolean,
     onAutoIgnoreChineseChange: (Boolean) -> Unit,
+    skipExistingTranslation: Boolean,
+    onSkipExistingTranslationChange: (Boolean) -> Unit,
     targetLang: String,
     onTargetLangClick: () -> Unit,
     apiKey: String,
@@ -165,6 +167,11 @@ fun LazyListScope.advancedSections(
                                 title = stringResource(id = R.string.title_ai_trans_auto_ignore_chinese),
                                 checked = autoIgnoreChinese,
                                 onCheckedChange = onAutoIgnoreChineseChange
+                            )
+                            SwitchPreference(
+                                title = stringResource(id = R.string.title_ai_trans_skip_existing),
+                                checked = skipExistingTranslation,
+                                onCheckedChange = onSkipExistingTranslationChange
                             )
                             Column {
                                 ArrowPreference(

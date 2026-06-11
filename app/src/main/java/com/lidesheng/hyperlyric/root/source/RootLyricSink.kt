@@ -101,6 +101,17 @@ class RootLyricSink(
                     HookLogger.d("RootLyricSink", "AITranslation : 歌曲 ${song.name}（中文占比 $percentage），已自动跳过AI翻译")
                     return@launch
                 }
+                val skipExisting = prefs.getBoolean(
+                    RootConstants.KEY_HOOK_AI_TRANS_SKIP_EXISTING_TRANSLATION,
+                    RootConstants.DEFAULT_HOOK_AI_TRANS_SKIP_EXISTING_TRANSLATION
+                )
+                if (skipExisting) {
+                    val hasTranslation = song.lyrics?.any { !it.translation.isNullOrBlank() } == true
+                    if (hasTranslation) {
+                        HookLogger.d("RootLyricSink", "AITranslation : 歌曲 ${song.name} 已有翻译，跳过AI翻译")
+                        return@launch
+                    }
+                }
                 val translatedSong = AITranslator.translateSongSync(song, configs)
 
                 if (version != LyriconDataBridge.versionCounter.get()) {

@@ -1,4 +1,4 @@
-﻿package com.lidesheng.hyperlyric.ui.page.hooksettings
+package com.lidesheng.hyperlyric.ui.page.hooksettings
 
 import android.content.Context
 import com.lidesheng.hyperlyric.root.bridge.LyriconBridge
@@ -87,6 +87,7 @@ fun LyricSettingsPage() {
 
     var aiTransEnabled by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_AI_TRANS_ENABLE, RootConstants.DEFAULT_HOOK_AI_TRANS_ENABLE)) }
     var autoIgnoreChinese by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_AI_TRANS_AUTO_IGNORE_CHINESE, RootConstants.DEFAULT_HOOK_AI_TRANS_AUTO_IGNORE_CHINESE)) }
+    var skipExistingTranslation by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_AI_TRANS_SKIP_EXISTING_TRANSLATION, RootConstants.DEFAULT_HOOK_AI_TRANS_SKIP_EXISTING_TRANSLATION)) }
     var apiKey by remember { mutableStateOf(prefs.getString(RootConstants.KEY_HOOK_AI_TRANS_API_KEY, "") ?: "") }
     var model by remember { mutableStateOf(prefs.getString(RootConstants.KEY_HOOK_AI_TRANS_MODEL, RootConstants.DEFAULT_HOOK_AI_TRANS_MODEL) ?: RootConstants.DEFAULT_HOOK_AI_TRANS_MODEL) }
     var baseUrl by remember { mutableStateOf(prefs.getString(RootConstants.KEY_HOOK_AI_TRANS_BASE_URL, RootConstants.DEFAULT_HOOK_AI_TRANS_BASE_URL) ?: RootConstants.DEFAULT_HOOK_AI_TRANS_BASE_URL) }
@@ -385,6 +386,8 @@ fun LyricSettingsPage() {
                             onAiTransEnabledChange = { aiTransEnabled = it; saveConfig(RootConstants.KEY_HOOK_AI_TRANS_ENABLE, it) },
                             autoIgnoreChinese = autoIgnoreChinese,
                             onAutoIgnoreChineseChange = { autoIgnoreChinese = it; saveConfig(RootConstants.KEY_HOOK_AI_TRANS_AUTO_IGNORE_CHINESE, it) },
+                            skipExistingTranslation = skipExistingTranslation,
+                            onSkipExistingTranslationChange = { skipExistingTranslation = it; saveConfig(RootConstants.KEY_HOOK_AI_TRANS_SKIP_EXISTING_TRANSLATION, it) },
                             targetLang = targetLang,
                             onTargetLangClick = { showTargetLangDialog = true },
                             apiKey = apiKey,

@@ -1,6 +1,7 @@
 package com.lidesheng.hyperlyric.ui.page
 
 import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -52,6 +53,10 @@ fun HookSettingsPage() {
     val blurActive = backdrop != null
     val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
     val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val prefs = remember { context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE) }
+    var lyricSource by remember {
+        mutableStateOf(prefs.getString(RootConstants.KEY_HOOK_LYRIC_SOURCE, RootConstants.DEFAULT_HOOK_LYRIC_SOURCE) ?: "lyricon")
+    }
     Scaffold(
         topBar = {
             BlurredBar(backdrop, blurActive) {
@@ -89,25 +94,24 @@ fun HookSettingsPage() {
                 ),
                 contentPadding = contentPadding,
             ) {
-                hookSettingsSections()
+                hookSettingsSections(lyricSource, onLyricSourceChange = { lyricSource = it })
             }
         }
     }
 }
 
-private fun LazyListScope.hookSettingsSections() {
+private fun LazyListScope.hookSettingsSections(
+    lyricSource: String,
+    onLyricSourceChange: (String) -> Unit
+) {
     item(key = "lyric_mode") {
         val context = LocalContext.current
-        val navigator = LocalNavigator.current
         val prefs = remember { context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE) }
         var lyricMode by remember { mutableIntStateOf(prefs.getInt(RootConstants.KEY_HOOK_LYRIC_MODE, RootConstants.DEFAULT_HOOK_LYRIC_MODE)) }
         val lyricModeOptions = listOf(
             stringResource(R.string.lyric_mode_verbatim),
             stringResource(R.string.lyric_mode_separated)
         )
-        var lyricSource by remember {
-            mutableStateOf(prefs.getString(RootConstants.KEY_HOOK_LYRIC_SOURCE, RootConstants.DEFAULT_HOOK_LYRIC_SOURCE) ?: "lyricon")
-        }
         val sourceOptions = listOf(
             stringResource(R.string.lyric_source_lyricon),
             stringResource(R.string.lyric_source_superlyric)
@@ -129,7 +133,7 @@ private fun LazyListScope.hookSettingsSections() {
                 selectedIndex = if (lyricSource == "superlyric") 1 else 0,
                 onSelectedIndexChange = { index ->
                     val newSource = if (index == 1) "superlyric" else "lyricon"
-                    lyricSource = newSource
+                    onLyricSourceChange(newSource)
                     prefs.edit { putString(RootConstants.KEY_HOOK_LYRIC_SOURCE, newSource) }
                     PrefsBridge.putString(RootConstants.KEY_HOOK_LYRIC_SOURCE, newSource)
                 }
@@ -146,7 +150,9 @@ private fun LazyListScope.hookSettingsSections() {
                 ArrowPreference(title = stringResource(R.string.title_super_island), onClick = { navigator.navigate(Route.SuperIslandSettings) })
                 ArrowPreference(title = stringResource(R.string.title_lyrics), onClick = { navigator.navigate(Route.LyricSettings) })
                 ArrowPreference(title = stringResource(R.string.title_lyric_anim), onClick = { navigator.navigate(Route.LyricAnimation) })
-                ArrowPreference(title = stringResource(R.string.title_lyric_provider), onClick = { navigator.navigate(Route.LyricProvider) })
+                AnimatedVisibility(visible = lyricSource == "lyricon") {
+                    ArrowPreference(title = stringResource(R.string.title_lyric_provider), onClick = { navigator.navigate(Route.LyricProvider) })
+                }
             }
         }
     }
