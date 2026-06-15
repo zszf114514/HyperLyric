@@ -3,6 +3,7 @@ package com.lidesheng.hyperlyric.ui.page
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -31,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,10 +40,12 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import com.lidesheng.hyperlyric.R
+import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.common.UIConstants
 import com.lidesheng.hyperlyric.lyric.ConfigRepository
-import com.lidesheng.hyperlyric.lyric.DynamicLyricData
 import com.lidesheng.hyperlyric.lyric.commonMusicApps
+import com.lidesheng.hyperlyric.root.RootApplication
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -58,6 +62,7 @@ import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Info
 import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
 import kotlin.time.Duration.Companion.milliseconds
@@ -68,12 +73,16 @@ fun SetupPage(onNavigateToMain: () -> Unit) {
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { 4 })
     val prefs = remember { context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE) }
-    
-    var workMode by remember { 
+
+    var workMode by remember {
         val initialMode = prefs.getInt(UIConstants.KEY_WORK_MODE, UIConstants.DEFAULT_WORK_MODE)
-        mutableIntStateOf(initialMode) 
+        mutableIntStateOf(initialMode)
     }
-    
+
+    var selectedSource by remember {
+        mutableStateOf(prefs.getString(RootConstants.KEY_HOOK_LYRIC_SOURCE, RootConstants.DEFAULT_HOOK_LYRIC_SOURCE) ?: "lyricon")
+    }
+
     val onFinish = {
         prefs.edit { putBoolean(UIConstants.KEY_SETUP_COMPLETED, true) }
         onNavigateToMain()
@@ -81,16 +90,7 @@ fun SetupPage(onNavigateToMain: () -> Unit) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = "引导页面",
-                actions = {
-                    Text(
-                        text = "${pagerState.currentPage + 1} / 4",
-                        color = MiuixTheme.colorScheme.onSurfaceSecondary,
-                        fontSize = 14.sp
-                    )
-                }
-            )
+            TopAppBar(title = stringResource(R.string.title_setup))
         },
         bottomBar = {
             Row(
@@ -102,7 +102,7 @@ fun SetupPage(onNavigateToMain: () -> Unit) {
             ) {
                 if (pagerState.currentPage > 0) {
                     TextButton(
-                        text = "上一步",
+                        text = stringResource(R.string.back),
                         onClick = {
                             scope.launch {
                                 pagerState.animateScrollToPage(pagerState.currentPage - 1)
@@ -112,11 +112,11 @@ fun SetupPage(onNavigateToMain: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                 }
-                
+
                 val isLastPage = pagerState.currentPage == 3
-                
+
                 TextButton(
-                    text = if (isLastPage) "完成" else "下一步",
+                    text = if (isLastPage) stringResource(R.string.confirm) else stringResource(R.string.next),
                     colors = ButtonDefaults.textButtonColorsPrimary(),
                     onClick = {
                         if (isLastPage) {
@@ -142,14 +142,20 @@ fun SetupPage(onNavigateToMain: () -> Unit) {
             when (page) {
                 0 -> ModeSelectionPage(
                     selectedMode = workMode,
-                    onModeSelected = { 
+                    onModeSelected = {
                         workMode = it
                         prefs.edit { putInt(UIConstants.KEY_WORK_MODE, it) }
                     }
                 )
                 1 -> if (workMode == 0) DisclaimerPage() else PermissionPage()
-                2 -> if (workMode == 0) DownloadProviderPage() else WhitelistPage()
-                3 -> CompletionPage(workMode = workMode)
+                2 -> if (workMode == 0) LyricSourceSelectionPage(
+                    selectedSource = selectedSource,
+                    onSourceSelected = { source ->
+                        selectedSource = source
+                        prefs.edit { putString(RootConstants.KEY_HOOK_LYRIC_SOURCE, source) }
+                    }
+                ) else WhitelistPage()
+                3 -> CompletionPage(workMode = workMode, selectedSource = selectedSource)
             }
         }
     }
@@ -157,6 +163,8 @@ fun SetupPage(onNavigateToMain: () -> Unit) {
 
 @Composable
 fun ModeSelectionPage(selectedMode: Int, onModeSelected: (Int) -> Unit) {
+    val isModuleActive = RootApplication.xposedService != null
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 20.dp),
@@ -165,7 +173,7 @@ fun ModeSelectionPage(selectedMode: Int, onModeSelected: (Int) -> Unit) {
     ) {
         item {
             Text(
-                text = "选择应用工作模式",
+                text = stringResource(R.string.title_select_work_mode),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(vertical = 20.dp)
@@ -174,27 +182,45 @@ fun ModeSelectionPage(selectedMode: Int, onModeSelected: (Int) -> Unit) {
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { onModeSelected(0) },
+                onClick = if (isModuleActive) ({ onModeSelected(0) }) else null,
                 pressFeedbackType = PressFeedbackType.Tilt,
                 colors = CardDefaults.defaultColors(
-                    color = if (selectedMode == 0) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.surfaceContainer
+                    color = when {
+                        selectedMode == 0 -> MiuixTheme.colorScheme.primary
+                        !isModuleActive -> MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.5f)
+                        else -> MiuixTheme.colorScheme.surfaceContainer
+                    }
                 )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "小米超级岛歌词（hook模式）",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (selectedMode == 0) Color.White else MiuixTheme.colorScheme.onSurface
-                        )
-                    }
                     Text(
-                        text = "仅支持LSPosed、HyperOS3设备",
+                        text = stringResource(R.string.title_super_island_lyrics),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = when {
+                            selectedMode == 0 -> Color.White
+                            !isModuleActive -> MiuixTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            else -> MiuixTheme.colorScheme.onSurface
+                        }
+                    )
+                    Text(
+                        text = stringResource(R.string.summary_super_island_lyrics),
                         fontSize = 14.sp,
-                        color = if (selectedMode == 0) Color.White.copy(alpha = 0.8f) else MiuixTheme.colorScheme.onSurfaceSecondary,
+                        color = when {
+                            selectedMode == 0 -> Color.White.copy(alpha = 0.8f)
+                            !isModuleActive -> MiuixTheme.colorScheme.onSurfaceSecondary.copy(alpha = 0.5f)
+                            else -> MiuixTheme.colorScheme.onSurfaceSecondary
+                        },
                         modifier = Modifier.padding(top = 4.dp)
                     )
+                    if (!isModuleActive) {
+                        Text(
+                            text = stringResource(R.string.toast_xposed_module_not_active),
+                            fontSize = 12.sp,
+                            color = Color(0xFFFF6B6B),
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
             }
         }
@@ -208,16 +234,14 @@ fun ModeSelectionPage(selectedMode: Int, onModeSelected: (Int) -> Unit) {
                 )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "通知型灵动岛歌词（无root模式）",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (selectedMode == 1) Color.White else MiuixTheme.colorScheme.onSurface
-                        )
-                    }
                     Text(
-                        text = "通过发送实时通知/焦点通知达到上岛效果",
+                        text = stringResource(R.string.title_dynamic_island_lyrics),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (selectedMode == 1) Color.White else MiuixTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.summary_dynamic_island_lyrics),
                         fontSize = 14.sp,
                         color = if (selectedMode == 1) Color.White.copy(alpha = 0.8f) else MiuixTheme.colorScheme.onSurfaceSecondary,
                         modifier = Modifier.padding(top = 4.dp)
@@ -231,7 +255,7 @@ fun ModeSelectionPage(selectedMode: Int, onModeSelected: (Int) -> Unit) {
 @Composable
 fun PermissionPage() {
     val context = LocalContext.current
-    
+
     val isNotificationGranted = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -240,7 +264,7 @@ fun PermissionPage() {
             delay(1000.milliseconds)
         }
     }
-    
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 20.dp),
@@ -249,26 +273,26 @@ fun PermissionPage() {
     ) {
         item {
             Text(
-                text = "授予必要权限",
+                text = stringResource(R.string.title_grant_permissions),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(vertical = 20.dp)
             )
         }
-        
+
         item {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column {
                     ArrowPreference(
-                        title = "通知监听权限",
-                        summary = if (isNotificationGranted.value) "权限已授予" else "读取播放状态和歌曲信息",
+                        title = stringResource(R.string.title_permission_listener),
+                        summary = if (isNotificationGranted.value) stringResource(R.string.toast_permission_granted) else stringResource(R.string.summary_permission_listener),
                         onClick = {
                             context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
                         }
                     )
                     ArrowPreference(
-                        title = "发送通知权限",
-                        summary = "允许app发送通知以显示歌词",
+                        title = stringResource(R.string.title_permission_post_notification),
+                        summary = stringResource(R.string.summary_permission_post_notification),
                         onClick = {
                             val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
                                 putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
@@ -286,7 +310,7 @@ fun PermissionPage() {
 fun WhitelistPage() {
     val context = LocalContext.current
     val whitelistSet by ConfigRepository.whitelistState.collectAsState()
-    
+
     LaunchedEffect(Unit) {
         ConfigRepository.initWhitelist(context)
     }
@@ -295,14 +319,14 @@ fun WhitelistPage() {
         topBar = {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "添加白名单应用",
+                    text = stringResource(R.string.title_add_whitelist),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 20.dp, bottom = 8.dp)
                 )
-                
+
                 Text(
-                    text = "勾选需要显示歌词的音乐App",
+                    text = stringResource(R.string.summary_add_whitelist),
                     color = MiuixTheme.colorScheme.onSurfaceSecondary,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -325,9 +349,9 @@ fun WhitelistPage() {
                             summary = pkg,
                             onClick = {
                                 if (isChecked) {
-                                            ConfigRepository.removePackageFromWhitelist(context, pkg)
+                                    ConfigRepository.removePackageFromWhitelist(context, pkg)
                                 } else {
-                                            ConfigRepository.addPackageToWhitelist(context, pkg)
+                                    ConfigRepository.addPackageToWhitelist(context, pkg)
                                 }
                             },
                             endActions = {
@@ -336,9 +360,9 @@ fun WhitelistPage() {
                                     onClick = {
                                         val checked = !isChecked
                                         if (checked) {
-                                    ConfigRepository.addPackageToWhitelist(context, pkg)
+                                            ConfigRepository.addPackageToWhitelist(context, pkg)
                                         } else {
-                                    ConfigRepository.removePackageFromWhitelist(context, pkg)
+                                            ConfigRepository.removePackageFromWhitelist(context, pkg)
                                         }
                                     }
                                 )
@@ -352,7 +376,102 @@ fun WhitelistPage() {
 }
 
 @Composable
-fun CompletionPage(workMode: Int) {
+fun LyricSourceSelectionPage(selectedSource: String, onSourceSelected: (String) -> Unit) {
+    val context = LocalContext.current
+    val sourceOptions = listOf(
+        stringResource(R.string.lyric_source_lyricon),
+        stringResource(R.string.lyric_source_superlyric),
+        stringResource(R.string.lyric_source_mediasession)
+    )
+    val sourceIds = listOf("lyricon", "superlyric", "mediasession")
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Text(
+                text = stringResource(R.string.setup_select_lyric_source),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(vertical = 20.dp)
+            )
+        }
+        item {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                OverlayDropdownPreference(
+                    title = stringResource(R.string.title_lyric_source),
+                    items = sourceOptions,
+                    selectedIndex = sourceIds.indexOf(selectedSource).coerceAtLeast(0),
+                    onSelectedIndexChange = { index ->
+                        onSourceSelected(sourceIds[index])
+                    }
+                )
+            }
+        }
+        item {
+            when (selectedSource) {
+                "lyricon" -> {
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        Column {
+                            ArrowPreference(
+                                title = stringResource(R.string.setup_download_lyric_core),
+                                summary = stringResource(R.string.setup_download_lyric_core_summary),
+                                onClick = {
+                                    context.startActivity(Intent(Intent.ACTION_VIEW,
+                                        "https://github.com/tomakino/lyricon/releases/tag/core".toUri()))
+                                }
+                            )
+                            ArrowPreference(
+                                title = stringResource(R.string.setup_download_provider),
+                                summary = stringResource(R.string.setup_download_provider_summary),
+                                onClick = {
+                                    context.startActivity(Intent(Intent.ACTION_VIEW,
+                                        "https://github.com/proify/LyricProvider/releases".toUri()))
+                                }
+                            )
+                        }
+                    }
+                }
+                "superlyric" -> {
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        ArrowPreference(
+                            title = stringResource(R.string.setup_download_superlyric),
+                            summary = stringResource(R.string.setup_download_superlyric_summary),
+                            onClick = {
+                                context.startActivity(Intent(Intent.ACTION_VIEW,
+                                    "https://github.com/HChenX/SuperLyric".toUri()))
+                            }
+                        )
+                    }
+                }
+                "mediasession" -> {
+                    Card(modifier = Modifier.fillMaxWidth()) {
+                        BasicComponent(
+                            title = stringResource(R.string.setup_no_dependency),
+                            summary = stringResource(R.string.setup_no_dependency_summary)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CompletionPage(workMode: Int, selectedSource: String = "lyricon") {
+    val completionText = if (workMode == 0) {
+        when (selectedSource) {
+            "superlyric" -> stringResource(R.string.setup_completion_superlyric)
+            "mediasession" -> stringResource(R.string.setup_completion_mediasession)
+            else -> stringResource(R.string.setup_completion_lyricon)
+        }
+    } else {
+        stringResource(R.string.setup_completion_dynamic_island)
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 20.dp),
@@ -369,20 +488,18 @@ fun CompletionPage(workMode: Int) {
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    text = "基础设置已完成",
+                    text = stringResource(R.string.title_setup_complete),
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold
                 )
-                if (workMode == 0) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "请前往lsposed启用HyperLyric和歌词提供器模块\n重启系统界面和音乐软件后即可使用",
-                        fontSize = 14.sp,
-                        color = MiuixTheme.colorScheme.onSurfaceSecondary,
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = completionText,
+                    fontSize = 14.sp,
+                    color = MiuixTheme.colorScheme.onSurfaceSecondary,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
             }
         }
     }
@@ -398,7 +515,7 @@ fun DisclaimerPage() {
     ) {
         item {
             Text(
-                text = "免责声明",
+                text = stringResource(R.string.title_disclaimer),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(vertical = 20.dp)
@@ -407,41 +524,8 @@ fun DisclaimerPage() {
         item {
             Card(modifier = Modifier.fillMaxWidth()) {
                 BasicComponent(
-                    title = "温馨提示",
-                    summary = "Hook模式依赖系统级注入框架运行。\n\n启用后将修改系统界面的核心布局参数，极端情况下可能引发未知异常。\n\n请您务必知晓：因使用本模块导致的任何数据遗失或系统故障后果自负，开发者不承担任何直接或间接责任。"
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun DownloadProviderPage() {
-    val context = LocalContext.current
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            Text(
-                text = "前置依赖",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 20.dp)
-            )
-        }
-        item {
-            Card(modifier = Modifier.fillMaxWidth()) {
-                ArrowPreference(
-                    title = "下载歌词提供器",
-                    summary = "本应用移植了lyricon词幕相关功能，请前往Github下载安装对应版本的LyricProvider",
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW,
-                            "https://github.com/proify/LyricProvider/releases".toUri())
-                        context.startActivity(intent)
-                    }
+                    title = stringResource(R.string.title_disclaimer_notice),
+                    summary = stringResource(R.string.summary_disclaimer)
                 )
             }
         }

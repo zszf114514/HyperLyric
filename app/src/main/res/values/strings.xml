@@ -370,4 +370,31 @@
     <string name="summary_bypass_focus_limit">实验性功能，谨慎启用</string>
     <string name="toast_shizuku_not_running">Shizuku 未运行</string>
     <string name="toast_shizuku_permission_required">请前往 Shizuku 授予权限</string>
+
+    <!-- ———————————————————————— SetupPage ———————————————————————— -->
+    <string name="title_setup">引导页面</string>
+    <string name="next">下一步</string>
+    <string name="title_select_work_mode">选择应用工作模式</string>
+    <string name="title_grant_permissions">授予必要权限</string>
+    <string name="summary_permission_listener">读取播放状态和歌曲信息</string>
+    <string name="summary_permission_post_notification">允许app发送通知以显示歌词</string>
+    <string name="summary_add_whitelist">勾选需要显示歌词的音乐App</string>
+    <string name="title_setup_complete">基础设置已完成</string>
+    <string name="title_disclaimer">免责声明</string>
+    <string name="title_disclaimer_notice">温馨提示</string>
+    <string name="summary_disclaimer">Hook模式依赖系统级注入框架运行。\n\n启用后将修改系统界面的核心布局参数，极端情况下可能引发未知异常。\n\n请您务必知晓：因使用本模块导致的任何数据遗失或系统故障后果自负，开发者不承担任何直接或间接责任。</string>
+    <string name="setup_completion_dynamic_island">请授予通知监听和发送通知权限后即可使用</string>
+
+    <string name="setup_select_lyric_source">选择歌词源</string>
+    <string name="setup_download_lyric_core">下载词幕服务</string>
+    <string name="setup_download_lyric_core_summary">LyricProvider 的前置依赖，此模块负责管理注册歌词提供者和订阅者，调度事件分发</string>
+    <string name="setup_download_provider">下载歌词提供器</string>
+    <string name="setup_download_provider_summary">本应用移植了词幕相关功能，请前往 Github 下载安装对应版本的 LyricProvider</string>
+    <string name="setup_download_superlyric">下载 SuperLyric</string>
+    <string name="setup_download_superlyric_summary">请前往 Github 下载安装并启用模块</string>
+    <string name="setup_no_dependency">无需额外依赖（实验性歌词源）</string>
+    <string name="setup_no_dependency_summary">无需下载额外组件，功能受限，不接受bug反馈</string>
+    <string name="setup_completion_lyricon">请前往 LSPosed 启用 HyperLyric 、词幕服务和歌词提供器模块，重启系统界面和音乐软件后即可使用</string>
+    <string name="setup_completion_superlyric">请前往 LSPosed 启用 SuperLyric 模块，重启手机后即可使用</string>
+    <string name="setup_completion_mediasession">重启系统界面后，打开音乐软件的车载蓝牙歌词功能即可使用</string>
 </resources>
