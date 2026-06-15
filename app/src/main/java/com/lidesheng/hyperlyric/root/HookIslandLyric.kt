@@ -214,7 +214,7 @@ object HookIslandLyric : IslandRenderer {
         val targetPkg = LyriconDataBridge.activePackageName ?: pkgName
         val mediaInfo = MediaMetadataHelper.getMediaInfo(rootView.context, targetPkg, HookLogger)
 
-        val songName = mediaInfo.title
+        val songName = LyriconDataBridge.currentSongName?.takeIf { it.isNotEmpty() } ?: mediaInfo.title
         val artistName = mediaInfo.artist
         val albumName = mediaInfo.album
         val albumBitmap = mediaInfo.albumArt
@@ -298,7 +298,7 @@ object HookIslandLyric : IslandRenderer {
             richView.visibility = View.VISIBLE
             wrapperView.visibility = View.VISIBLE
             
-            richView.line = when(mode) {
+            val newLine = when(mode) {
                 1, 2, 3, 4 -> RichLyricLine(text = singleModeText, words = emptyList())
                 5 -> RichLyricLine(text = songName, words = emptyList(), secondary = artistName, secondaryWords = emptyList())
                 6 -> {
@@ -315,6 +315,14 @@ object HookIslandLyric : IslandRenderer {
                     rawLine
                 }
                 else -> null
+            }
+
+            // 歌曲信息模式：内容未变化时跳过 line 赋值，避免跑马灯重置
+            val currentLine = richView.line
+            val contentChanged = mode !in 1..6 || newLine == null || currentLine == null ||
+                currentLine.text != newLine.text || currentLine.secondary != newLine.secondary
+            if (contentChanged) {
+                richView.line = newLine
             }
             HookLogger.d("HookIslandLyric","注入完成: mode=$mode, 标题=${singleModeText.take(20)}, 歌词=${(LyriconDataBridge.currentLyric ?: "").take(20)}")
 

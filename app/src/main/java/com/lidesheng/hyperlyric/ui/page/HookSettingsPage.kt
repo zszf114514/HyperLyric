@@ -114,25 +114,29 @@ private fun LazyListScope.hookSettingsSections(
         )
         val sourceOptions = listOf(
             stringResource(R.string.lyric_source_lyricon),
-            stringResource(R.string.lyric_source_superlyric)
+            stringResource(R.string.lyric_source_superlyric),
+            stringResource(R.string.lyric_source_mediasession)
         )
+        val sourceIds = listOf("lyricon", "superlyric", "mediasession")
         Card(modifier = Modifier.padding(horizontal = 12.dp).fillMaxWidth()) {
-            OverlayDropdownPreference(
-                title = stringResource(R.string.title_lyric_mode),
-                items = lyricModeOptions,
-                selectedIndex = lyricMode,
-                onSelectedIndexChange = { index ->
-                    lyricMode = index
-                    prefs.edit { putInt(RootConstants.KEY_HOOK_LYRIC_MODE, index) }
-                    PrefsBridge.putInt(RootConstants.KEY_HOOK_LYRIC_MODE, index)
-                }
-            )
+            AnimatedVisibility(visible = lyricSource == "lyricon") {
+                OverlayDropdownPreference(
+                    title = stringResource(R.string.title_lyric_mode),
+                    items = lyricModeOptions,
+                    selectedIndex = lyricMode,
+                    onSelectedIndexChange = { index ->
+                        lyricMode = index
+                        prefs.edit { putInt(RootConstants.KEY_HOOK_LYRIC_MODE, index) }
+                        PrefsBridge.putInt(RootConstants.KEY_HOOK_LYRIC_MODE, index)
+                    }
+                )
+            }
             OverlayDropdownPreference(
                 title = stringResource(R.string.title_lyric_source),
                 items = sourceOptions,
-                selectedIndex = if (lyricSource == "superlyric") 1 else 0,
+                selectedIndex = sourceIds.indexOf(lyricSource).coerceAtLeast(0),
                 onSelectedIndexChange = { index ->
-                    val newSource = if (index == 1) "superlyric" else "lyricon"
+                    val newSource = sourceIds[index]
                     onLyricSourceChange(newSource)
                     prefs.edit { putString(RootConstants.KEY_HOOK_LYRIC_SOURCE, newSource) }
                     PrefsBridge.putString(RootConstants.KEY_HOOK_LYRIC_SOURCE, newSource)

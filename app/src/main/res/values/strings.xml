@@ -91,8 +91,9 @@
     <string name="lyric_mode_separated">分离歌词</string>
     <string name="title_lyric_mode">歌词模式</string>
     <string name="title_lyric_source">歌词源</string>
-    <string name="lyric_source_lyricon">lyricon</string>
-    <string name="lyric_source_superlyric">superlyric</string>
+    <string name="lyric_source_lyricon">Lyricon</string>
+    <string name="lyric_source_superlyric">SuperLyric</string>
+    <string name="lyric_source_mediasession">MediaSession</string>
     <string name="title_custom_config">自定义配置</string>
     <string name="title_super_island">超级岛</string>
     <string name="subtitle_super_island">暂停或切换音乐后生效</string>
