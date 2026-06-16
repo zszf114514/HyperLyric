@@ -219,9 +219,7 @@ object HookIslandSpaceGateLyric : IslandRenderer {
         val container = IslandViewHelper.findViewByName(parent, "island_container_module_text") as? ViewGroup ?: parent
 
         var targetView = container.findViewWithTag<SpaceGateRichLyricLineView>(tag)
-        
-        val lyriconSongName = LyriconDataBridge.currentSongName
-        
+
         val isLeft = parentName.contains("1")
         val maxWidthDp = if (isLeft) prefs.getInt(RootConstants.KEY_HOOK_ISLAND_LEFT_CONTENT_MAX_WIDTH, RootConstants.DEFAULT_HOOK_ISLAND_LEFT_CONTENT_MAX_WIDTH)
                          else prefs.getInt(RootConstants.KEY_HOOK_ISLAND_RIGHT_CONTENT_MAX_WIDTH, RootConstants.DEFAULT_HOOK_ISLAND_RIGHT_CONTENT_MAX_WIDTH)
@@ -292,7 +290,8 @@ object HookIslandSpaceGateLyric : IslandRenderer {
         wrapperView.visibility = View.VISIBLE
         
         // 强制使用歌词穿梭内容（原本 mode 8 的逻辑）
-        var rawLine = LyriconDataBridge.currentLyricLine ?: RichLyricLine(text = lyriconSongName, words = emptyList())
+        val songName = LyriconDataBridge.currentSongName?.takeIf { it.isNotEmpty() } ?: ""
+        var rawLine = LyriconDataBridge.currentLyricLine ?: RichLyricLine(text = songName, words = emptyList())
         if (TranslationHelper.isTranslationOnly(prefs)) {
             rawLine = TranslationHelper.applyTranslationOnly(rawLine)
         } else if (TranslationHelper.isSwapTranslation(prefs)) {
@@ -345,7 +344,6 @@ object HookIslandSpaceGateLyric : IslandRenderer {
                 if (pkgName == activePkg) {
                     cv.post {
                         val prefs = (module as HookEntry).prefs
-                        IslandViewHelper.clearInjectedViews(cv)
                         CoverColorHelper.clearCache()
                         applySettings(cv)
                         

@@ -393,7 +393,6 @@ object HookIslandLyric : IslandRenderer {
                 if (pkgName == activePkg) {
                     cv.post {
                         val prefs = (module as HookEntry).prefs
-                        IslandViewHelper.clearInjectedViews(cv)
                         CoverColorHelper.clearCache()
                         applySettings(cv)
                         val leftMode = prefs.getInt(RootConstants.KEY_HOOK_ISLAND_CONTENT_LEFT, RootConstants.DEFAULT_HOOK_ISLAND_CONTENT_LEFT)
