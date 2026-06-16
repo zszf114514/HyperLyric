@@ -113,6 +113,10 @@ class RootLyricSink(
                         return@launch
                     }
                 }
+                if (song.lyrics.isNullOrEmpty()) {
+                    HookLogger.d("RootLyricSink", "歌曲 ${song.name} 无歌词，跳过AI翻译")
+                    return@launch
+                }
                 val translatedSong = AITranslator.translateSongSync(song, configs)
 
                 if (version != LyriconDataBridge.versionCounter.get()) {

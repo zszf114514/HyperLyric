@@ -183,7 +183,7 @@ object QrcParser {
 
                     val preWordText = lineContent.substring(currentPos, wordMatcher.start())
                     if (preWordText.isNotBlank()) {
-                        words.add(LyricsWord(lastWordEnd, wordStart, preWordText.trim()))
+                        words.add(LyricsWord(lastWordEnd, wordStart, preWordText.trimStart()))
                     }
 
                     words.add(LyricsWord(start = wordStart, end = wordEnd, text = wordText))
