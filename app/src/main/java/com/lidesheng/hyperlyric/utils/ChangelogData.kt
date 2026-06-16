@@ -13,7 +13,7 @@ object ChangelogData {
                 version = "6.0-1929",
                 title = "comming soon",
                 summary = "- 新增应用图标\n" +
-                        "- 新增 SuperLyric 和 MediaSession 歌词源\n" +
+                        "- 新增 SuperLyric 和 MediaSession 歌词源，支持实时切换\n" +
                         "- 新增“分离歌词”歌词模式，选择“分离歌词”后需要重启系统界面\n" +
                         "- 新增应用日志，优化、调整、新增更多日志内容和日志显示\n" +
                         "- 新增ai翻译“自动跳过已有翻译歌曲”\n" +
@@ -22,6 +22,7 @@ object ChangelogData {
                         "- 优化引导页面\n" +
                         "- 移除hook模式白名单绑定和判断，暂停注入控制移至主页“小米超级岛歌词”开关，优化使用体验\n" +
                         "- 修复AI翻译自动跳过中文歌曲不生效的错误\n" +
+                        "- 修复个别在线歌词会误删空格的错误\n" +
                         "- 更改在线歌词缓存至外部存储"
             ),
             ChangelogItem(

@@ -184,6 +184,16 @@ class HookEntry : XposedModule() {
                     )
                     sourceManager?.start()
 
+                    entry.prefs.registerOnSharedPreferenceChangeListener { _, key ->
+                        if (key == RootConstants.KEY_HOOK_LYRIC_SOURCE) {
+                            val newSourceId = entry.prefs.getString(key, RootConstants.DEFAULT_HOOK_LYRIC_SOURCE) ?: RootConstants.DEFAULT_HOOK_LYRIC_SOURCE
+                            HookLogger.i("HookEntry", "歌词源切换: $newSourceId")
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                sourceManager?.switchSource(newSourceId)
+                            }
+                        }
+                    }
+
                     HookLogger.i("HookEntry", "歌词源 = ${sourceManager?.getActiveSource()?.displayName}")
                     HookLogger.i("HookEntry", "系统环境初始化完成")
                 } catch (e: Exception) {
