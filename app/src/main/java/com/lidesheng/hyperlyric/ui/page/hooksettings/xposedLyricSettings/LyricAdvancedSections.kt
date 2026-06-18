@@ -59,7 +59,6 @@ fun LazyListScope.advancedSections(
     onPromptClick: () -> Unit
 ) {
     item {
-        AnimatedVisibility(visible = lyricSource == "lyricon") {
         Column {
             SmallTitle(text = stringResource(id = R.string.title_verbatim_lyric))
             Card(modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp).fillMaxWidth()) {
@@ -131,7 +130,6 @@ fun LazyListScope.advancedSections(
                 }
             }
         }
-        }
     }
 
     item {
@@ -156,7 +154,7 @@ fun LazyListScope.advancedSections(
                     )
                 }
 
-                AnimatedVisibility(visible = lyricSource == "lyricon") {
+                AnimatedVisibility(visible = lyricSource == "lyricon" || lyricSource == "lyricinfo") {
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )

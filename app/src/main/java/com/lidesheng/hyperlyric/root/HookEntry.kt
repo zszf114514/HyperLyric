@@ -7,6 +7,7 @@ import com.lidesheng.hyperlyric.root.source.LyriconSource
 import com.lidesheng.hyperlyric.root.source.LyricInfoSource
 import com.lidesheng.hyperlyric.root.source.RootLyricSink
 import com.lidesheng.hyperlyric.root.source.SuperLyricSource
+import com.lidesheng.hyperlyric.root.aitrans.AITranslator
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.common.UIConstants
@@ -169,6 +170,8 @@ class HookEntry : XposedModule() {
                     lyriconSource.initialize(app, entry.prefs, activeMode)
                     superLyricSource.initialize(app)
                     lyricInfoSource = LyricInfoSource(app)
+
+                    AITranslator.init(app)
 
                     sourceManager = SourceManager(
                         sources = listOf(lyriconSource, superLyricSource, lyricInfoSource!!),
