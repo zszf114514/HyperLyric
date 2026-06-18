@@ -146,22 +146,21 @@ object LogManager : HyperLogger {
     private suspend fun readXposedLogs(context: Context): List<LogEntry> = withContext(Dispatchers.IO) {
         val entries = mutableListOf<LogEntry>()
         try {
-            val findProcess = Runtime.getRuntime().exec(
-                arrayOf("su", "-c",
-                    "ls -d /data/adb/lspd/log /data/adb/lspd/log.old 2>/dev/null || echo '__NONE__'"
-                )
+            val logDir = "/data/adb/lspd/log"
+            val checkProcess = Runtime.getRuntime().exec(
+                arrayOf("su", "-c", "ls -d $logDir 2>/dev/null || echo '__NONE__'")
             )
-            val foundDirs = BufferedReader(InputStreamReader(findProcess.inputStream))
-                .readLines().filter { it.isNotBlank() && it != "__NONE__" }
-            findProcess.waitFor()
+            val foundDir = BufferedReader(InputStreamReader(checkProcess.inputStream))
+                .readLines().firstOrNull { it.isNotBlank() && it != "__NONE__" }
+            checkProcess.waitFor()
 
-            if (foundDirs.isEmpty()) {
+            if (foundDir == null) {
                 val msg = context.getString(R.string.lsposed_not_found)
                 entries.add(LogEntry("NOW", "W", context.getString(R.string.tag_logger), msg, rawLog = msg))
                 return@withContext entries
             }
 
-            val dirsArg = foundDirs.joinToString(" ")
+            val dirsArg = foundDir
             val listProcess = Runtime.getRuntime().exec(
                 arrayOf("su", "-c", "find $dirsArg -name '*.log' ! -name 'kmsg*' -type f 2>/dev/null")
             )

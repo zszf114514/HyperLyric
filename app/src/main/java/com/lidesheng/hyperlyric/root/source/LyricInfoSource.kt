@@ -138,14 +138,7 @@ class LyricInfoSource(private val context: Context) : LyricSource {
 
     private fun logDiagnosis(json: String) {
         val d = LyricInfoParser.diagnose(json) ?: return
-        HookLogger.d("LyricInfoSource", buildString {
-            append("  songName   : ${d.songName}\n")
-            append("  artist     : ${d.artist}\n")
-            append("  songId     : ${d.songId}\n")
-            append("  format     : ${d.format}\n")
-            append("  translation: ${d.translationFormat}\n")
-            append("  lyric      : ${d.lyricLength}chars | ${d.lyricPreview.joinToString(" | ")}")
-        })
+        HookLogger.d("LyricInfoSource", "songName=${d.songName} | artist=${d.artist} | songId=${d.songId} | format=${d.format} | translation=${d.translationFormat} | lyric=${d.lyricLength}chars | ${d.lyricPreview.joinToString(" | ")}")
     }
 
     private fun startPositionPolling(pkg: String) {
