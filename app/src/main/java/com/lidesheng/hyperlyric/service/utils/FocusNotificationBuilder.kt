@@ -1,4 +1,4 @@
-package com.lidesheng.hyperlyric.service
+package com.lidesheng.hyperlyric.service.utils
 
 import org.json.JSONObject
 

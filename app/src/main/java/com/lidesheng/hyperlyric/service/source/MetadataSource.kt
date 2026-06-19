@@ -197,6 +197,16 @@ class MetadataSource(
         val position = playbackState.position
         val isPlaying = playbackState.state == PlaybackState.STATE_PLAYING
 
+        val lyricInfoRaw = try {
+            metadata.description.extras?.getString("lyricInfo")
+                ?: metadata.description.extras?.getString("lyricinfo")
+                ?: metadata.getString("lyricInfo")
+                ?: metadata.getString("lyricinfo")
+        } catch (_: Exception) {
+            null
+        }
+        val lyricRaw = try { metadata.getString("android.media.metadata.LYRIC") } catch (_: Exception) { null }
+
         val newIdentifier = "$currentPackageName-$artist-$album-$duration"
         val isNewSong = (newIdentifier != currentSongIdentifier) || DynamicLyricData.currentState.albumBitmap == null
         LogManager.d(TAG, "同步元数据: pkg=$currentPackageName, 标题=$rawTitle, 艺术家=$artist, 专辑=$album, 时长=${duration}ms, 新歌=$isNewSong")
@@ -229,13 +239,8 @@ class MetadataSource(
             DynamicLyricData.currentState.notificationAlbumBitmapCircular
         }
 
-        val (identityTitle, identityArtist) = if (artist.contains(" - ")) {
-            val t = artist.substringAfterLast(" - ").trim()
-            val a = artist.substringBeforeLast(" - ").trim()
-            Pair(t, a)
-        } else {
-            Pair(rawTitle, artist)
-        }
+        val identityTitle = rawTitle
+        val identityArtist = artist
 
         if (isNewSong && albumBitmap == null) {
             LogManager.d(TAG, "封面为空，正在启动重试")
@@ -251,7 +256,8 @@ class MetadataSource(
                 identityTitle, identityArtist, album, rawTitle,
                 duration, position, isPlaying,
                 currentPackageName, isNewSong, albumBitmap, notificationAlbumBitmap,
-                notificationAlbumBitmapCircular, newIdentifier
+                notificationAlbumBitmapCircular, newIdentifier,
+                lyricInfoRaw, lyricRaw
             )
         )
     }

@@ -41,10 +41,8 @@ fun LyricNotificationConfigTab(
     onNormalNotificationTitleStyleChange: (Int) -> Unit,
     onAutostartClick: () -> Unit,
     onBatteryOptimizationClick: () -> Unit,
-    onlineLyricEnabled: Boolean,
-    onOnlineLyricToggle: (Boolean) -> Unit,
-    onlineLyricCacheLimit: Int,
-    onCacheLimitClick: () -> Unit,
+    lyricSource: Int,
+    onLyricSourceChange: (Int) -> Unit,
     bypassFocusLimitEnabled: Boolean,
     onBypassFocusLimitToggle: (Boolean) -> Unit
 ) {
@@ -86,10 +84,8 @@ fun LyricNotificationConfigTab(
             onNormalNotificationTitleStyleChange = onNormalNotificationTitleStyleChange,
             onAutostartClick = onAutostartClick,
             onBatteryOptimizationClick = onBatteryOptimizationClick,
-            onlineLyricEnabled = onlineLyricEnabled,
-            onOnlineLyricToggle = onOnlineLyricToggle,
-            onlineLyricCacheLimit = onlineLyricCacheLimit,
-            onCacheLimitClick = onCacheLimitClick,
+            lyricSource = lyricSource,
+            onLyricSourceChange = onLyricSourceChange,
             bypassFocusLimitEnabled = bypassFocusLimitEnabled,
             onBypassFocusLimitToggle = onBypassFocusLimitToggle
         )

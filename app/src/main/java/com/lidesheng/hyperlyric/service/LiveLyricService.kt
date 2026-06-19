@@ -1,4 +1,4 @@
-﻿package com.lidesheng.hyperlyric.service
+package com.lidesheng.hyperlyric.service
 
 import android.content.ComponentName
 import android.content.Context
@@ -29,17 +29,17 @@ class LiveLyricService : NotificationListenerService() {
     override fun onCreate() {
         super.onCreate()
 
-        notificationPresenter = NotificationPresenter(this, serviceScope)
-        notificationPresenter.register()
-
         val textPaint = createTextPaint()
         val lyricSplitter = LyricSplitter(textPaint, resources.displayMetrics)
+
+        notificationPresenter = NotificationPresenter(this, serviceScope, lyricSplitter)
+        notificationPresenter.register()
 
         ConfigRepository.initWhitelist(this)
 
         val componentName = ComponentName(this, LiveLyricService::class.java)
         metadataSource = MetadataSource(this, serviceScope, componentName)
-        appLyricSink = AppLyricSink(this, serviceScope, lyricSplitter, notificationPresenter)
+        appLyricSink = AppLyricSink(this, serviceScope, notificationPresenter)
 
         appLyricSink.startCollecting(metadataSource.lyricUpdateFlow, metadataSource.newSongFlow)
 

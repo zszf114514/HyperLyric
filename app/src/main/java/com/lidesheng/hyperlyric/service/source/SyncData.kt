@@ -15,5 +15,7 @@ data class SyncData(
     val albumBitmap: Bitmap?,
     val notificationAlbumBitmap: Bitmap?,
     val notificationAlbumBitmapCircular: Bitmap?,
-    val identifier: String
+    val identifier: String,
+    val lyricInfoRaw: String? = null,
+    val lyricRaw: String? = null
 )

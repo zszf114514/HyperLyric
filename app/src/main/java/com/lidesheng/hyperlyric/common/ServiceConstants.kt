@@ -20,9 +20,16 @@ object ServiceConstants {
     const val KEY_NOTIFICATION_ISLAND_MAX_WIDTH = "key_notification_island_max_width"
     const val KEY_NOTIFICATION_HIGHLIGHT_COLOR = "key_notification_island_highlight_color"
     const val KEY_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR = "key_notification_song_info_highlight_color"
-    const val KEY_ONLINE_LYRIC_CACHE_LIMIT = "key_online_lyric_cache_limit"
     const val KEY_ONLINE_LYRIC_ENABLED = "key_online_lyric_enabled"
     const val KEY_BYPASS_FOCUS_NOTIFICATION_LIMIT = "key_bypass_focus_notification_limit"
+    const val KEY_SERVICE_LYRIC_SOURCE = "key_service_lyric_source"
+
+    // ================= LYRIC SOURCE TYPES =================
+    const val LYRIC_SOURCE_AUTO = 0
+    const val LYRIC_SOURCE_ONLINE = 1
+    const val LYRIC_SOURCE_LYRIC_INFO = 2
+    const val LYRIC_SOURCE_LRC = 3
+    const val LYRIC_SOURCE_TITLE = 4
 
     // ================= DEFAULTS =================
     const val DEFAULT_NOTIFICATION_TYPE = 0
@@ -39,7 +46,7 @@ object ServiceConstants {
     const val DEFAULT_NOTIFICATION_ISLAND_MAX_WIDTH = 720
     const val DEFAULT_NOTIFICATION_HIGHLIGHT_COLOR = false
     const val DEFAULT_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR = false
-    const val DEFAULT_ONLINE_LYRIC_CACHE_LIMIT = 200
     const val DEFAULT_ONLINE_LYRIC_ENABLED = false
     const val DEFAULT_BYPASS_FOCUS_NOTIFICATION_LIMIT = false
+    const val DEFAULT_SERVICE_LYRIC_SOURCE = 0
 }

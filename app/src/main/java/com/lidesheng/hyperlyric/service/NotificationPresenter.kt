@@ -1,4 +1,4 @@
-﻿package com.lidesheng.hyperlyric.service
+package com.lidesheng.hyperlyric.service
 
 import android.app.Notification
 import android.app.NotificationManager
@@ -13,14 +13,17 @@ import android.view.KeyEvent
 import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.common.ServiceConstants
 import com.lidesheng.hyperlyric.common.UIConstants
+import com.lidesheng.hyperlyric.common.lyric.LyricSplitter
 import com.lidesheng.hyperlyric.lyric.ConfigRepository
 import com.lidesheng.hyperlyric.lyric.DynamicLyricData
+import com.lidesheng.hyperlyric.service.source.SyncData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import com.lidesheng.hyperlyric.service.utils.shizuku.ShizukuManager
+import com.lidesheng.hyperlyric.service.utils.NotificationBuilder
 
 /**
  * 通知展示调度中心。
@@ -31,7 +34,8 @@ import com.lidesheng.hyperlyric.service.utils.shizuku.ShizukuManager
  */
 class NotificationPresenter(
     private val context: Context,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val lyricSplitter: LyricSplitter
 ) {
     private val notificationManager by lazy { context.getSystemService(NotificationManager::class.java) }
     private var lastUiState: NotificationBuilder.UiState? = null
@@ -259,5 +263,67 @@ class NotificationPresenter(
                 ShizukuManager.setXmsfNetworkingEnabled(context, true)
             }
         }
+    }
+
+    private var lastDispatchedIslandLeft = ""
+    private var lastDispatchedIsPlaying = false
+    private var lastDispatchedShowAlbum = false
+
+    fun dispatchLyricContent(targetText: String, data: SyncData, hasScrollLyrics: Boolean) {
+        val songLyric = if (hasScrollLyrics) targetText else data.dynamicTitle
+        val pref = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
+
+        val islandLeftIconStyle = pref.getInt(ServiceConstants.KEY_ISLAND_LEFT_ICON, ServiceConstants.DEFAULT_ISLAND_LEFT_ICON)
+        val showIslandLeftAlbum = islandLeftIconStyle in 0..2
+        val showAlbumArt = pref.getBoolean(ServiceConstants.KEY_NOTIFICATION_ALBUM, ServiceConstants.DEFAULT_NOTIFICATION_ALBUM)
+        val disableLyricSplit = pref.getBoolean(ServiceConstants.KEY_NOTIFICATION_ISLAND_DISABLE_LYRIC_SPLIT, ServiceConstants.DEFAULT_NOTIFICATION_ISLAND_DISABLE_LYRIC_SPLIT) || notificationType == 0
+        val limitMaxWidth = pref.getBoolean(ServiceConstants.KEY_NOTIFICATION_ISLAND_LIMIT_WIDTH, ServiceConstants.DEFAULT_NOTIFICATION_ISLAND_LIMIT_WIDTH)
+        val maxWidth = pref.getInt(ServiceConstants.KEY_NOTIFICATION_ISLAND_MAX_WIDTH, ServiceConstants.DEFAULT_NOTIFICATION_ISLAND_MAX_WIDTH)
+
+        val splitResult = lyricSplitter.split(
+            songLyric,
+            LyricSplitter.Config(
+                showIslandLeftAlbum = showIslandLeftAlbum,
+                showAlbumArt = showAlbumArt,
+                disableLyricSplit = disableLyricSplit,
+                limitMaxWidth = limitMaxWidth,
+                maxWidth = maxWidth
+            )
+        )
+
+        val finalIslandLeft = splitResult.islandLeft
+        val finalIslandRight = splitResult.islandRight
+        val finalNotificationLeft = splitResult.notificationLeft
+        val finalNotificationRight = splitResult.notificationRight
+
+        val titleStyle = pref.getInt(ServiceConstants.KEY_NOTIFICATION_TITLE_STYLE, ServiceConstants.DEFAULT_NOTIFICATION_TITLE_STYLE)
+        val songInfo = when (titleStyle) {
+            0 -> ""
+            1 -> data.identityTitle
+            2 -> data.identityArtist
+            3 -> data.identityAlbum
+            4 -> "${data.identityTitle} - ${data.identityArtist}"
+            5 -> "${data.identityArtist} - ${data.identityTitle}"
+            6 -> "${data.identityArtist} - ${data.identityAlbum}"
+            else -> ""
+        }
+        LogManager.d("NotificationPresenter", "分发歌词: islandLeft=$finalIslandLeft, islandRight=$finalIslandRight, songInfo=$songInfo")
+
+        val shouldUpdateBitmap = data.isNewSong ||
+                                finalIslandLeft != lastDispatchedIslandLeft ||
+                                data.isPlaying != lastDispatchedIsPlaying ||
+                                showIslandLeftAlbum != lastDispatchedShowAlbum
+
+        if (shouldUpdateBitmap) {
+            lastDispatchedIslandLeft = finalIslandLeft
+            lastDispatchedIsPlaying = data.isPlaying
+            lastDispatchedShowAlbum = showIslandLeftAlbum
+        }
+
+        DynamicLyricData.updateBitmaps(data.albumBitmap, data.notificationAlbumBitmap, data.notificationAlbumBitmapCircular)
+        DynamicLyricData.updateIslandLeftIconStyle(islandLeftIconStyle)
+        DynamicLyricData.updateLeftTitles(finalIslandLeft, finalNotificationLeft)
+        DynamicLyricData.updateRightTitles(finalIslandRight,
+            finalNotificationRight, songLyric, songInfo, data.duration, data.isPlaying, data.currentPackageName, showIslandLeftAlbum)
     }
 }

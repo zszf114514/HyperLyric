@@ -80,11 +80,6 @@ object LrcCacheManager {
     }
 
     suspend fun saveLyricToCache(context: Context, title: String, artist: String, lrcContent: String) = withContext(Dispatchers.IO) {
-        val prefs = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
-        val limit = prefs.getInt(ServiceConstants.KEY_ONLINE_LYRIC_CACHE_LIMIT, ServiceConstants.DEFAULT_ONLINE_LYRIC_CACHE_LIMIT)
-
-        if (limit == 0) return@withContext
-
         val fileName = generateCacheFileName(context, title, artist)
         val file = File(getCacheDir(context), fileName)
         try {
@@ -92,23 +87,6 @@ object LrcCacheManager {
             LogManager.d("LrcCache", "正在保存缓存: $fileName, 大小=${lrcContent.toByteArray().size}B")
         } catch (e: Exception) {
             LogManager.w("LrcCache", "缓存保存失败: $fileName", e)
-        }
-
-        cleanupCacheIfNecessary(context, limit)
-    }
-
-    private fun cleanupCacheIfNecessary(context: Context, limit: Int) {
-        val dir = getCacheDir(context)
-        val files = dir.listFiles() ?: return
- 
-        if (limit < 0) return
-        
-        if (files.size > limit) {
-            val sortedFiles = files.sortedBy { it.lastModified() }
-            val numToDelete = files.size - limit
-            for (i in 0 until numToDelete) {
-                sortedFiles[i].delete()
-            }
         }
     }
 }

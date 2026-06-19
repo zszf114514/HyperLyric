@@ -103,8 +103,12 @@
     <string name="title_lyric_whitelist">Lyric Whitelist</string>
 
     <!-- ———————————————————————— DynamicIslandNotificationPage ———————————————————————— -->
-    <string name="dialog_cache_limit_title">Online Lyric Cache Limit</string>
-    <string name="label_cache_limit_range">0 – 10000</string>
+    <string name="title_service_lyric_source">Lyric Source</string>
+    <string name="option_service_lyric_source_auto">metadata (Auto)</string>
+    <string name="option_service_lyric_source_online">Online Lyric</string>
+    <string name="option_service_lyric_source_lyricinfo">metadata.lyricInfo</string>
+    <string name="option_service_lyric_source_lyric">metadata.LYRIC</string>
+    <string name="option_service_lyric_source_title">metadata.Title</string>
     <string name="dialog_add_whitelist_title">Enter Application Package Name</string>
     <string name="dialog_add_whitelist_hint">e.g. com.spotify.music</string>
     <string name="save">Save</string>
@@ -410,4 +414,5 @@
     <string name="setup_completion_lyricon">Please enable HyperLyric, Lyric Core Service and LyricProvider modules in LSPosed, then restart SystemUI and your music app</string>
     <string name="setup_completion_superlyric">Please enable the SuperLyric module in LSPosed, then restart your phone</string>
     <string name="setup_completion_lyricinfo">Install the LyricInfo module, enable it in LSPosed and select your music app, then restart SystemUI</string>
+    <string name="no_lyric_data">No lyric data</string>
 </resources>

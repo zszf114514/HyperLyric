@@ -1,6 +1,7 @@
 package com.lidesheng.hyperlyric.lyric
 
 import android.content.Context
+import com.lidesheng.hyperlyric.common.lyric.LrcParser
 import com.lidesheng.hyperlyric.online.LrcCacheManager
 import com.lidesheng.hyperlyric.online.OnlineLyricTargeter
 import com.lidesheng.hyperlyric.utils.LogManager
@@ -15,7 +16,7 @@ class LyricProviderImpl(private val context: Context) : ILyricProvider {
 
             // 1. 尝试从缓存获取
             var lines = LrcCacheManager.getLyricFromCache(context, params.title, params.artist)?.let {
-                parseLrc(it)
+                LrcParser.parse(it)
             }
 
             if (!lines.isNullOrEmpty()) {
@@ -44,25 +45,6 @@ class LyricProviderImpl(private val context: Context) : ILyricProvider {
             LogManager.d("LyricProvider", "歌词获取完成: 行数=${lines?.size ?: 0}")
             lines
         }
-    }
-
-    private fun parseLrc(lrcText: String): List<LrcLine> {
-        val lines = mutableListOf<LrcLine>()
-        val regex = Regex("\\[(\\d{2}):(\\d{2})\\.(\\d{2,3})](.*)")
-        lrcText.lines().forEach { line ->
-            val match = regex.find(line)
-            if (match != null) {
-                val min = match.groupValues[1].toLong()
-                val sec = match.groupValues[2].toLong()
-                val msRaw = match.groupValues[3]
-                val ms = if (msRaw.length == 2) msRaw.toLong() * 10 else msRaw.toLong()
-                val content = match.groupValues[4].trim()
-                if (content.isNotEmpty()) {
-                    lines.add(LrcLine(min * 60000 + sec * 1000 + ms, content))
-                }
-            }
-        }
-        return lines
     }
 
     private fun buildLrcString(lines: List<LrcLine>): String {

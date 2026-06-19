@@ -1,4 +1,4 @@
-package com.lidesheng.hyperlyric.service
+package com.lidesheng.hyperlyric.service.utils
 
 import com.lidesheng.hyperlyric.utils.LogManager
 import com.lidesheng.hyperlyric.common.ServiceConstants
@@ -163,9 +163,6 @@ object NotificationBuilder {
         }
 
         builder.setRequestPromotedOngoing(true)
-        val extras = Bundle()
-        extras.putBoolean("android.extra.requestPromotedOngoing", true)
-        builder.addExtras(extras)
 
         return builder.build()
     }
@@ -300,7 +297,8 @@ object NotificationBuilder {
     }
 
     private fun drawableToBitmap(context: Context, drawableResId: Int): Bitmap {
-        val drawable = ContextCompat.getDrawable(context, drawableResId)!!
+        val drawable = ContextCompat.getDrawable(context, drawableResId)
+            ?: return createBitmap(128, 128)
         val size = 128
         val bitmap = createBitmap(size, size)
         val canvas = Canvas(bitmap)

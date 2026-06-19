@@ -75,19 +75,14 @@ fun DynamicIslandNotificationPage() {
     val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val onlineLyricCacheLimit = prefs.getInt(
-        ServiceConstants.KEY_ONLINE_LYRIC_CACHE_LIMIT,
-        ServiceConstants.DEFAULT_ONLINE_LYRIC_CACHE_LIMIT
-    )
-    var onlineLyricEnabled by remember {
-        mutableStateOf(
-            prefs.getBoolean(
-                ServiceConstants.KEY_ONLINE_LYRIC_ENABLED,
-                ServiceConstants.DEFAULT_ONLINE_LYRIC_ENABLED
+    var lyricSource by remember {
+        mutableIntStateOf(
+            prefs.getInt(
+                ServiceConstants.KEY_SERVICE_LYRIC_SOURCE,
+                ServiceConstants.DEFAULT_SERVICE_LYRIC_SOURCE
             )
         )
     }
-    var onlineLyricCacheLimitState by remember { mutableIntStateOf(onlineLyricCacheLimit) }
     var limitWidthEnabled by remember {
         mutableStateOf(
             prefs.getBoolean(
@@ -104,7 +99,7 @@ fun DynamicIslandNotificationPage() {
             )
         )
     }
-    var showCacheLimitDialog by remember { mutableStateOf(false) }
+
 
     var notificationType by remember {
         mutableIntStateOf(
@@ -304,20 +299,7 @@ fun DynamicIslandNotificationPage() {
             )
         }
 
-        NumberInputDialog(
-            show = showCacheLimitDialog,
-            title = stringResource(R.string.dialog_cache_limit_title),
-            label = stringResource(R.string.label_cache_limit_range),
-            initialValue = onlineLyricCacheLimitState,
-            min = 0,
-            max = 10000,
-            onDismiss = { showCacheLimitDialog = false },
-            onConfirm = {
-                onlineLyricCacheLimitState = it
-                prefs.edit { putInt(ServiceConstants.KEY_ONLINE_LYRIC_CACHE_LIMIT, it) }
-                showCacheLimitDialog = false
-            }
-        )
+
 
         TextInputDialog(
             show = showAddWhitelistDialog,
@@ -483,13 +465,11 @@ fun DynamicIslandNotificationPage() {
                                     }
                                 }
                             },
-                            onlineLyricEnabled = onlineLyricEnabled,
-                            onOnlineLyricToggle = { checked ->
-                                onlineLyricEnabled = checked
-                                prefs.edit { putBoolean(ServiceConstants.KEY_ONLINE_LYRIC_ENABLED, checked) }
+                            lyricSource = lyricSource,
+                            onLyricSourceChange = { value ->
+                                lyricSource = value
+                                prefs.edit { putInt(ServiceConstants.KEY_SERVICE_LYRIC_SOURCE, value) }
                             },
-                            onlineLyricCacheLimit = onlineLyricCacheLimitState,
-                            onCacheLimitClick = { showCacheLimitDialog = true },
                             highlightColorEnabled = highlightColorEnabled,
                             onHighlightColorToggle = { checked ->
                                 highlightColorEnabled = checked

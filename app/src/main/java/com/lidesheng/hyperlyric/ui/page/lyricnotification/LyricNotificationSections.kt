@@ -16,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.lidesheng.hyperlyric.BuildConfig
 import com.lidesheng.hyperlyric.R
+import com.lidesheng.hyperlyric.common.ServiceConstants
 import com.lidesheng.hyperlyric.lyric.commonMusicApps
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
@@ -61,28 +62,85 @@ fun LazyListScope.configSections(
     onNormalNotificationTitleStyleChange: (Int) -> Unit,
     onAutostartClick: () -> Unit,
     onBatteryOptimizationClick: () -> Unit,
-    onlineLyricEnabled: Boolean,
-    onOnlineLyricToggle: (Boolean) -> Unit,
-    onlineLyricCacheLimit: Int,
-    onCacheLimitClick: () -> Unit,
+    lyricSource: Int,
+    onLyricSourceChange: (Int) -> Unit,
     bypassFocusLimitEnabled: Boolean,
     onBypassFocusLimitToggle: (Boolean) -> Unit
 ) {
     // Notification Type
-    item(key = "notification_type") {
-        val notificationTypeOptions = remember {
-            listOf(R.string.option_notification_live, R.string.option_notification_focus)
-        }.map { stringResource(id = it) }
+    item(key = "service_lyric_source_and_notification_type") {
         Card(
             modifier = Modifier.padding(horizontal = 12.dp)
                 .padding(bottom = 12.dp).fillMaxWidth()
         ) {
-            OverlayDropdownPreference(
-                title = stringResource(R.string.title_notification_type),
-                items = notificationTypeOptions,
-                selectedIndex = notificationType,
-                onSelectedIndexChange = onNotificationTypeChange
-            )
+            Column {
+                val lyricSourceOptions = remember {
+                    if (BuildConfig.ONLINE_FEATURES_ENABLED) {
+                        listOf(
+                            R.string.option_service_lyric_source_auto,
+                            R.string.option_service_lyric_source_online,
+                            R.string.option_service_lyric_source_lyricinfo,
+                            R.string.option_service_lyric_source_lyric,
+                            R.string.option_service_lyric_source_title
+                        )
+                    } else {
+                        listOf(
+                            R.string.option_service_lyric_source_auto,
+                            R.string.option_service_lyric_source_lyricinfo,
+                            R.string.option_service_lyric_source_lyric,
+                            R.string.option_service_lyric_source_title
+                        )
+                    }
+                }.map { stringResource(id = it) }
+
+                val dropdownToValue: (Int) -> Int = { index ->
+                    if (BuildConfig.ONLINE_FEATURES_ENABLED) {
+                        index
+                    } else {
+                        when (index) {
+                            0 -> ServiceConstants.LYRIC_SOURCE_AUTO
+                            1 -> ServiceConstants.LYRIC_SOURCE_LYRIC_INFO
+                            2 -> ServiceConstants.LYRIC_SOURCE_LRC
+                            3 -> ServiceConstants.LYRIC_SOURCE_TITLE
+                            else -> ServiceConstants.LYRIC_SOURCE_AUTO
+                        }
+                    }
+                }
+
+                val valueToDropdown: (Int) -> Int = { value ->
+                    if (BuildConfig.ONLINE_FEATURES_ENABLED) {
+                        value
+                    } else {
+                        when (value) {
+                            ServiceConstants.LYRIC_SOURCE_AUTO -> 0
+                            ServiceConstants.LYRIC_SOURCE_LYRIC_INFO -> 1
+                            ServiceConstants.LYRIC_SOURCE_LRC -> 2
+                            ServiceConstants.LYRIC_SOURCE_TITLE -> 3
+                            else -> 0
+                        }
+                    }
+                }
+
+                WindowDropdownPreference(
+                    title = stringResource(R.string.title_service_lyric_source),
+                    items = lyricSourceOptions,
+                    selectedIndex = valueToDropdown(lyricSource),
+                    onSelectedIndexChange = { index ->
+                        onLyricSourceChange(dropdownToValue(index))
+                    }
+                )
+
+                val notificationTypeOptions = remember {
+                    listOf(R.string.option_notification_live, R.string.option_notification_focus)
+                }.map { stringResource(id = it) }
+
+                OverlayDropdownPreference(
+                    title = stringResource(R.string.title_notification_type),
+                    items = notificationTypeOptions,
+                    selectedIndex = notificationType,
+                    onSelectedIndexChange = onNotificationTypeChange
+                )
+            }
         }
     }
 
@@ -266,21 +324,7 @@ fun LazyListScope.configSections(
                         onCheckedChange = onBypassFocusLimitToggle
                     )
                 }
-                if (BuildConfig.ONLINE_FEATURES_ENABLED) {
-                    SwitchPreference(
-                        title = stringResource(R.string.title_online_lyric),
-                        summary = stringResource(R.string.summary_online_lyric),
-                        checked = onlineLyricEnabled,
-                        onCheckedChange = onOnlineLyricToggle
-                    )
-                    if (onlineLyricEnabled) {
-                        ArrowPreference(
-                            title = stringResource(R.string.dialog_cache_limit_title),
-                            summary = stringResource(R.string.format_songs_count).format(onlineLyricCacheLimit),
-                            onClick = onCacheLimitClick
-                        )
-                    }
-                }
+
             }
         }
     }
