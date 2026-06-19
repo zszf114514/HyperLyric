@@ -14,6 +14,15 @@ data class MigrationNote(
 object MigrationData {
     val notes = listOf(
         MigrationNote(
+            versionCode = 1932,
+            items = listOf(
+                MigrationItem(
+                    text = "本次更新和xposed模块功能无关，但是使用无 root 模式的请注意",
+                    summary = "新版本大幅更改了“通知型灵动岛歌词”的歌词数据来源，默认选择 metadata（自动）即可。当然，你也可以选择指定的歌词源"
+                )
+            )
+        ),
+        MigrationNote(
             versionCode = 1931,
             items = listOf(
                 MigrationItem(
