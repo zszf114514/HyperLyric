@@ -13,9 +13,8 @@ import com.lidesheng.hyperlyric.lyric.view.SpaceGateRichLyricLineView
 import com.lidesheng.hyperlyric.lyric.view.yoyo.YoYoPresets
 import com.lidesheng.hyperlyric.lyric.view.yoyo.animateUpdate
 import com.lidesheng.hyperlyric.root.HookEntry
-import com.lidesheng.hyperlyric.root.HookIslandGlow
 import com.lidesheng.hyperlyric.root.LyriconDataBridge
-import com.lidesheng.hyperlyric.root.island.IslandViewHelper
+import com.lidesheng.hyperlyric.root.island.IslandHostFacade
 import com.lidesheng.hyperlyric.root.utils.CoverColorHelper
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import com.lidesheng.hyperlyric.root.utils.LyricStyleHelper
@@ -23,11 +22,9 @@ import com.lidesheng.hyperlyric.root.utils.TranslationHelper
 import io.github.libxposed.api.XposedInterface.Chain
 
 /**
- * 左右分离歌词模式灵动岛渲染器。
+ * 左右分离歌词模式超级岛渲染器。
  */
 object SplitIslandRenderer : BaseIslandRenderer("SplitIslandRenderer") {
-
-    private var loggedCutoutInfo = false
 
     override fun onPreInject(chain: Chain): Any? {
         runCatching {
@@ -43,7 +40,7 @@ object SplitIslandRenderer : BaseIslandRenderer("SplitIslandRenderer") {
             }
 
             if (pkgName != null && pkgName == activePkg) {
-                applySettings(islandView)
+                IslandHostFacade.applyHostSettings(islandView, prefs)
                 injectToSlot(islandView, "island_container_module_image_text_1", "HYPERLYRIC_LEFT_VIEW", prefs, pkgName)
                 injectToSlot(islandView, "island_container_module_image_text_2", "HYPERLYRIC_RIGHT_VIEW", prefs, pkgName)
                 linkViews(islandView)
@@ -62,13 +59,7 @@ object SplitIslandRenderer : BaseIslandRenderer("SplitIslandRenderer") {
             if (!prefs.getBoolean(RootConstants.KEY_HOOK_ENABLE_SUPER_ISLAND, RootConstants.DEFAULT_HOOK_ENABLE_SUPER_ISLAND)) return result
 
             val islandData = chain.args.getOrNull(0)
-            var pkgName = runCatching {
-                val getExtrasMethod = islandData?.javaClass?.methods?.find {
-                    it.name == "getExtras" && it.parameterTypes.isEmpty() && it.returnType.name.contains("Bundle")
-                }
-                val extras = getExtrasMethod?.invoke(islandData) as? android.os.Bundle
-                extras?.getString("miui.pkg.name")
-            }.getOrNull() ?: ""
+            var pkgName = IslandHostFacade.extractPackageName(islandData)
 
             if (pkgName.isNotEmpty()) {
                 activeIslandPkgNames[viewGroup] = pkgName
@@ -80,7 +71,7 @@ object SplitIslandRenderer : BaseIslandRenderer("SplitIslandRenderer") {
             val behavior = prefs.getInt(RootConstants.KEY_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE, RootConstants.DEFAULT_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE)
 
             if (activePkg.isNullOrEmpty() || (!MediaMetadataHelper.isPackagePlaying(viewGroup.context, activePkg) && behavior == 0)) {
-                IslandViewHelper.clearInjectedViews(viewGroup)
+                IslandHostFacade.clearInjectedViews(viewGroup)
                 return@runCatching
             }
 
@@ -90,7 +81,7 @@ object SplitIslandRenderer : BaseIslandRenderer("SplitIslandRenderer") {
 
             activeContentView = java.lang.ref.WeakReference(viewGroup)
 
-            applySettings(viewGroup)
+            IslandHostFacade.applyHostSettings(viewGroup, prefs)
 
             // 分割歌词为左右两部分
             val songName = LyriconDataBridge.currentSongName?.takeIf { it.isNotEmpty() } ?: ""
@@ -125,7 +116,7 @@ object SplitIslandRenderer : BaseIslandRenderer("SplitIslandRenderer") {
             injectToSlot(viewGroup, "island_container_module_image_text_2", "HYPERLYRIC_RIGHT_VIEW", prefs, pkgName, splitResult?.right)
             linkViews(viewGroup)
 
-            HookIslandGlow.injectAndTriggerGlow(viewGroup, islandData, prefs)
+            IslandHostFacade.injectHostGlow(viewGroup, islandData, prefs)
         }.onFailure { e ->
             HookLogger.e("SplitIslandRenderer", "更新超级岛视图失败", e)
         }
@@ -142,25 +133,17 @@ object SplitIslandRenderer : BaseIslandRenderer("SplitIslandRenderer") {
         rightView?.main?.spaceGateEnabled = false
         rightView?.secondary?.spaceGateEnabled = false
 
-        if (!loggedCutoutInfo && leftView != null && rightView != null) {
-            val cutoutView = IslandViewHelper.findViewByName(rootView, "area_cutout")
-            if (cutoutView != null) {
-                val cutoutLoc = IntArray(2)
-                cutoutView.getLocationOnScreen(cutoutLoc)
-                HookLogger.d("SplitIslandRenderer","成功定位摄像头容器(area_cutout), 宽度 = ${cutoutView.width}px, 绝对X = ${cutoutLoc[0]}")
-            } else {
-                HookLogger.d("SplitIslandRenderer","未找到系统 area_cutout 容器，将使用几何居中fallback。")
-            }
-            loggedCutoutInfo = true
+        if (leftView != null && rightView != null) {
+            IslandHostFacade.logCameraCutoutInfo(rootView)
         }
     }
 
     @SuppressLint("DiscouragedApi")
     private fun injectToSlot(rootView: ViewGroup, parentName: String, tag: String, prefs: SharedPreferences, pkgName: String, lineOverride: IRichLyricLine? = null) {
         val res = rootView.resources
-        val config = readSlotConfig(prefs, parentName)
+        val config = IslandHostFacade.readSlotConfig(prefs, parentName)
 
-        val pair = ensureSlotWrapper(rootView, parentName, tag, config) { context ->
+        val pair = IslandHostFacade.ensureSlotWrapper(rootView, parentName, tag, config) { context ->
             SpaceGateRichLyricLineView(context)
         } ?: return
 
@@ -181,8 +164,8 @@ object SplitIslandRenderer : BaseIslandRenderer("SplitIslandRenderer") {
         }
         targetView.line = rawLine
 
-        hideNativeChildren(rootView, parentName, wrapperView)
-        forceImmediateLayout(rootView, parentName, wrapperView, config.maxWidthDp)
+        IslandHostFacade.hideNativeChildren(rootView, parentName, wrapperView)
+        IslandHostFacade.forceImmediateLayout(rootView, parentName, wrapperView, config.maxWidthDp)
 
         targetView.post {
             if (prefs.getBoolean(RootConstants.KEY_HOOK_MARQUEE_MODE, RootConstants.DEFAULT_HOOK_MARQUEE_MODE)) {
@@ -217,16 +200,16 @@ object SplitIslandRenderer : BaseIslandRenderer("SplitIslandRenderer") {
                     cv.post {
                         val prefs = (module as HookEntry).prefs
                         CoverColorHelper.clearCache()
-                        applySettings(cv)
+                        IslandHostFacade.applyHostSettings(cv, prefs)
                         
                         injectToSlot(cv, "island_container_module_image_text_1", "HYPERLYRIC_LEFT_VIEW", prefs, pkgName)
                         injectToSlot(cv, "island_container_module_image_text_2", "HYPERLYRIC_RIGHT_VIEW", prefs, pkgName)
                         linkViews(cv)
                         
                         val mediaInfo = MediaMetadataHelper.getMediaInfo(cv.context, pkgName, HookLogger)
-                        HookIslandGlow.updateMusicGlow(mediaInfo.albumArt, prefs)
+                        IslandHostFacade.updateHostGlow(mediaInfo.albumArt, prefs)
 
-                        IslandViewHelper.triggerSystemRelayout(cv)
+                        IslandHostFacade.triggerSystemRelayout(cv)
                     }
                 }
             } else {

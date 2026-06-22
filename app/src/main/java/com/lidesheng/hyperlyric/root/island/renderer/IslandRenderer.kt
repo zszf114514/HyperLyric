@@ -3,7 +3,7 @@ package com.lidesheng.hyperlyric.root.island.renderer
 import io.github.libxposed.api.XposedInterface.Chain
 
 /**
- * 灵动岛渲染器接口，规范了宿主事件回调与渲染更新契约。
+ * 超级岛渲染器接口，规范了宿主事件回调与渲染更新契约。
  */
 interface IslandRenderer {
     fun refreshActiveIsland()

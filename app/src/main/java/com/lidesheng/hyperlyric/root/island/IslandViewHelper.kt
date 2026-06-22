@@ -6,15 +6,15 @@ import android.view.ViewGroup
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 
 /**
- * MIUI 灵动岛视图管理助手
- * 负责处理灵动岛内部组件的查找、显隐切换及布局刷新
+ * 小米超级岛视图管理
+ * 负责处理超级岛内部组件的查找、显隐切换及布局刷新
  */
 object IslandViewHelper {
 
     private val SYSTEMUI_PKG_NAMES = arrayOf("miui.systemui.plugin", "com.android.systemui")
 
     /**
-     * 切换灵动岛内部容器（如图标、文本容器）的可见性
+     * 切换超级岛内部容器（如图标、文本容器）的可见性
      */
     @SuppressLint("DiscouragedApi")
     fun toggleContainer(root: ViewGroup, parentName: String, containerName: String, show: Boolean) {
@@ -36,7 +36,7 @@ object IslandViewHelper {
     }
 
     /**
-     * 清除灵动岛文本容器的边距
+     * 清除超级岛文本容器的边距
      */
     @SuppressLint("DiscouragedApi")
     fun clearTextContainerMargin(root: ViewGroup, parentName: String, clearStart: Boolean, clearEnd: Boolean) {
@@ -109,7 +109,7 @@ object IslandViewHelper {
     }
 
     /**
-     * 触发灵动岛系统的布局刷新
+     * 触发超级岛系统的布局刷新
      */
     fun triggerSystemRelayout(islandView: ViewGroup) {
         HookLogger.d("IslandViewHelper","正在触发布局刷新")

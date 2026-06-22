@@ -9,7 +9,7 @@ import com.lidesheng.hyperlyric.lyric.view.RichLyricLineView
 import com.lidesheng.hyperlyric.lyric.view.yoyo.YoYoPresets
 import com.lidesheng.hyperlyric.lyric.view.yoyo.animateUpdate
 import com.lidesheng.hyperlyric.root.LyriconDataBridge
-import com.lidesheng.hyperlyric.root.island.renderer.BaseIslandRenderer
+import com.lidesheng.hyperlyric.root.island.IslandHostFacade
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import com.lidesheng.hyperlyric.root.utils.LyricStyleHelper
 import com.lidesheng.hyperlyric.root.utils.TranslationHelper
@@ -20,7 +20,6 @@ import com.lidesheng.hyperlyric.root.utils.TranslationHelper
 object LiveLyricSlotProvider : IslandSlotContentProvider {
     
     override fun inject(
-        renderer: BaseIslandRenderer,
         rootView: ViewGroup,
         parentName: String,
         tag: String,
@@ -29,10 +28,10 @@ object LiveLyricSlotProvider : IslandSlotContentProvider {
         mode: Int
     ) {
         val res = rootView.resources
-        val config = renderer.readSlotConfig(prefs, parentName)
+        val config = IslandHostFacade.readSlotConfig(prefs, parentName)
         
         // 确保 MaxWidthFrameLayout 容器 and RichLyricLineView 被正确挂载
-        val pair = renderer.ensureSlotWrapper(rootView, parentName, tag, config) { context ->
+        val pair = IslandHostFacade.ensureSlotWrapper(rootView, parentName, tag, config) { context ->
             RichLyricLineView(context)
         } ?: return
 
@@ -55,8 +54,8 @@ object LiveLyricSlotProvider : IslandSlotContentProvider {
         targetView.line = rawLine
         HookLogger.d("LiveLyricSlotProvider","实时歌词注入完成: 歌词=${(LyriconDataBridge.currentLyric ?: "").take(20)}")
 
-        renderer.hideNativeChildren(rootView, parentName, wrapperView)
-        renderer.forceImmediateLayout(rootView, parentName, wrapperView, config.maxWidthDp)
+        IslandHostFacade.hideNativeChildren(rootView, parentName, wrapperView)
+        IslandHostFacade.forceImmediateLayout(rootView, parentName, wrapperView, config.maxWidthDp)
 
         targetView.post {
             if (prefs.getBoolean(RootConstants.KEY_HOOK_MARQUEE_MODE, RootConstants.DEFAULT_HOOK_MARQUEE_MODE)) {

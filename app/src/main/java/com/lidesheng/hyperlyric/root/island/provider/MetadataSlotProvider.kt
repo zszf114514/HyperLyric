@@ -7,7 +7,7 @@ import com.lidesheng.hyperlyric.common.media.MediaMetadataHelper
 import com.lidesheng.hyperlyric.lyric.model.RichLyricLine
 import com.lidesheng.hyperlyric.lyric.view.RichLyricLineView
 import com.lidesheng.hyperlyric.root.LyriconDataBridge
-import com.lidesheng.hyperlyric.root.island.renderer.BaseIslandRenderer
+import com.lidesheng.hyperlyric.root.island.IslandHostFacade
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import com.lidesheng.hyperlyric.root.utils.LyricStyleHelper
 import com.lidesheng.hyperlyric.root.utils.TranslationHelper
@@ -18,7 +18,6 @@ import com.lidesheng.hyperlyric.root.utils.TranslationHelper
 object MetadataSlotProvider : IslandSlotContentProvider {
     
     override fun inject(
-        renderer: BaseIslandRenderer,
         rootView: ViewGroup,
         parentName: String,
         tag: String,
@@ -27,9 +26,9 @@ object MetadataSlotProvider : IslandSlotContentProvider {
         mode: Int
     ) {
         val res = rootView.resources
-        val config = renderer.readSlotConfig(prefs, parentName)
+        val config = IslandHostFacade.readSlotConfig(prefs, parentName)
 
-        val pair = renderer.ensureSlotWrapper(rootView, parentName, tag, config) { context ->
+        val pair = IslandHostFacade.ensureSlotWrapper(rootView, parentName, tag, config) { context ->
             RichLyricLineView(context)
         } ?: return
 
@@ -94,8 +93,8 @@ object MetadataSlotProvider : IslandSlotContentProvider {
             targetView.secondary.setPeerLineWidth(targetView.main.lineWidth)
         }
 
-        renderer.hideNativeChildren(rootView, parentName, wrapperView)
-        renderer.forceImmediateLayout(rootView, parentName, wrapperView, config.maxWidthDp)
+        IslandHostFacade.hideNativeChildren(rootView, parentName, wrapperView)
+        IslandHostFacade.forceImmediateLayout(rootView, parentName, wrapperView, config.maxWidthDp)
 
         targetView.post {
             if (prefs.getBoolean(RootConstants.KEY_HOOK_MARQUEE_METADATA_MODE, RootConstants.DEFAULT_HOOK_MARQUEE_METADATA_MODE)) {

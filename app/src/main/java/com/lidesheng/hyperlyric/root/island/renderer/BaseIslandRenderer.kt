@@ -1,22 +1,17 @@
 package com.lidesheng.hyperlyric.root.island.renderer
 
-import android.content.Context
-import android.content.SharedPreferences
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.root.HookEntry
 import com.lidesheng.hyperlyric.root.LyriconDataBridge
-import com.lidesheng.hyperlyric.root.island.IslandViewHelper
-import com.lidesheng.hyperlyric.root.island.view.MaxWidthFrameLayout
+import com.lidesheng.hyperlyric.root.island.IslandHostFacade
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import io.github.libxposed.api.XposedInterface.Chain
 import io.github.libxposed.api.XposedModule
 
 /**
- * 灵动岛渲染器的抽象基类。
+ * 超级岛渲染器的抽象基类。
  */
 abstract class BaseIslandRenderer(protected val logTag: String) : IslandRenderer {
     lateinit var module: XposedModule
@@ -35,8 +30,7 @@ abstract class BaseIslandRenderer(protected val logTag: String) : IslandRenderer
             val cv = entry.key as? ViewGroup
             if (cv != null && cv.isAttachedToWindow) {
                 cv.post {
-                    IslandViewHelper.clearInjectedViews(cv)
-                    IslandViewHelper.triggerSystemRelayout(cv)
+                    IslandHostFacade.clearAndRefresh(cv)
                 }
             } else {
                 iterator.remove()
@@ -70,8 +64,7 @@ abstract class BaseIslandRenderer(protected val logTag: String) : IslandRenderer
                         val cv = entry.key as? ViewGroup
                         if (cv != null && cv.isAttachedToWindow) {
                             cv.post {
-                                IslandViewHelper.clearInjectedViews(cv)
-                                IslandViewHelper.triggerSystemRelayout(cv)
+                                IslandHostFacade.clearAndRefresh(cv)
                             }
                         } else {
                             iterator.remove()
@@ -115,140 +108,4 @@ abstract class BaseIslandRenderer(protected val logTag: String) : IslandRenderer
     // Xposed 事件拦截由具体的子类重写实现
     abstract override fun onPreInject(chain: Chain): Any?
     abstract override fun onUpdateBigIsland(chain: Chain): Any?
-
-    /**
-     * 应用配置选项（如是否隐藏专辑封面或律动图标等）。
-     */
-    protected fun applySettings(rootView: ViewGroup) {
-        val prefs = (module as HookEntry).prefs
-        val showAlbum = prefs.getBoolean(RootConstants.KEY_HOOK_ISLAND_LEFT_ALBUM, RootConstants.DEFAULT_HOOK_ISLAND_LEFT_ALBUM)
-        val showRhythm = prefs.getBoolean(RootConstants.KEY_HOOK_ISLAND_RIGHT_ICON, RootConstants.DEFAULT_HOOK_ISLAND_RIGHT_ICON)
-
-        IslandViewHelper.toggleContainer(rootView, "island_container_module_image_text_1", "island_container_module_icon", showAlbum)
-        IslandViewHelper.toggleContainer(rootView, "island_container_module_image_text_2", "island_container_module_icon", showRhythm)
-
-        IslandViewHelper.toggleContainer(rootView, "island_container_module_image_text_1", "island_container_module_text", true)
-        IslandViewHelper.toggleContainer(rootView, "island_container_module_image_text_2", "island_container_module_text", true)
-
-        if (!showAlbum) {
-            IslandViewHelper.clearTextContainerMargin(rootView, "island_container_module_image_text_1", clearStart = true, clearEnd = false)
-        }
-        if (!showRhythm) {
-            IslandViewHelper.clearTextContainerMargin(rootView, "island_container_module_image_text_2", clearStart = false, clearEnd = true)
-        }
-    }
-
-    class SlotConfig(
-        val maxWidthDp: Int,
-        val paddingLeftDp: Int,
-        val paddingRightDp: Int,
-        val isLeft: Boolean
-    )
-
-    /**
-     * 读取指定卡槽（左/右）的最大宽度与内边距配置。
-     */
-    internal fun readSlotConfig(prefs: SharedPreferences, parentName: String): SlotConfig {
-        val isLeft = parentName.contains("1")
-        val maxWidthDp = if (isLeft) prefs.getInt(RootConstants.KEY_HOOK_ISLAND_LEFT_CONTENT_MAX_WIDTH, RootConstants.DEFAULT_HOOK_ISLAND_LEFT_CONTENT_MAX_WIDTH)
-                         else prefs.getInt(RootConstants.KEY_HOOK_ISLAND_RIGHT_CONTENT_MAX_WIDTH, RootConstants.DEFAULT_HOOK_ISLAND_RIGHT_CONTENT_MAX_WIDTH)
-        val pL = if (isLeft) prefs.getInt(RootConstants.KEY_HOOK_ISLAND_LEFT_PADDING_LEFT, RootConstants.DEFAULT_HOOK_ISLAND_LEFT_PADDING_LEFT)
-                 else prefs.getInt(RootConstants.KEY_HOOK_ISLAND_RIGHT_PADDING_LEFT, RootConstants.DEFAULT_HOOK_ISLAND_RIGHT_PADDING_LEFT)
-        val pR = if (isLeft) prefs.getInt(RootConstants.KEY_HOOK_ISLAND_LEFT_PADDING_RIGHT, RootConstants.DEFAULT_HOOK_ISLAND_LEFT_PADDING_RIGHT)
-                 else prefs.getInt(RootConstants.KEY_HOOK_ISLAND_RIGHT_PADDING_RIGHT, RootConstants.DEFAULT_HOOK_ISLAND_RIGHT_PADDING_RIGHT)
-        return SlotConfig(maxWidthDp, pL, pR, isLeft)
-    }
-
-    /**
-     * 确保包装的容器 ([MaxWidthFrameLayout]) 和目标歌词视图被正确挂载在卡槽上。
-     */
-    internal fun <T : View> ensureSlotWrapper(
-        rootView: ViewGroup,
-        parentName: String,
-        tag: String,
-        config: SlotConfig,
-        viewCreator: (Context) -> T
-    ): Pair<MaxWidthFrameLayout, T>? {
-        val parent = IslandViewHelper.findViewByName(rootView, parentName) as? ViewGroup ?: return null
-        val container = IslandViewHelper.findViewByName(parent, "island_container_module_text") as? ViewGroup ?: parent
-
-        val wrapperTag = tag + "_WRAPPER"
-        var wrapperView = container.findViewWithTag<MaxWidthFrameLayout>(wrapperTag)
-        var targetView = container.findViewWithTag<T>(tag)
-
-        if (config.maxWidthDp <= 0) {
-            wrapperView?.visibility = View.GONE
-            targetView?.visibility = View.GONE
-            return null
-        }
-
-        val density = rootView.resources.displayMetrics.density
-
-        if (wrapperView == null) {
-            targetView?.let { container.removeView(it) }
-
-            wrapperView = MaxWidthFrameLayout(rootView.context).apply {
-                this.tag = wrapperTag
-                this.clipChildren = true
-            }
-
-            targetView = viewCreator(rootView.context).apply {
-                this.tag = tag
-            }
-
-            wrapperView.addView(targetView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT).apply {
-                gravity = Gravity.CENTER_VERTICAL
-            })
-
-            container.addView(wrapperView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.MATCH_PARENT).apply {
-                gravity = Gravity.CENTER_VERTICAL
-            })
-        } else {
-            targetView = wrapperView.findViewWithTag(tag) as? T
-            if (targetView == null) {
-                wrapperView.removeAllViews()
-                targetView = viewCreator(rootView.context).apply {
-                    this.tag = tag
-                }
-                wrapperView.addView(targetView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT).apply {
-                    gravity = Gravity.CENTER_VERTICAL
-                })
-            }
-        }
-
-        wrapperView.maxWidthPx = (config.maxWidthDp * density).toInt()
-
-        targetView.setPadding((config.paddingLeftDp * density).toInt(), 0, (config.paddingRightDp * density).toInt(), 0)
-        targetView.visibility = View.VISIBLE
-        wrapperView.visibility = View.VISIBLE
-
-        return Pair(wrapperView, targetView)
-    }
-
-    /**
-     * 隐藏原生容器中除了我们的包装类之外的其他所有文本视图，保证我们的歌词不被覆盖。
-     */
-    internal fun hideNativeChildren(rootView: ViewGroup, parentName: String, wrapperView: View) {
-        val parent = IslandViewHelper.findViewByName(rootView, parentName) as? ViewGroup ?: return
-        val container = IslandViewHelper.findViewByName(parent, "island_container_module_text") as? ViewGroup ?: parent
-        for (i in 0 until container.childCount) {
-            val child = container.getChildAt(i)
-            if (child != wrapperView) {
-                child.visibility = View.GONE
-            }
-        }
-    }
-
-    /**
-     * 强制立即完成测量和布局，防止因为异步渲染造成的一帧闪烁/抖动。
-     */
-    internal fun forceImmediateLayout(rootView: ViewGroup, parentName: String, wrapperView: View, maxWidthDp: Int) {
-        val parent = IslandViewHelper.findViewByName(rootView, parentName) as? ViewGroup ?: return
-        val container = IslandViewHelper.findViewByName(parent, "island_container_module_text") as? ViewGroup ?: parent
-        val density = rootView.resources.displayMetrics.density
-        val msW = View.MeasureSpec.makeMeasureSpec((maxWidthDp * density).toInt(), View.MeasureSpec.AT_MOST)
-        val msH = View.MeasureSpec.makeMeasureSpec(container.height, if (container.height > 0) View.MeasureSpec.EXACTLY else View.MeasureSpec.UNSPECIFIED)
-        wrapperView.measure(msW, msH)
-        wrapperView.layout(0, 0, wrapperView.measuredWidth, wrapperView.measuredHeight)
-    }
 }
