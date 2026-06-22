@@ -1,4 +1,4 @@
-package com.lidesheng.hyperlyric.root
+package com.lidesheng.hyperlyric.root.island
 
 import android.annotation.SuppressLint
 import android.view.View
@@ -73,7 +73,7 @@ object IslandViewHelper {
         rootView.findViewWithTag<View>("HYPERLYRIC_LEFT_VIEW_WRAPPER")?.visibility = View.GONE
         rootView.findViewWithTag<View>("HYPERLYRIC_RIGHT_VIEW")?.visibility = View.GONE
         rootView.findViewWithTag<View>("HYPERLYRIC_RIGHT_VIEW_WRAPPER")?.visibility = View.GONE
-
+ 
         // 恢复系统原有组件的可见性
         toggleContainer(rootView, "island_container_module_image_text_1", "island_container_module_icon", true)
         toggleContainer(rootView, "island_container_module_image_text_2", "island_container_module_icon", true)

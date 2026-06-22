@@ -2,7 +2,10 @@ package com.lidesheng.hyperlyric.root
 
 import com.lidesheng.hyperlyric.lyric.source.SourceManager
 import com.lidesheng.hyperlyric.root.bridge.IpcRouter
-import com.lidesheng.hyperlyric.root.source.IslandRenderer
+import com.lidesheng.hyperlyric.root.island.SystemUIHookRegistry
+import com.lidesheng.hyperlyric.root.island.renderer.IslandRenderer
+import com.lidesheng.hyperlyric.root.island.renderer.SplitIslandRenderer
+import com.lidesheng.hyperlyric.root.island.renderer.StandardIslandRenderer
 import com.lidesheng.hyperlyric.root.source.LyriconSource
 import com.lidesheng.hyperlyric.root.source.LyricInfoSource
 import com.lidesheng.hyperlyric.root.source.RootLyricSink
@@ -125,7 +128,7 @@ class HookEntry : XposedModule() {
             if (!isSuperIslandEnabled) {
                 return
             }
-            HookIslandLyric.hook(this, param.defaultClassLoader)
+            SystemUIHookRegistry.hook(this, param.defaultClassLoader)
         }
     }
 
@@ -138,7 +141,7 @@ class HookEntry : XposedModule() {
             val cl = chain.thisObject as? ClassLoader ?: return result
             if (!prefs.getBoolean(RootConstants.KEY_HOOK_ENABLE_SUPER_ISLAND, RootConstants.DEFAULT_HOOK_ENABLE_SUPER_ISLAND)) return result
             try {
-                HookIslandLyric.hook(this@HookEntry, cl)
+                SystemUIHookRegistry.hook(this@HookEntry, cl)
             } catch (e: Exception) {
                 if (e is ClassNotFoundException || e is NoSuchMethodException) {
                     // HookLogger.w("HookEntry","插件中未找到超级岛相关类")
@@ -160,9 +163,9 @@ class HookEntry : XposedModule() {
                 try {
                     val entry = instance!!
                     // 两个 renderer 的 module 都需要初始化（热切换时两个都会被用到）
-                    HookIslandLyric.module = entry
-                    HookIslandSpaceGateLyric.module = entry
-                    val renderer = if (activeMode == 1) HookIslandSpaceGateLyric else HookIslandLyric
+                    StandardIslandRenderer.module = entry
+                    SplitIslandRenderer.module = entry
+                    val renderer = if (activeMode == 1) SplitIslandRenderer else StandardIslandRenderer
                     val sink = RootLyricSink(renderer, entry.prefs)
 
                     IpcRouter.initialize(app)
@@ -199,13 +202,13 @@ class HookEntry : XposedModule() {
                                 HookLogger.i("HookEntry", "歌词模式切换: $newMode")
                                 android.os.Handler(android.os.Looper.getMainLooper()).post {
                                     // 1. 清除旧视图
-                                    if (activeMode == 1) HookIslandSpaceGateLyric.clearAllViews() else HookIslandLyric.clearAllViews()
+                                    if (activeMode == 1) SplitIslandRenderer.clearAllViews() else StandardIslandRenderer.clearAllViews()
                                     // 2. 传递 activeIslandPkgNames 到新 renderer
-                                    val oldPkgNames = if (activeMode == 1) HookIslandSpaceGateLyric.activeIslandPkgNames else HookIslandLyric.activeIslandPkgNames
-                                    val newPkgNames = if (newMode == 1) HookIslandSpaceGateLyric.activeIslandPkgNames else HookIslandLyric.activeIslandPkgNames
+                                    val oldPkgNames = if (activeMode == 1) SplitIslandRenderer.activeIslandPkgNames else StandardIslandRenderer.activeIslandPkgNames
+                                    val newPkgNames = if (newMode == 1) SplitIslandRenderer.activeIslandPkgNames else StandardIslandRenderer.activeIslandPkgNames
                                     synchronized(oldPkgNames) { newPkgNames.putAll(oldPkgNames) }
                                     // 3. 先更新 renderer 引用，再更新 activeMode（保证线程安全顺序）
-                                    val newRenderer: IslandRenderer = if (newMode == 1) HookIslandSpaceGateLyric else HookIslandLyric
+                                    val newRenderer: IslandRenderer = if (newMode == 1) SplitIslandRenderer else StandardIslandRenderer
                                     lyriconSource.updateRenderer(newRenderer, newMode)
                                     sink.updateRenderer(newRenderer)
                                     activeMode = newMode

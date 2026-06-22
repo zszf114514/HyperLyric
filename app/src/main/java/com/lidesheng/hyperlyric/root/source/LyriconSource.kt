@@ -4,8 +4,9 @@ import android.app.Application
 import android.content.SharedPreferences
 import com.lidesheng.hyperlyric.lyric.source.LyricSink
 import com.lidesheng.hyperlyric.lyric.source.LyricSource
-import com.lidesheng.hyperlyric.root.HookIslandLyric
-import com.lidesheng.hyperlyric.root.HookIslandSpaceGateLyric
+import com.lidesheng.hyperlyric.root.island.renderer.IslandRenderer
+import com.lidesheng.hyperlyric.root.island.renderer.SplitIslandRenderer
+import com.lidesheng.hyperlyric.root.island.renderer.StandardIslandRenderer
 import com.lidesheng.hyperlyric.root.LyriconDataBridge
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import io.github.proify.lyricon.lyric.model.Song
@@ -79,7 +80,7 @@ class LyriconSource : LyricSource {
         this.app = app
         this.prefs = prefs
         this.activeMode = activeMode
-        this.renderer = if (activeMode == 1) HookIslandSpaceGateLyric else HookIslandLyric
+        this.renderer = if (activeMode == 1) SplitIslandRenderer else StandardIslandRenderer
 
         LyriconDataBridge.onAiTranslationComplete = {
             renderer?.refreshActiveIsland()
@@ -87,7 +88,7 @@ class LyriconSource : LyricSource {
     }
 
     private fun getRenderer(): IslandRenderer =
-        renderer ?: if (activeMode == 1) HookIslandSpaceGateLyric else HookIslandLyric
+        renderer ?: if (activeMode == 1) SplitIslandRenderer else StandardIslandRenderer
 
     fun updateRenderer(newRenderer: IslandRenderer, newMode: Int) {
         this.renderer = newRenderer

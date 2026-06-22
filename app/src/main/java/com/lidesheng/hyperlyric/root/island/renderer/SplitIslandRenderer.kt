@@ -1,40 +1,35 @@
-package com.lidesheng.hyperlyric.root
+package com.lidesheng.hyperlyric.root.island.renderer
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
-import com.lidesheng.hyperlyric.root.utils.HookLogger
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import com.lidesheng.hyperlyric.root.utils.CoverColorHelper
 import com.lidesheng.hyperlyric.common.RootConstants
-
-import com.lidesheng.hyperlyric.root.source.IslandRenderer
-import com.lidesheng.hyperlyric.root.utils.LyricStyleHelper
+import com.lidesheng.hyperlyric.common.lyric.RichLyricLineSplitter
 import com.lidesheng.hyperlyric.common.media.MediaMetadataHelper
-import com.lidesheng.hyperlyric.root.utils.TranslationHelper
-import io.github.libxposed.api.XposedInterface.Chain
-import io.github.libxposed.api.XposedModule
 import com.lidesheng.hyperlyric.lyric.model.RichLyricLine
 import com.lidesheng.hyperlyric.lyric.model.interfaces.IRichLyricLine
-import com.lidesheng.hyperlyric.common.lyric.RichLyricLineSplitter
 import com.lidesheng.hyperlyric.lyric.view.SpaceGateRichLyricLineView
 import com.lidesheng.hyperlyric.lyric.view.yoyo.YoYoPresets
 import com.lidesheng.hyperlyric.lyric.view.yoyo.animateUpdate
+import com.lidesheng.hyperlyric.root.HookEntry
+import com.lidesheng.hyperlyric.root.HookIslandGlow
+import com.lidesheng.hyperlyric.root.LyriconDataBridge
+import com.lidesheng.hyperlyric.root.island.IslandViewHelper
+import com.lidesheng.hyperlyric.root.utils.CoverColorHelper
+import com.lidesheng.hyperlyric.root.utils.HookLogger
+import com.lidesheng.hyperlyric.root.utils.LyricStyleHelper
+import com.lidesheng.hyperlyric.root.utils.TranslationHelper
+import io.github.libxposed.api.XposedInterface.Chain
 
-object HookIslandSpaceGateLyric : IslandRenderer {
-    lateinit var module: XposedModule
-
-    var activeIslandPkgNames = java.util.Collections.synchronizedMap(java.util.WeakHashMap<View, String>())
-    var activeContentView: java.lang.ref.WeakReference<ViewGroup>? = null
+/**
+ * 左右分离歌词模式灵动岛渲染器。
+ */
+object SplitIslandRenderer : BaseIslandRenderer("SplitIslandRenderer") {
 
     private var loggedCutoutInfo = false
 
-    /**
-     * 供动态委托 hook 调用的预注入逻辑
-     */
-    fun handlePreInject(chain: Chain): Any? {
+    override fun onPreInject(chain: Chain): Any? {
         runCatching {
             val islandView = chain.thisObject as? ViewGroup ?: return@runCatching
             val prefs = (module as HookEntry).prefs
@@ -54,15 +49,12 @@ object HookIslandSpaceGateLyric : IslandRenderer {
                 linkViews(islandView)
             }
         }.onFailure { e ->
-            HookLogger.e("HookIslandSpaceGateLyric", "预注入超级岛失败", e)
+            HookLogger.e("SplitIslandRenderer", "预注入超级岛失败", e)
         }
         return chain.proceed()
     }
 
-    /**
-     * 供动态委托 hook 调用的更新逻辑
-     */
-    fun handleUpdateBigIsland(chain: Chain): Any? {
+    override fun onUpdateBigIsland(chain: Chain): Any? {
         val result = chain.proceed()
         runCatching {
             val viewGroup = chain.thisObject as? ViewGroup ?: return@runCatching
@@ -135,36 +127,16 @@ object HookIslandSpaceGateLyric : IslandRenderer {
 
             HookIslandGlow.injectAndTriggerGlow(viewGroup, islandData, prefs)
         }.onFailure { e ->
-            HookLogger.e("HookIslandSpaceGateLyric", "更新超级岛视图失败", e)
+            HookLogger.e("SplitIslandRenderer", "更新超级岛视图失败", e)
         }
 
         return result
-    }
-
-    private fun applySettings(rootView: ViewGroup) {
-        val prefs = (module as HookEntry).prefs
-        val showAlbum = prefs.getBoolean(RootConstants.KEY_HOOK_ISLAND_LEFT_ALBUM, RootConstants.DEFAULT_HOOK_ISLAND_LEFT_ALBUM)
-        val showRhythm = prefs.getBoolean(RootConstants.KEY_HOOK_ISLAND_RIGHT_ICON, RootConstants.DEFAULT_HOOK_ISLAND_RIGHT_ICON)
-        
-        IslandViewHelper.toggleContainer(rootView, "island_container_module_image_text_1", "island_container_module_icon", showAlbum)
-        IslandViewHelper.toggleContainer(rootView, "island_container_module_image_text_2", "island_container_module_icon", showRhythm)
-        
-        IslandViewHelper.toggleContainer(rootView, "island_container_module_image_text_1", "island_container_module_text", true)
-        IslandViewHelper.toggleContainer(rootView, "island_container_module_image_text_2", "island_container_module_text", true)
-
-        if (!showAlbum) {
-            IslandViewHelper.clearTextContainerMargin(rootView, "island_container_module_image_text_1", clearStart = true, clearEnd = false)
-        }
-        if (!showRhythm) {
-            IslandViewHelper.clearTextContainerMargin(rootView, "island_container_module_image_text_2", clearStart = false, clearEnd = true)
-        }
     }
 
     private fun linkViews(rootView: ViewGroup) {
         val leftView = rootView.findViewWithTag<SpaceGateRichLyricLineView>("HYPERLYRIC_LEFT_VIEW")
         val rightView = rootView.findViewWithTag<SpaceGateRichLyricLineView>("HYPERLYRIC_RIGHT_VIEW")
 
-        // 字符串分割模式：每个视图独立渲染，不需要 sibling 同步
         leftView?.main?.spaceGateEnabled = false
         leftView?.secondary?.spaceGateEnabled = false
         rightView?.main?.spaceGateEnabled = false
@@ -175,9 +147,9 @@ object HookIslandSpaceGateLyric : IslandRenderer {
             if (cutoutView != null) {
                 val cutoutLoc = IntArray(2)
                 cutoutView.getLocationOnScreen(cutoutLoc)
-                HookLogger.d("HookIslandSpaceGateLyric","成功定位摄像头容器(area_cutout), 宽度 = ${cutoutView.width}px, 绝对X = ${cutoutLoc[0]}")
+                HookLogger.d("SplitIslandRenderer","成功定位摄像头容器(area_cutout), 宽度 = ${cutoutView.width}px, 绝对X = ${cutoutLoc[0]}")
             } else {
-                HookLogger.d("HookIslandSpaceGateLyric","未找到系统 area_cutout 容器，将使用几何居中fallback。")
+                HookLogger.d("SplitIslandRenderer","未找到系统 area_cutout 容器，将使用几何居中fallback。")
             }
             loggedCutoutInfo = true
         }
@@ -185,86 +157,18 @@ object HookIslandSpaceGateLyric : IslandRenderer {
 
     @SuppressLint("DiscouragedApi")
     private fun injectToSlot(rootView: ViewGroup, parentName: String, tag: String, prefs: SharedPreferences, pkgName: String, lineOverride: IRichLyricLine? = null) {
-        injectToSlotInternal(rootView, parentName, tag, prefs, pkgName, lineOverride)
-    }
-
-    private fun injectToSlotInternal(rootView: ViewGroup, parentName: String, tag: String, prefs: SharedPreferences, pkgName: String, lineOverride: IRichLyricLine? = null) {
         val res = rootView.resources
-        val density = res.displayMetrics.density
-        val parent = IslandViewHelper.findViewByName(rootView, parentName) as? ViewGroup ?: return
-        val container = IslandViewHelper.findViewByName(parent, "island_container_module_text") as? ViewGroup ?: parent
+        val config = readSlotConfig(prefs, parentName)
 
-        var targetView = container.findViewWithTag<SpaceGateRichLyricLineView>(tag)
+        val pair = ensureSlotWrapper(rootView, parentName, tag, config) { context ->
+            SpaceGateRichLyricLineView(context)
+        } ?: return
 
-        val isLeft = parentName.contains("1")
-        var maxWidthDp = if (isLeft) prefs.getInt(RootConstants.KEY_HOOK_ISLAND_LEFT_CONTENT_MAX_WIDTH, RootConstants.DEFAULT_HOOK_ISLAND_LEFT_CONTENT_MAX_WIDTH)
-                         else prefs.getInt(RootConstants.KEY_HOOK_ISLAND_RIGHT_CONTENT_MAX_WIDTH, RootConstants.DEFAULT_HOOK_ISLAND_RIGHT_CONTENT_MAX_WIDTH)
-        val pL = if (isLeft) prefs.getInt(RootConstants.KEY_HOOK_ISLAND_LEFT_PADDING_LEFT, RootConstants.DEFAULT_HOOK_ISLAND_LEFT_PADDING_LEFT)
-                 else prefs.getInt(RootConstants.KEY_HOOK_ISLAND_RIGHT_PADDING_LEFT, RootConstants.DEFAULT_HOOK_ISLAND_RIGHT_PADDING_LEFT)
-        val pR = if (isLeft) prefs.getInt(RootConstants.KEY_HOOK_ISLAND_LEFT_PADDING_RIGHT, RootConstants.DEFAULT_HOOK_ISLAND_LEFT_PADDING_RIGHT)
-                 else prefs.getInt(RootConstants.KEY_HOOK_ISLAND_RIGHT_PADDING_RIGHT, RootConstants.DEFAULT_HOOK_ISLAND_RIGHT_PADDING_RIGHT)
-
-        if (maxWidthDp <= 0) {
-            val wrapperTag = tag + "_WRAPPER"
-            container.findViewWithTag<FrameLayout>(wrapperTag)?.visibility = View.GONE
-            targetView?.visibility = View.GONE
-            return
-        }
-
-        val wrapperTag = tag + "_WRAPPER"
-        var wrapperView = container.findViewWithTag<FrameLayout>(wrapperTag)
-        
-        if (wrapperView == null) {
-            targetView?.let { container.removeView(it) }
-            
-            wrapperView = object : FrameLayout(rootView.context) {
-                var maxWidthPx = -1
-                override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-                    val givenWidth = MeasureSpec.getSize(widthMeasureSpec)
-                    val newWidth = if (maxWidthPx > 0 && (givenWidth == 0 || givenWidth > maxWidthPx)) maxWidthPx else givenWidth
-                    super.onMeasure(MeasureSpec.makeMeasureSpec(newWidth, MeasureSpec.AT_MOST), heightMeasureSpec)
-                }
-            }.apply {
-                this.tag = wrapperTag
-            }
-            
-            targetView = SpaceGateRichLyricLineView(rootView.context).apply {
-                this.tag = tag
-            }
-            wrapperView.addView(targetView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT).apply {
-                gravity = Gravity.CENTER_VERTICAL
-            })
-            
-            container.addView(wrapperView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.MATCH_PARENT).apply {
-                gravity = Gravity.CENTER_VERTICAL
-            })
-        } else {
-            targetView = wrapperView.findViewWithTag(tag) as? SpaceGateRichLyricLineView
-            if (targetView == null) {
-                wrapperView.removeAllViews()
-                targetView = SpaceGateRichLyricLineView(rootView.context).apply {
-                    this.tag = tag
-                }
-                wrapperView.addView(targetView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT).apply {
-                    gravity = Gravity.CENTER_VERTICAL
-                })
-            }
-        }
-
-        // 设置 wrapper 的最大宽度限制
-        try {
-            val maxField = wrapperView.javaClass.getDeclaredField("maxWidthPx")
-            maxField.isAccessible = true
-            maxField.setInt(wrapperView, (maxWidthDp * density).toInt())
-        } catch (_: Exception) {}
+        val wrapperView = pair.first
+        val targetView = pair.second
 
         configureRichLyricView(targetView, prefs, res)
         
-        targetView.setPadding((pL * density).toInt(), 0, (pR * density).toInt(), 0)
-        targetView.visibility = View.VISIBLE
-        wrapperView.visibility = View.VISIBLE
-        
-        // 使用分割后的歌词行，或从数据桥获取
         val rawLine = lineOverride ?: run {
             val songName = LyriconDataBridge.currentSongName?.takeIf { it.isNotEmpty() } ?: ""
             var line = LyriconDataBridge.currentLyricLine ?: RichLyricLine(text = songName, words = emptyList())
@@ -277,17 +181,8 @@ object HookIslandSpaceGateLyric : IslandRenderer {
         }
         targetView.line = rawLine
 
-        for (i in 0 until container.childCount) {
-            val child = container.getChildAt(i)
-            if (child != wrapperView) {
-                child.visibility = View.GONE
-            }
-        }
-
-        val msW = View.MeasureSpec.makeMeasureSpec((maxWidthDp * density).toInt(), View.MeasureSpec.AT_MOST)
-        val msH = View.MeasureSpec.makeMeasureSpec(container.height, if (container.height > 0) View.MeasureSpec.EXACTLY else View.MeasureSpec.UNSPECIFIED)
-        wrapperView.measure(msW, msH)
-        wrapperView.layout(0, 0, wrapperView.measuredWidth, wrapperView.measuredHeight)
+        hideNativeChildren(rootView, parentName, wrapperView)
+        forceImmediateLayout(rootView, parentName, wrapperView, config.maxWidthDp)
 
         targetView.post {
             if (prefs.getBoolean(RootConstants.KEY_HOOK_MARQUEE_MODE, RootConstants.DEFAULT_HOOK_MARQUEE_MODE)) {
@@ -302,30 +197,13 @@ object HookIslandSpaceGateLyric : IslandRenderer {
         view.displayTranslation = LyriconDataBridge.isDisplayTranslation && !disableAll
         view.displayRoma = LyriconDataBridge.isDisplayRoma && !disableAll && !translationOnly
 
-        // 强行使用歌词模式获取样式
         val style = LyricStyleHelper.buildStyle(prefs, res, 7, null)
         view.setStyle(style)
     }
 
-    override fun clearAllViews() {
-        val iterator = activeIslandPkgNames.entries.iterator()
-        while (iterator.hasNext()) {
-            val entry = iterator.next()
-            val cv = entry.key as? ViewGroup
-            if (cv != null && cv.isAttachedToWindow) {
-                cv.post {
-                    IslandViewHelper.clearInjectedViews(cv)
-                    IslandViewHelper.triggerSystemRelayout(cv)
-                }
-            } else {
-                iterator.remove()
-            }
-        }
-    }
-
     override fun refreshActiveIsland() {
         if ((module as? HookEntry)?.prefs?.getBoolean(RootConstants.KEY_HOOK_ENABLE_SUPER_ISLAND, RootConstants.DEFAULT_HOOK_ENABLE_SUPER_ISLAND) != true) return
-        HookLogger.d("HookIslandSpaceGateLyric","正在刷新超级岛")
+        HookLogger.d("SplitIslandRenderer","正在刷新超级岛")
         val iterator = activeIslandPkgNames.entries.iterator()
         val activePkg = LyriconDataBridge.activePackageName ?: return
 
@@ -359,7 +237,7 @@ object HookIslandSpaceGateLyric : IslandRenderer {
 
     override fun updateLyricLine() {
         if ((module as? HookEntry)?.prefs?.getBoolean(RootConstants.KEY_HOOK_ENABLE_SUPER_ISLAND, RootConstants.DEFAULT_HOOK_ENABLE_SUPER_ISLAND) != true) return
-        HookLogger.d("HookIslandSpaceGateLyric","正在更新歌词行")
+        HookLogger.d("SplitIslandRenderer","正在更新歌词行")
         val iterator = activeIslandPkgNames.entries.iterator()
         val activePkg = LyriconDataBridge.activePackageName ?: return
 
@@ -372,7 +250,6 @@ object HookIslandSpaceGateLyric : IslandRenderer {
                 if (pkgName == activePkg) {
                     val prefs = (module as HookEntry).prefs
 
-                    // 分割歌词为左右两部分（先应用翻译模式再分割）
                     var rawLine = LyriconDataBridge.currentLyricLine
                     if (rawLine != null) {
                         if (TranslationHelper.isTranslationOnly(prefs)) {
@@ -453,66 +330,8 @@ object HookIslandSpaceGateLyric : IslandRenderer {
         }
     }
 
-    override fun updatePosition(position: Long) {
-        if ((module as? HookEntry)?.prefs?.getBoolean(RootConstants.KEY_HOOK_ENABLE_SUPER_ISLAND, RootConstants.DEFAULT_HOOK_ENABLE_SUPER_ISLAND) != true) return
-        val iterator = activeIslandPkgNames.entries.iterator()
-        val activePkg = LyriconDataBridge.activePackageName ?: return
-
-        while (iterator.hasNext()) {
-            val entry = iterator.next()
-            val cv = entry.key as? ViewGroup
-            val pkgName = entry.value
-
-            if (cv != null && cv.isAttachedToWindow) {
-                if (pkgName == activePkg) {
-                    cv.post {
-                        cv.findViewWithTag<SpaceGateRichLyricLineView>("HYPERLYRIC_LEFT_VIEW")?.setPosition(position)
-                        cv.findViewWithTag<SpaceGateRichLyricLineView>("HYPERLYRIC_RIGHT_VIEW")?.setPosition(position)
-                    }
-                }
-            } else {
-                iterator.remove()
-            }
-        }
-    }
-
-    override fun onPlaybackStateChanged(isPlaying: Boolean) {
-        val prefs = (module as HookEntry).prefs
-        if (!prefs.getBoolean(RootConstants.KEY_HOOK_ENABLE_SUPER_ISLAND, RootConstants.DEFAULT_HOOK_ENABLE_SUPER_ISLAND)) {
-            activeIslandPkgNames.clear()
-            return
-        }
-        HookLogger.d("HookIslandSpaceGateLyric","播放状态变更: isPlaying=$isPlaying")
-        val behavior = prefs.getInt(RootConstants.KEY_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE, RootConstants.DEFAULT_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE)
-
-        if (isPlaying) {
-            val activePkg = LyriconDataBridge.activePackageName
-            val hasInjection = activePkg != null && activeIslandPkgNames.values.any { it == activePkg }
-            if (hasInjection) {
-                updateLyricLine()
-            } else {
-                refreshActiveIsland()
-            }
-        } else {
-            when (behavior) {
-                0 -> {
-                    val iterator = activeIslandPkgNames.entries.iterator()
-                    while (iterator.hasNext()) {
-                        val entry = iterator.next()
-                        val cv = entry.key as? ViewGroup
-                        if (cv != null && cv.isAttachedToWindow) {
-                            cv.post {
-                                IslandViewHelper.clearInjectedViews(cv)
-                                IslandViewHelper.triggerSystemRelayout(cv)
-                            }
-                        } else {
-                            iterator.remove()
-                        }
-                    }
-                }
-                1 -> {
-                }
-            }
-        }
+    override fun setPositionOnViews(cv: ViewGroup, position: Long) {
+        cv.findViewWithTag<SpaceGateRichLyricLineView>("HYPERLYRIC_LEFT_VIEW")?.setPosition(position)
+        cv.findViewWithTag<SpaceGateRichLyricLineView>("HYPERLYRIC_RIGHT_VIEW")?.setPosition(position)
     }
 }

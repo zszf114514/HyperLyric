@@ -2,9 +2,9 @@ package com.lidesheng.hyperlyric.root.bridge
 
 import android.app.Application
 import com.lidesheng.hyperlyric.root.HookEntry
-import com.lidesheng.hyperlyric.root.HookIslandLyric
-import com.lidesheng.hyperlyric.root.HookIslandSpaceGateLyric
-import com.lidesheng.hyperlyric.root.source.IslandRenderer
+import com.lidesheng.hyperlyric.root.island.renderer.IslandRenderer
+import com.lidesheng.hyperlyric.root.island.renderer.SplitIslandRenderer
+import com.lidesheng.hyperlyric.root.island.renderer.StandardIslandRenderer
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 
 object IpcRouter {
@@ -12,7 +12,7 @@ object IpcRouter {
     private const val TAG = "IpcRouter"
 
     private fun getActiveRenderer(): IslandRenderer =
-        if (HookEntry.activeMode == 1) HookIslandSpaceGateLyric else HookIslandLyric
+        if (HookEntry.activeMode == 1) SplitIslandRenderer else StandardIslandRenderer
 
     fun initialize(app: Application) {
         LyriconBridge.routing(app) {
