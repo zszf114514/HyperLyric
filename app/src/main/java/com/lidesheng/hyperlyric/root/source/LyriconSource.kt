@@ -156,10 +156,7 @@ class LyriconSource : LyricSource {
             getRenderer().updateLyricLine()
         }
 
-        override fun onDisplayTranslationChanged(isDisplayTranslation: Boolean) {
-            LyriconDataBridge.isDisplayTranslation = isDisplayTranslation
-            getRenderer().refreshActiveIsland()
-        }
+        override fun onDisplayTranslationChanged(isDisplayTranslation: Boolean) {}
 
         override fun onDisplayRomaChanged(isDisplayRoma: Boolean) {
             LyriconDataBridge.isDisplayRoma = isDisplayRoma
