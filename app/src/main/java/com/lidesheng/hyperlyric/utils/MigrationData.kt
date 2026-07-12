@@ -14,6 +14,16 @@ data class MigrationNote(
 object MigrationData {
     val notes = listOf(
         MigrationNote(
+            versionCode = 1933,
+            items = listOf(
+                MigrationItem(
+                    text = "再一次温馨提示，HyperLyric v6.0 往后需要额外安装 lyricon central 才可继续使用 lyricon 歌词源",
+                    summary = "点我跳转下载 lyricon central 模块",
+                    url = "https://github.com/tomakino/lyricon/releases/tag/core"
+                )
+            )
+        ),
+        MigrationNote(
             versionCode = 1932,
             items = listOf(
                 MigrationItem(
