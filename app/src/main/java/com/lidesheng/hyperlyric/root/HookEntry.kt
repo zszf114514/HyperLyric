@@ -1,8 +1,16 @@
 package com.lidesheng.hyperlyric.root
 
+import android.app.Application
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import com.lidesheng.hyperlyric.lyric.source.SourceManager
 import com.lidesheng.hyperlyric.root.bridge.IpcRouter
+import com.lidesheng.hyperlyric.root.island.FakeIslandTransitionHooker
+import com.lidesheng.hyperlyric.root.island.IslandModuleRestoreHooker
 import com.lidesheng.hyperlyric.root.island.SystemUIHookRegistry
+import com.lidesheng.hyperlyric.root.island.IslandWidthHooker
+import com.lidesheng.hyperlyric.root.island.RealIslandHooker
 import com.lidesheng.hyperlyric.root.island.renderer.IslandRenderer
 import com.lidesheng.hyperlyric.root.island.renderer.BaseIslandRenderer
 import com.lidesheng.hyperlyric.root.source.LyriconSource
@@ -16,12 +24,19 @@ import com.lidesheng.hyperlyric.common.UIConstants
 import io.github.libxposed.api.XposedInterface.Chain
 import io.github.libxposed.api.XposedInterface.Hooker
 import io.github.libxposed.api.XposedModule
+import io.github.libxposed.api.XposedModuleInterface.HotReloadedParam
+import io.github.libxposed.api.XposedModuleInterface.HotReloadingParam
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
+import java.lang.reflect.Constructor
+import java.lang.reflect.Executable
+import java.lang.reflect.Method
 
 class HookEntry : XposedModule() {
 
     companion object {
+        private const val STATE_RUNTIME_READY = "runtimeReady"
+
         @Volatile
         var activeMode = 0
         val lyriconSource = LyriconSource()
@@ -87,6 +102,7 @@ class HookEntry : XposedModule() {
 
     private var _prefs: android.content.SharedPreferences? = null
     private var prefListener: android.content.SharedPreferences.OnSharedPreferenceChangeListener? = null
+    private var runtimeApp: Application? = null
 
     val prefs: android.content.SharedPreferences
         get() {
@@ -101,6 +117,50 @@ class HookEntry : XposedModule() {
         instance = this
         HookLogger.module = this
         HookLogger.i("HookEntry","模块已加载")
+    }
+
+    override fun onHotReloading(param: HotReloadingParam): Boolean {
+        val state = Bundle().apply {
+            putBoolean(STATE_RUNTIME_READY, runtimeApp != null)
+        }
+        param.setSavedInstanceState(state)
+        cleanupRuntime()
+        HookLogger.i("HookEntry", "热重载准备完成")
+        return true
+    }
+
+    override fun onHotReloaded(param: HotReloadedParam) {
+        instance = this
+        HookLogger.module = this
+
+        var replacedCount = 0
+        var removedCount = 0
+        param.oldHookHandles.forEach { handle ->
+            val replacement = createReplacementHooker(handle.executable)
+            if (replacement != null) {
+                runCatching {
+                    handle.replaceHook(replacement)
+                    replacedCount++
+                }.onFailure {
+                    handle.unhook()
+                    removedCount++
+                }
+            } else {
+                handle.unhook()
+                removedCount++
+            }
+        }
+
+        val state = param.savedInstanceState as? Bundle
+        if (state?.getBoolean(STATE_RUNTIME_READY) == true) {
+            findCurrentApplication()?.let { app ->
+                Handler(Looper.getMainLooper()).post {
+                    initializeSystemEnvironment(app)
+                }
+            }
+                ?: HookLogger.w("HookEntry", "热重载后未取得当前 Application，等待 Application.onCreate")
+        }
+        HookLogger.i("HookEntry", "热重载完成: replaced=$replacedCount removed=$removedCount")
     }
 
     override fun onPackageLoaded(param: PackageLoadedParam) {
@@ -176,6 +236,143 @@ class HookEntry : XposedModule() {
         }
     }
 
+    private fun initializeSystemEnvironment(app: Application) {
+        try {
+            cleanupRuntime()
+            runtimeApp = app
+
+            val renderer = BaseIslandRenderer
+            val sink = RootLyricSink(renderer, prefs)
+
+            IpcRouter.initialize(app)
+
+            lyriconSource.initialize(app)
+            superLyricSource.initialize(app)
+            lyricInfoSource = LyricInfoSource(app)
+
+            AITranslator.init(app)
+
+            sourceManager = SourceManager(
+                sources = listOf(lyriconSource, superLyricSource, lyricInfoSource!!),
+                prefs = prefs,
+                sink = sink,
+                prefKey = RootConstants.KEY_HOOK_LYRIC_SOURCE,
+                defaultSourceId = RootConstants.DEFAULT_HOOK_LYRIC_SOURCE,
+                stateResetter = LyriconDataBridge,
+                logger = HookLogger
+            )
+            sourceManager?.start()
+
+            prefListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                when (key) {
+                    RootConstants.KEY_HOOK_LYRIC_SOURCE -> {
+                        val newSourceId = prefs.getString(key, RootConstants.DEFAULT_HOOK_LYRIC_SOURCE)
+                            ?: RootConstants.DEFAULT_HOOK_LYRIC_SOURCE
+                        HookLogger.i("HookEntry", "歌词源切换: $newSourceId")
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            sourceManager?.switchSource(newSourceId)
+                        }
+                    }
+                    RootConstants.KEY_HOOK_LYRIC_MODE -> {
+                        val newMode = prefs.getInt(key, RootConstants.DEFAULT_HOOK_LYRIC_MODE)
+                        if (newMode == activeMode) return@OnSharedPreferenceChangeListener
+                        HookLogger.i("HookEntry", "歌词模式切换: $newMode")
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            activeMode = newMode
+                            BaseIslandRenderer.refreshActiveIsland()
+                        }
+                    }
+                    RootConstants.KEY_HOOK_ENABLE_SUPER_ISLAND -> {
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            if (prefs.getBoolean(key, RootConstants.DEFAULT_HOOK_ENABLE_SUPER_ISLAND)) {
+                                BaseIslandRenderer.refreshActiveIsland()
+                            } else {
+                                BaseIslandRenderer.clearAllViews()
+                            }
+                        }
+                    }
+                    in SUPER_ISLAND_RUNTIME_REFRESH_KEYS -> {
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            BaseIslandRenderer.refreshActiveIsland()
+                        }
+                    }
+                }
+            }
+            prefListener?.let {
+                prefs.registerOnSharedPreferenceChangeListener(it)
+            }
+
+            activeMode = prefs.getInt(RootConstants.KEY_HOOK_LYRIC_MODE, RootConstants.DEFAULT_HOOK_LYRIC_MODE)
+            HookLogger.i("HookEntry", "歌词源 = ${sourceManager?.getActiveSource()?.displayName}")
+            HookLogger.i("HookEntry", "系统环境初始化完成")
+        } catch (e: Exception) {
+            HookLogger.e("HookEntry", "系统环境初始化失败", e)
+        }
+    }
+
+    private fun cleanupRuntime() {
+        prefListener?.let {
+            runCatching { prefs.unregisterOnSharedPreferenceChangeListener(it) }
+        }
+        prefListener = null
+        runCatching { sourceManager?.stop() }
+        sourceManager = null
+        lyricInfoSource = null
+        runtimeApp?.let { app ->
+            runCatching { IpcRouter.shutdown(app) }
+        }
+        runtimeApp = null
+    }
+
+    private fun findCurrentApplication(): Application? {
+        return runCatching {
+            val activityThreadClass = Class.forName("android.app.ActivityThread")
+            val currentApplication = activityThreadClass.getDeclaredMethod("currentApplication")
+            currentApplication.invoke(null) as? Application
+        }.getOrNull()
+    }
+
+    private fun createReplacementHooker(executable: Executable): Hooker? {
+        val owner = executable.declaringClass.name
+        if (executable is Constructor<*> && owner == "dalvik.system.BaseDexClassLoader") {
+            return ClassLoaderHooker()
+        }
+        if (executable !is Method) return null
+
+        val name = executable.name
+        return when {
+            owner == "android.app.Application" && name == "onCreate" ->
+                AppCreateHooker()
+            name == "mediaIslandSupportMiniWindow" ->
+                UnlockIslandWhitelist.ReturnTrueHooker()
+            owner == "com.android.systemui.shared.plugins.PluginInstance" && name == "loadPlugin" ->
+                UnlockFocusWhitelist.PluginLoadHooker()
+            name == "canShowFocus" || name == "canCustomFocus" ->
+                UnlockFocusWhitelist.ReturnTrueHooker()
+            owner.contains("AuthServiceCallback") && name == "invokeSuspend" ->
+                UnlockFocusWhitelist.AuthResultHooker()
+            name == "updateBigIslandView" ->
+                RealIslandHooker.UpdateBigIslandViewHook()
+            name == "calculateBigIslandWidth" ->
+                IslandWidthHooker.CalculateWidthHook()
+            name == "hideIslandLayout" || name == "showIslandLayout" ->
+                RealIslandHooker.LayoutVisibilityHook(name)
+            name == "onTrackingFakeViewStart" ->
+                FakeIslandTransitionHooker.TrackingStartHook()
+            name == "updateViewStateWhenOpenAnimStart" ->
+                FakeIslandTransitionHooker.PrepareVisibleHook()
+            owner.endsWith("DynamicIslandContentFakeView") && name == "setVisibility" ->
+                FakeIslandTransitionHooker.VisibilityHook()
+            owner.endsWith("IslandTemplateBuilder") && name == "updateModuleView" ->
+                IslandModuleRestoreHooker.UpdateModuleViewHook()
+            owner.endsWith("IslandModuleViewHolderAdapter") && name == "updateView" ->
+                IslandModuleRestoreHooker.AdapterUpdateViewHook()
+            owner.endsWith("DynamicIslandBaseContentView") && name == "updateTemplate" ->
+                HookIslandGlow.UpdateTemplateHook()
+            else -> null
+        }
+    }
+
     /**
      * 动态类加载器劫持
      */
@@ -201,79 +398,8 @@ class HookEntry : XposedModule() {
      */
     class AppCreateHooker : Hooker {
         override fun intercept(chain: Chain): Any? {
-            val app = chain.thisObject as? android.app.Application
-            if (app != null) {
-                try {
-                    val entry = instance!!
-                    val renderer = BaseIslandRenderer
-                    val sink = RootLyricSink(renderer, entry.prefs)
-
-                    IpcRouter.initialize(app)
-
-                    lyriconSource.initialize(app)
-                    superLyricSource.initialize(app)
-                    lyricInfoSource = LyricInfoSource(app)
-
-                    AITranslator.init(app)
-
-                    sourceManager = SourceManager(
-                        sources = listOf(lyriconSource, superLyricSource, lyricInfoSource!!),
-                        prefs = entry.prefs,
-                        sink = sink,
-                        prefKey = RootConstants.KEY_HOOK_LYRIC_SOURCE,
-                        defaultSourceId = RootConstants.DEFAULT_HOOK_LYRIC_SOURCE,
-                        stateResetter = LyriconDataBridge,
-                        logger = HookLogger
-                    )
-                    sourceManager?.start()
-
-                    entry.prefListener?.let {
-                        entry.prefs.unregisterOnSharedPreferenceChangeListener(it)
-                    }
-                    entry.prefListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-                        when (key) {
-                            RootConstants.KEY_HOOK_LYRIC_SOURCE -> {
-                                val newSourceId = entry.prefs.getString(key, RootConstants.DEFAULT_HOOK_LYRIC_SOURCE) ?: RootConstants.DEFAULT_HOOK_LYRIC_SOURCE
-                                HookLogger.i("HookEntry", "歌词源切换: $newSourceId")
-                                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                                    sourceManager?.switchSource(newSourceId)
-                                }
-                            }
-                            RootConstants.KEY_HOOK_LYRIC_MODE -> {
-                                val newMode = entry.prefs.getInt(key, RootConstants.DEFAULT_HOOK_LYRIC_MODE)
-                                if (newMode == activeMode) return@OnSharedPreferenceChangeListener
-                                HookLogger.i("HookEntry", "歌词模式切换: $newMode")
-                                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                                    activeMode = newMode
-                                    BaseIslandRenderer.refreshActiveIsland()
-                                }
-                            }
-                            RootConstants.KEY_HOOK_ENABLE_SUPER_ISLAND -> {
-                                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                                    if (entry.prefs.getBoolean(key, RootConstants.DEFAULT_HOOK_ENABLE_SUPER_ISLAND)) {
-                                        BaseIslandRenderer.refreshActiveIsland()
-                                    } else {
-                                        BaseIslandRenderer.clearAllViews()
-                                    }
-                                }
-                            }
-                            in SUPER_ISLAND_RUNTIME_REFRESH_KEYS -> {
-                                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                                    BaseIslandRenderer.refreshActiveIsland()
-                                }
-                            }
-                        }
-                    }
-                    entry.prefListener?.let {
-                        entry.prefs.registerOnSharedPreferenceChangeListener(it)
-                    }
-
-                    HookLogger.i("HookEntry", "歌词源 = ${sourceManager?.getActiveSource()?.displayName}")
-                    HookLogger.i("HookEntry", "系统环境初始化完成")
-                } catch (e: Exception) {
-                    HookLogger.e("HookEntry", "系统环境初始化失败", e)
-                }
-            }
+            val app = chain.thisObject as? Application
+            app?.let { instance?.initializeSystemEnvironment(it) }
             return chain.proceed()
         }
     }

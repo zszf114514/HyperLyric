@@ -9,6 +9,8 @@ import com.lidesheng.hyperlyric.common.media.MediaMetadataHelper
 import com.lidesheng.hyperlyric.root.island.IslandProbeUtils
 import com.lidesheng.hyperlyric.root.utils.CoverColorHelper
 import com.lidesheng.hyperlyric.root.utils.HookLogger
+import io.github.libxposed.api.XposedInterface.Chain
+import io.github.libxposed.api.XposedInterface.Hooker
 import io.github.libxposed.api.XposedModule
 import org.json.JSONObject
 import java.util.WeakHashMap
@@ -44,15 +46,7 @@ object HookIslandGlow {
             if (updateTemplateMethod != null) {
                 updateTemplateMethod.isAccessible = true
                 module.deoptimize(updateTemplateMethod)
-                module.hook(updateTemplateMethod).intercept { chain ->
-                    val view = chain.thisObject as? View
-                    val data = chain.args.getOrNull(0)
-                    val color = prepareHighlightColor(view, data)
-                    if (color != null) {
-                        injectTickerDataHighlightColor(data, color)
-                    }
-                    chain.proceed()
-                }
+                module.hook(updateTemplateMethod).intercept(UpdateTemplateHook())
                 HookLogger.i(TAG, "已 Hook DynamicIslandBaseContentView.updateTemplate，用于媒体岛光效")
             } else {
                 HookLogger.w(TAG, "未找到 updateTemplate，跳过媒体岛光效 Hook")
@@ -61,6 +55,18 @@ object HookIslandGlow {
             HookLogger.w(TAG, "跳过不支持的媒体岛光效 Hook: ${e.message}")
         } catch (e: Exception) {
             HookLogger.e(TAG, "初始化媒体岛光效 Hook 失败", e)
+        }
+    }
+
+    class UpdateTemplateHook : Hooker {
+        override fun intercept(chain: Chain): Any? {
+            val view = chain.thisObject as? View
+            val data = chain.args.getOrNull(0)
+            val color = prepareHighlightColor(view, data)
+            if (color != null) {
+                injectTickerDataHighlightColor(data, color)
+            }
+            return chain.proceed()
         }
     }
 

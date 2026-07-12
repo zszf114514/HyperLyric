@@ -18,19 +18,20 @@ object DynamicFinder {
         targetString: String
     ): Class<*>? {
         try {
-            // 获取 BaseDexClassLoader 的 pathList
-            val pathListField = loader.javaClass.superclass?.getDeclaredField("pathList") ?: return null
+            // 获取 BaseDexClassLoader 的 pathList。部分框架/匿名 ClassLoader 不是标准
+            // BaseDexClassLoader 结构，不能作为错误上报，直接跳过即可。
+            val pathListField = findFieldInHierarchy(loader.javaClass, "pathList") ?: return null
             pathListField.isAccessible = true
             val pathList = pathListField.get(loader)
 
             // 获取 DexPathList 的 dexElements
-            val dexElementsField = pathList.javaClass.getDeclaredField("dexElements")
+            val dexElementsField = findFieldInHierarchy(pathList.javaClass, "dexElements") ?: return null
             dexElementsField.isAccessible = true
             val dexElements = dexElementsField.get(pathList) as Array<*>
 
             for (element in dexElements) {
                 if (element == null) continue
-                val dexFileField = element.javaClass.getDeclaredField("dexFile")
+                val dexFileField = findFieldInHierarchy(element.javaClass, "dexFile") ?: continue
                 dexFileField.isAccessible = true
                 val dexFile = dexFileField.get(element) as? dalvik.system.DexFile ?: continue
 
@@ -59,7 +60,19 @@ object DynamicFinder {
                 }
             }
         } catch (e: Exception) {
-            HookLogger.e("DynamicFinder", "扫描 Dex 寻找特征字符串时出错: $targetString", e)
+            HookLogger.w("DynamicFinder", "扫描 Dex 寻找特征字符串时跳过异常 ClassLoader: $targetString", e)
+        }
+        return null
+    }
+
+    private fun findFieldInHierarchy(clazz: Class<*>, fieldName: String): java.lang.reflect.Field? {
+        var current: Class<*>? = clazz
+        while (current != null) {
+            try {
+                return current.getDeclaredField(fieldName)
+            } catch (_: NoSuchFieldException) {
+                current = current.superclass
+            }
         }
         return null
     }

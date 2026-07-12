@@ -27,4 +27,8 @@ object IpcRouter {
             }
         }
     }
+
+    fun shutdown(app: Application) {
+        LyriconBridge.shutdown(app)
+    }
 }

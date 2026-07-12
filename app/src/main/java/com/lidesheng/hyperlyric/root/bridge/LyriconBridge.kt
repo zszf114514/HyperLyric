@@ -95,6 +95,18 @@ object LyriconBridge {
         BridgeRoutingScope().apply(block)
     }
 
+    fun shutdown(context: Context) {
+        handlers.clear()
+        if (!isInitialized) return
+        synchronized(this) {
+            if (!isInitialized) return
+            runCatching {
+                context.applicationContext.unregisterReceiver(receiver)
+            }
+            isInitialized = false
+        }
+    }
+
     /**
      * 启动一个请求构造链。
      * @param context 发起请求的上下文
