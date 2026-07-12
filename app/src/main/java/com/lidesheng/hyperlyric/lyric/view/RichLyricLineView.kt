@@ -247,7 +247,7 @@ class RichLyricLineView(
                 secondary.model.text == mainResult.line.text &&
                 isAttachedToWindow && main.height > 0 && secondary.height > 0
         if (shouldPromote) {
-            animateNextLinePromotion()
+            animateNextLinePromotion(mainResult.line.text, mainResult.line.isAlignedRight)
             return
         }
 
@@ -278,16 +278,19 @@ class RichLyricLineView(
         layoutTransition = LayoutTransitionX(config).apply { setAnimateParentHierarchy(true) }
     }
 
-    private fun animateNextLinePromotion() {
+    private fun animateNextLinePromotion(nextMainText: String?, nextMainAlignedRight: Boolean) {
         val generation = ++nextLineTransitionGeneration
         nextLineTransitionRunning = true
         val targetTranslationY = (main.top - secondary.top).toFloat()
-        val targetTranslationX = (main.left - secondary.left).toFloat()
+        val secondaryTextStartX = secondary.currentTextStartX()
+        val targetMainTextStartX = main.textStartX(nextMainText, nextMainAlignedRight)
+        val targetTranslationX = (main.left - secondary.left).toFloat() +
+                targetMainTextStartX - secondaryTextStartX
         val targetScale = (main.textSize / secondary.textSize).coerceIn(0.5f, 2f)
 
         main.animate().cancel()
         secondary.animate().cancel()
-        secondary.pivotX = 0f
+        secondary.pivotX = secondaryTextStartX
         secondary.pivotY = 0f
         main.animate()
             .alpha(0f)

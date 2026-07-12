@@ -133,6 +133,11 @@ open class LyricLineView(context: Context, attrs: AttributeSet? = null) :
 
     val textSize: Float get() = textPaint.textSize
 
+    fun currentTextStartX(): Float = resolveTextStartX(_model.width, _model.isAlignedRight)
+
+    fun textStartX(text: String?, isAlignedRight: Boolean): Float =
+        resolveTextStartX(textPaint.measureText(text.orEmpty()), isAlignedRight)
+
     fun setTextSize(size: Float) {
         val needsUpdate = textPaint.textSize != size || syncRenderer.bgPaint.textSize != size
         if (!needsUpdate) return
@@ -366,6 +371,16 @@ open class LyricLineView(context: Context, attrs: AttributeSet? = null) :
         textPaint.apply {
             color = colors.firstOrNull() ?: Color.BLACK
             shader = if (colors.size > 1) makeRainbowShader(colors) else null
+        }
+    }
+
+    private fun resolveTextStartX(textWidth: Float, isAlignedRight: Boolean): Float {
+        val availableWidth = measuredWidth.toFloat()
+        return when {
+            textWidth >= availableWidth -> 0f
+            isAlignedRight -> availableWidth - textWidth
+            centerIfPossible -> (availableWidth - textWidth) / 2f
+            else -> 0f
         }
     }
 

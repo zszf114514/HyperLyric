@@ -31,6 +31,11 @@ class SuperLyricSource : LyricSource {
     private val positionScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     @Volatile
     private var lastKnownPosition: Long = -1L
+    private var positionPublisher: String? = null
+    private var lastMetadataKey: String? = null
+    private var lastMetadataTitle: String? = null
+    private var lastMetadataArtist: String? = null
+    private var lastMetadataAlbum: String? = null
 
     fun initialize(app: android.app.Application) {
         this.app = app
@@ -113,12 +118,24 @@ class SuperLyricSource : LyricSource {
         if (!hasContent) return
 
         currentSink.onPlaybackStateChanged(true)
-        currentSink.onMetadata(
-            if (data.hasTitle()) data.title else null,
-            if (data.hasArtist()) data.artist else null,
-            if (data.hasAlbum()) data.album else null,
-            publisher
-        )
+        if (data.hasTitle()) lastMetadataTitle = data.title
+        if (data.hasArtist()) lastMetadataArtist = data.artist
+        if (data.hasAlbum()) lastMetadataAlbum = data.album
+        val metadataKey = listOf(
+            publisher,
+            lastMetadataTitle,
+            lastMetadataArtist,
+            lastMetadataAlbum
+        ).joinToString("\u001F")
+        if (lastMetadataKey != metadataKey) {
+            lastMetadataKey = metadataKey
+            currentSink.onMetadata(
+                lastMetadataTitle,
+                lastMetadataArtist,
+                lastMetadataAlbum,
+                publisher
+            )
+        }
         startPositionPolling(publisher)
 
         if (data.hasLyric()) {
@@ -210,7 +227,9 @@ class SuperLyricSource : LyricSource {
     }
 
     private fun startPositionPolling(publisher: String) {
+        if (positionPublisher == publisher && positionJob?.isActive == true) return
         positionJob?.cancel()
+        positionPublisher = publisher
         val context = app ?: return
         positionJob = positionScope.launch {
             while (isActive) {
@@ -227,6 +246,11 @@ class SuperLyricSource : LyricSource {
     private fun stopPositionPolling() {
         positionJob?.cancel()
         positionJob = null
+        positionPublisher = null
+        lastMetadataKey = null
+        lastMetadataTitle = null
+        lastMetadataArtist = null
+        lastMetadataAlbum = null
         lastKnownPosition = -1L
     }
 

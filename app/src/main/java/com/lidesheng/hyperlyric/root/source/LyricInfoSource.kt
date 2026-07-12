@@ -6,6 +6,7 @@ import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import com.lidesheng.hyperlyric.common.lyric.LyricInfoParser
+import com.lidesheng.hyperlyric.common.media.MediaMetadataHelper
 import com.lidesheng.hyperlyric.lyric.model.Song
 import com.lidesheng.hyperlyric.lyric.source.LyricSink
 import com.lidesheng.hyperlyric.lyric.source.LyricSource
@@ -31,6 +32,7 @@ class LyricInfoSource(private val context: Context) : LyricSource {
     private var lastLyricHash: Int = 0
     private var hasLyrics: Boolean = false
     private var activePkg: String? = null
+    private var activeController: MediaController? = null
 
     private var positionJob: Job? = null
     private val positionJob_supervisor = SupervisorJob()
@@ -69,6 +71,7 @@ class LyricInfoSource(private val context: Context) : LyricSource {
         hasLyrics = false
         lastLyricHash = 0
         activePkg = null
+        activeController = null
         positionJob?.cancel()
     }
 
@@ -78,12 +81,17 @@ class LyricInfoSource(private val context: Context) : LyricSource {
         trackedControllers.keys.filter { it !in currentSessions }.forEach { dead ->
             trackedControllers.remove(dead)?.let { try { dead.unregisterCallback(it) } catch (_: Exception) {} }
         }
+        val activeToken = activeController?.sessionToken
+        if (activeToken != null && controllers.none { it.sessionToken == activeToken }) {
+            sink?.onStop()
+            clearLyrics()
+        }
         for (ctrl in controllers) {
             if (!trackedControllers.containsKey(ctrl)) {
                 val cb = object : MediaController.Callback() {
                     override fun onMetadataChanged(metadata: MediaMetadata?) = onMetadataUpdate(ctrl)
                     override fun onPlaybackStateChanged(state: PlaybackState?) {
-                        if (ctrl.packageName == activePkg) {
+                        if (ctrl.sessionToken == activeController?.sessionToken) {
                             sink?.onPlaybackStateChanged(state?.state == PlaybackState.STATE_PLAYING)
                         }
                     }
@@ -110,7 +118,16 @@ class LyricInfoSource(private val context: Context) : LyricSource {
 
         if (!lyricInfoRaw.isNullOrBlank() && currentHash != 0) {
             // 有 lyricInfo → 注入（不同包的歌词互相覆盖，以最后更新的为准）
-            if (currentHash == lastLyricHash && pkg == activePkg) return
+            if (currentHash == lastLyricHash && pkg == activePkg) {
+                if (controller.sessionToken != activeController?.sessionToken) {
+                    activeController = controller
+                    sink?.onPlaybackStateChanged(
+                        controller.playbackState?.state == PlaybackState.STATE_PLAYING
+                    )
+                    startPositionPolling(controller)
+                }
+                return
+            }
 
             val songName = metadata.getString(MediaMetadata.METADATA_KEY_TITLE) ?: ""
             val artist = metadata.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: ""
@@ -121,12 +138,13 @@ class LyricInfoSource(private val context: Context) : LyricSource {
                 lastLyricHash = currentHash
                 hasLyrics = true
                 activePkg = pkg
+                activeController = controller
                 LyriconDataBridge.updateLyricPackage(pkg)
                 LyriconDataBridge.updateSong(song)
                 sink?.onSongChanged(song)
                 sink?.onMetadata(title = songName, artist = artist, album = "", publisher = pkg)
                 sink?.onPlaybackStateChanged(controller.playbackState?.state == PlaybackState.STATE_PLAYING)
-                startPositionPolling(pkg)
+                startPositionPolling(controller)
                 HookLogger.d("LyricInfoSource", "歌词就绪: $songName | ${song.lyrics!!.size}行")
             }
         } else if (hasLyrics && pkg == activePkg) {
@@ -143,31 +161,17 @@ class LyricInfoSource(private val context: Context) : LyricSource {
         HookLogger.d("LyricInfoSource", "songName=${d.songName} | artist=${d.artist} | songId=${d.songId} | format=${d.format} | translation=${d.translationFormat} | lyric=${d.lyricLength}chars | ${d.lyricPreview.joinToString(" | ")}")
     }
 
-    private fun startPositionPolling(pkg: String) {
+    private fun startPositionPolling(controller: MediaController) {
         positionJob?.cancel()
         positionJob = positionScope.launch {
-            var lastKnownPos = 0L
-            var lastPollTime = System.currentTimeMillis()
             while (isActive) {
                 try {
-                    val msm = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
-                    val ctrl = msm.getActiveSessions(null).find { it.packageName == pkg }
-                    val state = ctrl?.playbackState
-                    if (state != null) {
-                        val statePos = state.position
-                        val now = System.currentTimeMillis()
-                        val isPlaying = state.state == PlaybackState.STATE_PLAYING
-                        if (statePos != lastKnownPos) {
-                            lastKnownPos = statePos; lastPollTime = now
-                        } else if (isPlaying) {
-                            lastKnownPos += now - lastPollTime; lastPollTime = now
-                        } else {
-                            lastPollTime = now
-                        }
-                        sink?.onPositionChanged(lastKnownPos)
+                    val position = MediaMetadataHelper.estimatePlaybackPosition(controller.playbackState)
+                    if (position >= 0L && activeController?.sessionToken == controller.sessionToken) {
+                        sink?.onPositionChanged(position)
                     }
                 } catch (_: Exception) {}
-                delay(30)
+                delay(33)
             }
         }
     }
