@@ -2,12 +2,12 @@ package com.lidesheng.hyperlyric.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.lidesheng.hyperlyric.ui.page.MainPage
 import com.lidesheng.hyperlyric.ui.page.SetupPage
@@ -26,7 +26,7 @@ import com.lidesheng.hyperlyric.ui.page.ChangelogPage
 
 @Composable
 fun AppNavigation(startRoute: Route) {
-    val backStack = remember { mutableStateListOf<NavKey>(startRoute) }
+    val backStack = rememberNavBackStack(startRoute)
     val navigator = remember { Navigator(backStack) }
 
     CompositionLocalProvider(LocalNavigator provides navigator) {

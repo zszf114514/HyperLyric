@@ -11,11 +11,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -128,9 +130,9 @@ private fun LazyListScope.settingsSections(
                     items = languageOptions,
                     selectedIndex = appLanguage,
                     onSelectedIndexChange = {
+                        if (appLanguage == it) return@WindowDropdownPreference
                         appLanguage = it
                         prefs.edit { putInt(UIConstants.KEY_APP_LANGUAGE, it) }
-                        LocaleUtils.applyLanguage(context, it)
                     }
                 )
                 if (themeMode >= 3) {

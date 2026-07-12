@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.Context
 import com.lidesheng.hyperlyric.common.PrefsBridge
 import com.lidesheng.hyperlyric.common.UIConstants
+import com.lidesheng.hyperlyric.ui.utils.AppUtils
+import com.lidesheng.hyperlyric.ui.utils.LocaleUtils
 import com.lidesheng.hyperlyric.utils.LogManager
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
@@ -12,6 +14,8 @@ class RootApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        LocaleUtils.clearLegacyPlatformLocale(this)
+        AppUtils.initPredictiveBackGesture(this)
         LogManager.init(this)
         PrefsBridge.init(this)
         appContext = this

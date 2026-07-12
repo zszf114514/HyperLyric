@@ -10,6 +10,18 @@ object ChangelogData {
     fun getChangelog(): List<ChangelogItem> {
         return listOf(
             ChangelogItem(
+                version = "6.1-1933",
+                title = "修 bug 为主~",
+                summary = "- 新增应用语言切换功能\n" +
+                        "- 新增下一句歌词显示功能，仅支持 lyricon 和 lyricinfo 歌词源\n" +
+                        "- 修复超级岛歌词和光效注入延迟的错误\n" +
+                        "- 移除严苛的翻译显示判断条件\n" +
+                        "- 优化应用收进超级岛的过渡动画\n" +
+                        "- 移除超级岛设置页的长度控制滑条\n" +
+                        "- 修复上个版本不小心删除的更新日志\n" +
+                        "- 修复了一些 bug，优化了一些功能"
+            ),
+            ChangelogItem(
                 version = "6.0-1932",
                 title = "本次更新只针对无root模式",
                 summary = "- 重构 service 服务\n" +

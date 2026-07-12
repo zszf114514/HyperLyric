@@ -1,10 +1,9 @@
 package com.lidesheng.hyperlyric.ui.navigation
 
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavKey
 
-class Navigator(val backStack: SnapshotStateList<NavKey>) {
+class Navigator(val backStack: MutableList<NavKey>) {
     fun navigate(route: NavKey) {
         if (backStack.lastOrNull() != route) {
             backStack.add(route)
