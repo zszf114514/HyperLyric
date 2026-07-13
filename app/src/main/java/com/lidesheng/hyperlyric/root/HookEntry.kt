@@ -12,6 +12,7 @@ import com.lidesheng.hyperlyric.root.island.IslandModuleRestoreHooker
 import com.lidesheng.hyperlyric.root.island.SystemUIHookRegistry
 import com.lidesheng.hyperlyric.root.island.IslandWidthHooker
 import com.lidesheng.hyperlyric.root.island.RealIslandHooker
+import com.lidesheng.hyperlyric.root.mediacard.notification.NotificationMediaAmbientFlowHooker
 import com.lidesheng.hyperlyric.root.island.renderer.IslandRenderer
 import com.lidesheng.hyperlyric.root.island.renderer.BaseIslandRenderer
 import com.lidesheng.hyperlyric.root.source.LyriconSource
@@ -128,6 +129,7 @@ class HookEntry : XposedModule() {
             putBoolean(STATE_RUNTIME_READY, runtimeApp != null)
         }
         param.setSavedInstanceState(state)
+        NotificationMediaAmbientFlowHooker.releaseAll()
         cleanupRuntime()
         HookLogger.i("HookEntry", "热重载准备完成")
         return true
@@ -139,6 +141,7 @@ class HookEntry : XposedModule() {
 
         HookIslandGlow.initialize(this)
         IslandProgressGlowHooker.initialize(this)
+        NotificationMediaAmbientFlowHooker.initialize(this)
         val hadProgressBackgroundHook = param.oldHookHandles.any {
             isProgressGlowBackgroundDraw(it.executable)
         }
@@ -156,6 +159,11 @@ class HookEntry : XposedModule() {
                     }.isSuccess
                 }
         }
+        val notificationMediaClassLoader = param.oldHookHandles.asSequence()
+            .filter { isNotificationAmbientFlowHook(it.executable) }
+            .mapNotNull { it.executable.declaringClass.classLoader }
+            .firstOrNull()
+            ?: findCurrentApplication()?.classLoader
 
         var replacedCount = 0
         var removedCount = 0
@@ -187,6 +195,13 @@ class HookEntry : XposedModule() {
                 HookLogger.e("HookEntry", "Failed to install island background progress hook", e)
             }
         }
+        notificationMediaClassLoader?.let { classLoader ->
+            runCatching {
+                NotificationMediaAmbientFlowHooker.hook(this, classLoader)
+            }.onFailure { e ->
+                HookLogger.e("HookEntry", "Failed to install notification media ambient flow hook", e)
+            }
+        }
 
         val state = param.savedInstanceState as? Bundle
         if (state?.getBoolean(STATE_RUNTIME_READY) == true) {
@@ -210,6 +225,7 @@ class HookEntry : XposedModule() {
         val packageName = param.packageName
         
         if (packageName == "com.android.systemui") {
+            NotificationMediaAmbientFlowHooker.hook(this, param.defaultClassLoader)
             try {
                 UnlockIslandWhitelist.hook(this, param.defaultClassLoader)
             } catch (e: Exception) {
@@ -410,6 +426,7 @@ class HookEntry : XposedModule() {
                 IslandModuleRestoreHooker.AdapterUpdateViewHook()
             owner.endsWith("DynamicIslandBaseContentView") && name == "updateTemplate" ->
                 HookIslandGlow.UpdateTemplateHook()
+            isNotificationAmbientFlowHook(executable) -> null
             isProgressGlowBackgroundDraw(executable) ->
                 IslandProgressGlowHooker.BackgroundDrawHook()
             else -> null
@@ -423,6 +440,11 @@ class HookEntry : XposedModule() {
             executable.parameterTypes[0].name == "android.graphics.Canvas" &&
             executable.declaringClass.name ==
             "miui.systemui.dynamicisland.DynamicIslandBackgroundView"
+    }
+
+    private fun isNotificationAmbientFlowHook(executable: Executable): Boolean {
+        return executable is Method &&
+            NotificationMediaAmbientFlowHooker.isTargetMethod(executable)
     }
 
     /**

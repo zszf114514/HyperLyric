@@ -101,6 +101,12 @@
     <string name="title_custom_config">自定义配置</string>
     <string name="title_super_island">超级岛</string>
     <string name="subtitle_super_island">暂停或切换音乐后生效</string>
+    <string name="title_media_cards">媒体卡片</string>
+    <string name="title_notification_center_media_card">通知中心媒体卡片</string>
+    <string name="title_notification_media_ambient_flow_mode">卡片动态流光</string>
+    <string name="option_notification_media_ambient_flow_dynamic">动态流光</string>
+    <string name="option_notification_media_ambient_flow_cover_color">动态流光（封面色）</string>
+    <string name="option_notification_media_ambient_flow_disabled">默认（禁用）</string>
     <string name="title_lyrics">音乐信息</string>
     <string name="title_lyric_anim">歌词切换动画</string>
     <string name="title_lyric_provider">歌词提供者 (Lyricon)</string>

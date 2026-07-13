@@ -19,6 +19,8 @@ object RootConstants {
     const val KEY_HOOK_ISLAND_LEFT_CONTENT_MAX_WIDTH = "key_hook_island_left_content_max_width"
     const val KEY_HOOK_ISLAND_RIGHT_CONTENT_MAX_WIDTH = "key_hook_island_right_content_max_width"
     const val KEY_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE = "key_hook_island_behavior_after_pause"
+    const val KEY_HOOK_NOTIFICATION_MEDIA_AMBIENT_FLOW_MODE =
+        "key_hook_notification_media_ambient_flow_mode"
 
     const val KEY_HOOK_MAX_LEFT_WIDTH = "key_hook_max_left_width"
     const val KEY_HOOK_REMOVE_FOCUS_WHITELIST = "key_hook_remove_focus_whitelist"
@@ -116,6 +118,11 @@ object RootConstants {
     const val DEFAULT_HOOK_ISLAND_LEFT_CONTENT_MAX_WIDTH = 80
     const val DEFAULT_HOOK_ISLAND_RIGHT_CONTENT_MAX_WIDTH = 100
     const val DEFAULT_HOOK_ISLAND_BEHAVIOR_AFTER_PAUSE = 0
+    const val NOTIFICATION_MEDIA_AMBIENT_FLOW_MODE_DISABLED = 0
+    const val NOTIFICATION_MEDIA_AMBIENT_FLOW_MODE_DYNAMIC = 1
+    const val NOTIFICATION_MEDIA_AMBIENT_FLOW_MODE_COVER_COLOR = 2
+    const val DEFAULT_HOOK_NOTIFICATION_MEDIA_AMBIENT_FLOW_MODE =
+        NOTIFICATION_MEDIA_AMBIENT_FLOW_MODE_DISABLED
 
 
     const val DEFAULT_HOOK_TEXT_SIZE = 12
