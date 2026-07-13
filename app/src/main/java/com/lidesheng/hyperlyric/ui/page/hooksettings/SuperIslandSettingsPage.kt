@@ -57,6 +57,17 @@ fun SuperIslandSettingsPage() {
     var islandContentRight by remember { mutableIntStateOf(prefs.getInt(RootConstants.KEY_HOOK_ISLAND_CONTENT_RIGHT, RootConstants.DEFAULT_HOOK_ISLAND_CONTENT_RIGHT)) }
     val lyricMode by remember { mutableIntStateOf(prefs.getInt(RootConstants.KEY_HOOK_LYRIC_MODE, RootConstants.DEFAULT_HOOK_LYRIC_MODE)) }
     var audioCover by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_ISLAND_LEFT_ALBUM, RootConstants.DEFAULT_HOOK_ISLAND_LEFT_ALBUM)) }
+    var audioCoverStyle by remember {
+        mutableIntStateOf(
+            prefs.getInt(
+                RootConstants.KEY_HOOK_ISLAND_ALBUM_COVER_STYLE,
+                RootConstants.DEFAULT_HOOK_ISLAND_ALBUM_COVER_STYLE
+            ).coerceIn(
+                RootConstants.ISLAND_ALBUM_COVER_STYLE_DEFAULT,
+                RootConstants.ISLAND_ALBUM_COVER_STYLE_APP_ICON
+            )
+        )
+    }
     var audioRhythm by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_ISLAND_RIGHT_ICON, RootConstants.DEFAULT_HOOK_ISLAND_RIGHT_ICON)) }
     var optimizeMusicWaveColor by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_ISLAND_MUSIC_WAVE_COLOR, RootConstants.DEFAULT_HOOK_ISLAND_MUSIC_WAVE_COLOR)) }
     var musicWaveGradient by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_ISLAND_MUSIC_WAVE_GRADIENT, RootConstants.DEFAULT_HOOK_ISLAND_MUSIC_WAVE_GRADIENT)) }
@@ -105,6 +116,13 @@ fun SuperIslandSettingsPage() {
     }.map { stringResource(id = it) }
     val afterPauseOptions = remember {
         listOf(R.string.option_after_pause_default, R.string.option_after_pause_keep)
+    }.map { stringResource(id = it) }
+    val audioCoverStyleOptions = remember {
+        listOf(
+            R.string.option_audio_cover_style_default,
+            R.string.option_audio_cover_style_circle,
+            R.string.option_audio_cover_style_app_icon
+        )
     }.map { stringResource(id = it) }
     val progressStyleOptions = remember {
         listOf(
@@ -206,6 +224,19 @@ fun SuperIslandSettingsPage() {
                     Card(modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp).fillMaxWidth()) {
                         Column {
                             SwitchPreference(title = stringResource(id = R.string.title_audio_cover), checked = audioCover, onCheckedChange = { audioCover = it; saveConfig(RootConstants.KEY_HOOK_ISLAND_LEFT_ALBUM, it) })
+                            AnimatedVisibility(visible = audioCover) {
+                                Column {
+                                    OverlayDropdownPreference(
+                                        title = stringResource(id = R.string.title_audio_cover_style),
+                                        items = audioCoverStyleOptions,
+                                        selectedIndex = audioCoverStyle,
+                                        onSelectedIndexChange = {
+                                            audioCoverStyle = it
+                                            saveConfig(RootConstants.KEY_HOOK_ISLAND_ALBUM_COVER_STYLE, it)
+                                        }
+                                    )
+                                }
+                            }
                             SwitchPreference(title = stringResource(id = R.string.title_audio_rhythm), checked = audioRhythm, onCheckedChange = { audioRhythm = it; saveConfig(RootConstants.KEY_HOOK_ISLAND_RIGHT_ICON, it) })
                             AnimatedVisibility(visible = audioRhythm) {
                                 Column {

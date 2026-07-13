@@ -36,6 +36,7 @@ object SystemUIHookRegistry {
             HookIslandGlow.init(module, cl)
             IslandProgressGlowHooker.hook(module, cl)
             IslandMusicWaveColorHooker.hook(module, cl)
+            IslandAlbumCoverStyleHooker.hook(module, cl)
 
             isHookedSuccess = true
             HookLogger.i("SystemUIHookRegistry", "超级岛 Hook 已初始化")

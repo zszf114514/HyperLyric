@@ -7,6 +7,7 @@ import android.os.Looper
 import com.lidesheng.hyperlyric.lyric.source.SourceManager
 import com.lidesheng.hyperlyric.root.bridge.IpcRouter
 import com.lidesheng.hyperlyric.root.island.FakeIslandTransitionHooker
+import com.lidesheng.hyperlyric.root.island.IslandAlbumCoverStyleHooker
 import com.lidesheng.hyperlyric.root.island.IslandProgressGlowHooker
 import com.lidesheng.hyperlyric.root.island.IslandModuleRestoreHooker
 import com.lidesheng.hyperlyric.root.island.SystemUIHookRegistry
@@ -328,6 +329,12 @@ class HookEntry : XposedModule() {
                             } else {
                                 BaseIslandRenderer.clearAllViews()
                             }
+                        }
+                    }
+                    RootConstants.KEY_HOOK_ISLAND_ALBUM_COVER_STYLE -> {
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            IslandAlbumCoverStyleHooker.refresh()
+                            BaseIslandRenderer.refreshActiveIsland()
                         }
                     }
                     in SUPER_ISLAND_RUNTIME_REFRESH_KEYS -> {

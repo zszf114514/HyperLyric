@@ -290,6 +290,10 @@
     <string name="label_left_padding">左边距</string>
     <string name="label_right_padding">右边距</string>
     <string name="title_audio_cover">音频封面</string>
+    <string name="title_audio_cover_style">音频封面样式</string>
+    <string name="option_audio_cover_style_default">默认</string>
+    <string name="option_audio_cover_style_circle">圆形封面</string>
+    <string name="option_audio_cover_style_app_icon">应用图标</string>
     <string name="title_audio_rhythm">音频律动</string>
     <string name="title_audio_rhythm_cover_color">音频律动封面色</string>
     <string name="title_audio_rhythm_gradient_color">音频律动封面渐变色</string>

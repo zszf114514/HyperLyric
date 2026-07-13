@@ -9,6 +9,7 @@ object RootConstants {
     const val DEFAULT_HOOK_LYRIC_SOURCE = "lyricon"
 
     const val KEY_HOOK_ISLAND_LEFT_ALBUM = "key_hook_island_left_album"
+    const val KEY_HOOK_ISLAND_ALBUM_COVER_STYLE = "key_hook_island_album_cover_style"
     const val KEY_HOOK_ISLAND_CONTENT_LEFT = "key_hook_island_content_left"
     const val KEY_HOOK_ISLAND_CONTENT_RIGHT = "key_hook_island_content_right"
     const val KEY_HOOK_ISLAND_LEFT_PADDING_LEFT = "key_hook_island_left_padding_left"
@@ -98,6 +99,10 @@ object RootConstants {
     const val DEFAULT_HOOK_ENABLE_SUPER_ISLAND = false
     const val DEFAULT_HOOK_ENABLE_DYNAMIC_ISLAND = false
     const val DEFAULT_HOOK_ISLAND_LEFT_ALBUM = true
+    const val ISLAND_ALBUM_COVER_STYLE_DEFAULT = 0
+    const val ISLAND_ALBUM_COVER_STYLE_CIRCLE = 1
+    const val ISLAND_ALBUM_COVER_STYLE_APP_ICON = 2
+    const val DEFAULT_HOOK_ISLAND_ALBUM_COVER_STYLE = ISLAND_ALBUM_COVER_STYLE_DEFAULT
     const val DEFAULT_HOOK_MAX_LEFT_WIDTH = 100
     const val DEFAULT_HOOK_REMOVE_FOCUS_WHITELIST = false
     const val DEFAULT_HOOK_REMOVE_ISLAND_WHITELIST = false
