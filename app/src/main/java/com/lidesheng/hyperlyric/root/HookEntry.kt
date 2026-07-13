@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import com.lidesheng.hyperlyric.lyric.source.SourceManager
-import com.lidesheng.hyperlyric.root.bridge.IpcRouter
 import com.lidesheng.hyperlyric.root.island.FakeIslandTransitionHooker
 import com.lidesheng.hyperlyric.root.island.IslandAlbumCoverStyleHooker
 import com.lidesheng.hyperlyric.root.island.IslandProgressGlowHooker
@@ -283,8 +282,6 @@ class HookEntry : XposedModule() {
             val renderer = BaseIslandRenderer
             val sink = RootLyricSink(renderer, prefs)
 
-            IpcRouter.initialize(app)
-
             lyriconSource.initialize(app)
             superLyricSource.initialize(app)
             lyricInfoSource = LyricInfoSource(app)
@@ -365,9 +362,6 @@ class HookEntry : XposedModule() {
         runCatching { sourceManager?.stop() }
         sourceManager = null
         lyricInfoSource = null
-        runtimeApp?.let { app ->
-            runCatching { IpcRouter.shutdown(app) }
-        }
         runtimeApp = null
     }
 

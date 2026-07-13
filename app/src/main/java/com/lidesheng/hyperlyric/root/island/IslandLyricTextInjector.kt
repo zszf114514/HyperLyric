@@ -152,7 +152,12 @@ internal object IslandLyricTextInjector {
 
         val prefs = HookEntry.instance?.prefs ?: return false
 
-        val existingWrapper = container.findViewWithTag<MaxWidthFrameLayout>(wrapperTag)
+        val taggedWrapper = container.findViewWithTag<View>(wrapperTag)
+        val existingWrapper = taggedWrapper as? MaxWidthFrameLayout
+        if (taggedWrapper != null && existingWrapper == null) {
+            (taggedWrapper.parent as? ViewGroup)?.removeView(taggedWrapper)
+            HookLogger.i(TAG, "已移除热重载遗留的旧歌词容器: tag=$wrapperTag")
+        }
         if (existingWrapper != null) {
             existingWrapper.keepVisible = true
             var changed = updateWrapper(existingWrapper, widthPx, config, parentName)
@@ -202,7 +207,8 @@ internal object IslandLyricTextInjector {
     private fun restoreExistingSlotLightweight(rootView: ViewGroup, parentName: String, viewTag: String): Boolean {
         val parent = IslandViewHelper.findViewByName(rootView, parentName) as? ViewGroup ?: return false
         val container = IslandViewHelper.findViewByName(parent, IslandProbeUtils.TEXT_CONTAINER_NAME) as? ViewGroup ?: return false
-        val wrapper = container.findViewWithTag<MaxWidthFrameLayout>("${viewTag}_WRAPPER") ?: return false
+        val wrapper = container.findViewWithTag<View>("${viewTag}_WRAPPER") as? MaxWidthFrameLayout
+            ?: return false
         val targetView = wrapper.findViewWithTag<View>(viewTag) ?: return false
 
         var changed = false
@@ -224,7 +230,8 @@ internal object IslandLyricTextInjector {
     }
 
     private fun restoreExistingSlotByTagLightweight(rootView: ViewGroup, viewTag: String): Boolean {
-        val wrapper = rootView.findViewWithTag<MaxWidthFrameLayout>("${viewTag}_WRAPPER") ?: return false
+        val wrapper = rootView.findViewWithTag<View>("${viewTag}_WRAPPER") as? MaxWidthFrameLayout
+            ?: return false
         val targetView = wrapper.findViewWithTag<View>(viewTag) ?: return false
         val container = wrapper.parent as? ViewGroup ?: return false
 

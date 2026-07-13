@@ -94,7 +94,12 @@ object IslandViewHelper {
 
     private fun hideInjectedView(rootView: ViewGroup, tag: String) {
         val view = rootView.findViewWithTag<View>(tag) ?: return
-        (view as? MaxWidthFrameLayout)?.keepVisible = false
+        val wrapper = view as? MaxWidthFrameLayout
+        if (wrapper == null && view.javaClass.name == MaxWidthFrameLayout::class.java.name) {
+            (view.parent as? ViewGroup)?.removeView(view)
+            return
+        }
+        wrapper?.keepVisible = false
         view.visibility = View.GONE
     }
 
