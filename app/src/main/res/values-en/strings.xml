@@ -103,7 +103,7 @@
     <string name="subtitle_super_island">Takes effect after music paused or changed</string>
     <string name="title_lyrics">Media Info</string>
     <string name="title_lyric_anim">Lyric Animation</string>
-    <string name="title_lyric_provider">Lyric Source (Lyricon)</string>
+    <string name="title_lyric_provider">Lyric Provider (Lyricon)</string>
     <string name="title_lyric_whitelist">Lyric Whitelist</string>
 
     <!-- ———————————————————————— DynamicIslandNotificationPage ———————————————————————— -->

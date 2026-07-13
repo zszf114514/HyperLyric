@@ -103,7 +103,7 @@
     <string name="subtitle_super_island">暂停或切换音乐后生效</string>
     <string name="title_lyrics">音乐信息</string>
     <string name="title_lyric_anim">歌词切换动画</string>
-    <string name="title_lyric_provider">歌词源 (Lyricon)</string>
+    <string name="title_lyric_provider">歌词提供者 (Lyricon)</string>
     <string name="title_lyric_whitelist">歌词白名单</string>
 
     <!-- ———————————————————————— DynamicIslandNotificationPage ———————————————————————— -->
