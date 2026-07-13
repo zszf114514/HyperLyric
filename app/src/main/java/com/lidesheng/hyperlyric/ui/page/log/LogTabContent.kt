@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -79,7 +79,12 @@ fun LogTabContent(
                         }
                     }
                 } else {
-                    items(logs, key = { it.id.ifEmpty { "${it.timestamp}_${it.level}_${it.tag}_${it.message}" } }) { entry ->
+                    itemsIndexed(
+                        logs,
+                        key = { index, entry ->
+                            entry.id.ifEmpty { "log_fallback_${index}_${entry.timestamp}_${entry.level}_${entry.tag}" }
+                        }
+                    ) { _, entry ->
                         LogItem(entry = entry, copiedMsg = copiedMsg, snackbarHostState = snackbarHostState)
                     }
                 }

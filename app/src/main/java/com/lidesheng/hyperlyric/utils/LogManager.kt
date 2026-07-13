@@ -136,7 +136,9 @@ object LogManager : HyperLogger {
             } catch (_: Exception) {
             }
         }
-        entries.reversed()
+        entries.reversed().mapIndexed { index, entry ->
+            entry.copy(id = "app_log_${index}_${entry.timestamp}")
+        }
     }
 
     suspend fun readModuleLogs(context: Context): List<LogEntry> {
