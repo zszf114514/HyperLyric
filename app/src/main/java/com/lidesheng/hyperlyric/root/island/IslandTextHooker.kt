@@ -17,6 +17,8 @@ internal object IslandTextHooker {
     private const val FAKE_CONTENT_VIEW_CLASS = "miui.systemui.dynamicisland.window.content.DynamicIslandContentFakeView"
     private const val BASE_CONTENT_VIEW_CLASS =
         "miui.systemui.dynamicisland.window.content.DynamicIslandBaseContentView"
+    private const val EXPANDED_VIEW_CLASS =
+        "miui.systemui.dynamicisland.view.DynamicIslandExpandedView"
     private const val TEMPLATE_BUILDER_CLASS = "miui.systemui.dynamicisland.template.IslandTemplateBuilder"
     private const val ADAPTER_CLASS = "miui.systemui.dynamicisland.module.IslandModuleViewHolderAdapter"
 
@@ -106,7 +108,8 @@ internal object IslandTextHooker {
 
     internal fun installMiniBarHook(module: XposedModule, cl: ClassLoader) {
         try {
-            cl.loadClass(BASE_CONTENT_VIEW_CLASS).declaredMethods
+            val baseContentViewClass = cl.loadClass(BASE_CONTENT_VIEW_CLASS)
+            baseContentViewClass.declaredMethods
                 .filter { it.name == "updateMiniBar" && it.parameterTypes.size == 1 }
                 .forEach { method ->
                     method.isAccessible = true
@@ -116,11 +119,54 @@ internal object IslandTextHooker {
                     )
                     HookLogger.d(TAG, "已 Hook updateMiniBar: $method")
                 }
+            installBackgroundUpdateHook(module, cl)
+            installExpandedVisibilityHook(module, cl)
+            installClosingToExpandedHook(module, cl)
         } catch (e: ClassNotFoundException) {
             HookLogger.w(TAG, "跳过不支持的 media mini bar Hook: ${e.message}")
         } catch (e: Exception) {
             HookLogger.e(TAG, "安装 media mini bar Hook 失败", e)
         }
+    }
+
+    internal fun installBackgroundUpdateHook(module: XposedModule, cl: ClassLoader) {
+        val method = cl.loadClass(BASE_CONTENT_VIEW_CLASS).declaredMethods.single {
+            it.name == "updateBackgroundBg" &&
+                it.parameterCount == 2 &&
+                it.parameterTypes[0] == android.view.View::class.java &&
+                it.parameterTypes[1] == java.lang.Boolean.TYPE
+        }.apply { isAccessible = true }
+        module.deoptimize(method)
+        module.hook(method).intercept(
+            IslandExpandedMediaAmbientFlowHooker.BackgroundUpdateHook()
+        )
+        HookLogger.d(TAG, "Hook updateBackgroundBg: $method")
+    }
+
+    internal fun installExpandedVisibilityHook(module: XposedModule, cl: ClassLoader) {
+        val method = cl.loadClass(EXPANDED_VIEW_CLASS).getDeclaredMethod(
+            "onVisibilityChanged",
+            android.view.View::class.java,
+            Int::class.javaPrimitiveType
+        ).apply { isAccessible = true }
+        module.deoptimize(method)
+        module.hook(method).intercept(
+            IslandExpandedMediaAmbientFlowHooker.ExpandedVisibilityHook()
+        )
+        HookLogger.d(TAG, "Hook expanded onVisibilityChanged: $method")
+    }
+
+    internal fun installClosingToExpandedHook(module: XposedModule, cl: ClassLoader) {
+        val method = cl.loadClass(FAKE_CONTENT_VIEW_CLASS).getDeclaredMethod(
+            "setClosingToExpanded",
+            Boolean::class.javaPrimitiveType,
+            Boolean::class.javaPrimitiveType
+        ).apply { isAccessible = true }
+        module.deoptimize(method)
+        module.hook(method).intercept(
+            IslandExpandedMediaAmbientFlowHooker.ClosingToExpandedHook()
+        )
+        HookLogger.d(TAG, "Hook fake setClosingToExpanded: $method")
     }
 
     private inline fun installFeature(name: String, block: () -> Unit) {

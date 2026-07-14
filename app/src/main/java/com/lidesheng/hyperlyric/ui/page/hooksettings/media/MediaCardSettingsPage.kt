@@ -74,6 +74,14 @@ fun MediaCardSettingsPage() {
             )
         )
     }
+    var notificationBackgroundBlur by remember {
+        mutableIntStateOf(
+            prefs.getInt(
+                RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_BLUR,
+                RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_BACKGROUND_BLUR
+            ).coerceIn(1, 20)
+        )
+    }
     var notificationBackgroundAutoInvert by remember {
         mutableStateOf(
             prefs.getBoolean(
@@ -90,6 +98,41 @@ fun MediaCardSettingsPage() {
             ).coerceIn(
                 RootConstants.ISLAND_EXPANDED_MEDIA_AMBIENT_FLOW_MODE_DEFAULT,
                 RootConstants.ISLAND_EXPANDED_MEDIA_AMBIENT_FLOW_MODE_COVER_COLOR
+            )
+        )
+    }
+    var islandExpandedBackgroundStyle by remember {
+        mutableIntStateOf(
+            prefs.getInt(
+                RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE,
+                RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE
+            ).coerceIn(
+                RootConstants.ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE_DEFAULT,
+                RootConstants.ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE_LINEAR_GRADIENT
+            )
+        )
+    }
+    var islandExpandedBackgroundColorAnimation by remember {
+        mutableStateOf(
+            prefs.getBoolean(
+                RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_COLOR_ANIMATION,
+                RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_COLOR_ANIMATION
+            )
+        )
+    }
+    var islandExpandedBackgroundBlur by remember {
+        mutableIntStateOf(
+            prefs.getInt(
+                RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_BLUR,
+                RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_BLUR
+            ).coerceIn(1, 20)
+        )
+    }
+    var islandExpandedBackgroundAutoInvert by remember {
+        mutableStateOf(
+            prefs.getBoolean(
+                RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_AUTO_INVERT,
+                RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_AUTO_INVERT
             )
         )
     }
@@ -294,6 +337,20 @@ fun MediaCardSettingsPage() {
                             enabled
                         )
                     },
+                    backgroundBlur = notificationBackgroundBlur,
+                    onBackgroundBlurChange = { blur ->
+                        notificationBackgroundBlur = blur
+                        prefs.edit {
+                            putInt(
+                                RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_BLUR,
+                                blur
+                            )
+                        }
+                        PrefsBridge.putInt(
+                            RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_BLUR,
+                            blur
+                        )
+                    },
                     backgroundAutoInvert = notificationBackgroundAutoInvert,
                     onBackgroundAutoInvertChange = { enabled ->
                         notificationBackgroundAutoInvert = enabled
@@ -375,6 +432,62 @@ fun MediaCardSettingsPage() {
                         PrefsBridge.putBoolean(
                             RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_HIDE_DEVICE_SWITCH,
                             hidden
+                        )
+                    },
+                    backgroundStyle = islandExpandedBackgroundStyle,
+                    onBackgroundStyleChange = { style ->
+                        islandExpandedBackgroundStyle = style
+                        prefs.edit {
+                            putInt(
+                                RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE,
+                                style
+                            )
+                        }
+                        PrefsBridge.putInt(
+                            RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE,
+                            style
+                        )
+                    },
+                    backgroundColorAnimation = islandExpandedBackgroundColorAnimation,
+                    onBackgroundColorAnimationChange = { enabled ->
+                        islandExpandedBackgroundColorAnimation = enabled
+                        prefs.edit {
+                            putBoolean(
+                                RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_COLOR_ANIMATION,
+                                enabled
+                            )
+                        }
+                        PrefsBridge.putBoolean(
+                            RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_COLOR_ANIMATION,
+                            enabled
+                        )
+                    },
+                    backgroundBlur = islandExpandedBackgroundBlur,
+                    onBackgroundBlurChange = { blur ->
+                        islandExpandedBackgroundBlur = blur
+                        prefs.edit {
+                            putInt(
+                                RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_BLUR,
+                                blur
+                            )
+                        }
+                        PrefsBridge.putInt(
+                            RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_BLUR,
+                            blur
+                        )
+                    },
+                    backgroundAutoInvert = islandExpandedBackgroundAutoInvert,
+                    onBackgroundAutoInvertChange = { enabled ->
+                        islandExpandedBackgroundAutoInvert = enabled
+                        prefs.edit {
+                            putBoolean(
+                                RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_AUTO_INVERT,
+                                enabled
+                            )
+                        }
+                        PrefsBridge.putBoolean(
+                            RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_AUTO_INVERT,
+                            enabled
                         )
                     },
                     ambientFlowMode = islandExpandedAmbientFlowMode,

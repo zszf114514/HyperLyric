@@ -121,6 +121,7 @@
     <string name="option_notification_media_background_radial_gradient">Radial gradient</string>
     <string name="option_notification_media_background_linear_gradient">Linear gradient</string>
     <string name="title_notification_media_background_color_animation">Background transition</string>
+    <string name="title_notification_media_background_blur">Background blur strength</string>
     <string name="title_notification_media_background_auto_invert">Auto-invert bright covers</string>
     <string name="title_island_expanded_media_card">Expanded HyperIsland media card</string>
     <string name="title_island_media_ambient_flow_mode">Card ambient flow</string>

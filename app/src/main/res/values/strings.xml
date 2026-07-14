@@ -121,6 +121,7 @@
     <string name="option_notification_media_background_radial_gradient">径向渐变</string>
     <string name="option_notification_media_background_linear_gradient">线性渐变</string>
     <string name="title_notification_media_background_color_animation">背景切换动画</string>
+    <string name="title_notification_media_background_blur">背景模糊强度</string>
     <string name="title_notification_media_background_auto_invert">亮色封面自动反色</string>
     <string name="title_island_expanded_media_card">超级岛展开态媒体卡片</string>
     <string name="title_island_media_ambient_flow_mode">卡片动态流光</string>

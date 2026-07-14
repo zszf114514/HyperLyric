@@ -180,19 +180,29 @@ class HookEntry : XposedModule() {
         val hadMiniBarHook = param.oldHookHandles.any {
             isIslandMiniBarHook(it.executable)
         }
+        val hadBackgroundUpdateHook = param.oldHookHandles.any {
+            isIslandBackgroundUpdateHook(it.executable)
+        }
+        val hadExpandedVisibilityHook = param.oldHookHandles.any {
+            isIslandExpandedVisibilityHook(it.executable)
+        }
+        val hadClosingToExpandedHook = param.oldHookHandles.any {
+            isIslandClosingToExpandedHook(it.executable)
+        }
+        val islandPluginClassLoader = param.oldHookHandles.asSequence()
+            .mapNotNull { it.executable.declaringClass.classLoader }
+            .distinct()
+            .firstOrNull { classLoader ->
+                runCatching {
+                    classLoader.loadClass(
+                        "miui.systemui.dynamicisland.window.content.DynamicIslandBaseContentView"
+                    )
+                }.isSuccess
+            }
         val miniBarClassLoader = if (hadMiniBarHook) {
             null
         } else {
-            param.oldHookHandles.asSequence()
-                .mapNotNull { it.executable.declaringClass.classLoader }
-                .distinct()
-                .firstOrNull { classLoader ->
-                    runCatching {
-                        classLoader.loadClass(
-                            "miui.systemui.dynamicisland.window.content.DynamicIslandBaseContentView"
-                        )
-                    }.isSuccess
-                }
+            islandPluginClassLoader
         }
 
         var replacedCount = 0
@@ -246,6 +256,31 @@ class HookEntry : XposedModule() {
         }
         miniBarClassLoader?.let { classLoader ->
             IslandTextHooker.installMiniBarHook(this, classLoader)
+        }
+        if (hadMiniBarHook) {
+            islandPluginClassLoader?.let { classLoader ->
+                if (!hadBackgroundUpdateHook) {
+                    runCatching {
+                        IslandTextHooker.installBackgroundUpdateHook(this, classLoader)
+                    }.onFailure { error ->
+                        HookLogger.e("HookEntry", "Failed to install background update hook", error)
+                    }
+                }
+                if (!hadExpandedVisibilityHook) {
+                    runCatching {
+                        IslandTextHooker.installExpandedVisibilityHook(this, classLoader)
+                    }.onFailure { error ->
+                        HookLogger.e("HookEntry", "Failed to install expanded visibility hook", error)
+                    }
+                }
+                if (!hadClosingToExpandedHook) {
+                    runCatching {
+                        IslandTextHooker.installClosingToExpandedHook(this, classLoader)
+                    }.onFailure { error ->
+                        HookLogger.e("HookEntry", "Failed to install closing transition hook", error)
+                    }
+                }
+            }
         }
 
         val state = param.savedInstanceState as? Bundle
@@ -431,9 +466,18 @@ class HookEntry : XposedModule() {
                             NotificationMediaCoverStyleHooker.refresh()
                         }
                     }
-                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_CARD_THEME -> {
+                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_CARD_THEME,
+                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_AMBIENT_FLOW_MODE -> {
                         android.os.Handler(android.os.Looper.getMainLooper()).post {
                             IslandExpandedMediaAmbientFlowHooker.refreshCardTheme()
+                        }
+                    }
+                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE,
+                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_BLUR,
+                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_COLOR_ANIMATION,
+                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_AUTO_INVERT -> {
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            IslandExpandedMediaAmbientFlowHooker.refreshBackgroundStyle()
                         }
                     }
                     RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_COVER_STYLE,
@@ -522,6 +566,13 @@ class HookEntry : XposedModule() {
                 HookIslandGlow.UpdateTemplateHook()
             owner.endsWith("DynamicIslandBaseContentView") && name == "updateMiniBar" ->
                 IslandExpandedMediaAmbientFlowHooker.MiniBarUpdateHook()
+            owner.endsWith("DynamicIslandBaseContentView") && name == "updateBackgroundBg" ->
+                IslandExpandedMediaAmbientFlowHooker.BackgroundUpdateHook()
+            owner.endsWith("DynamicIslandExpandedView") && name == "onVisibilityChanged" ->
+                IslandExpandedMediaAmbientFlowHooker.ExpandedVisibilityHook()
+            owner.endsWith("DynamicIslandContentFakeView") &&
+                name == "setClosingToExpanded" && executable.parameterCount == 2 ->
+                IslandExpandedMediaAmbientFlowHooker.ClosingToExpandedHook()
             isIslandExpandedMediaAmbientFlowHook(executable) ->
                 IslandExpandedMediaAmbientFlowHooker.hookerFor(executable)
             isNotificationAmbientFlowHook(executable) -> null
@@ -555,6 +606,27 @@ class HookEntry : XposedModule() {
             executable.declaringClass.name.endsWith("DynamicIslandBaseContentView") &&
             executable.name == "updateMiniBar" &&
             executable.parameterCount == 1
+    }
+
+    private fun isIslandExpandedVisibilityHook(executable: Executable): Boolean {
+        return executable is Method &&
+            executable.declaringClass.name.endsWith("DynamicIslandExpandedView") &&
+            executable.name == "onVisibilityChanged" &&
+            executable.parameterCount == 2
+    }
+
+    private fun isIslandBackgroundUpdateHook(executable: Executable): Boolean {
+        return executable is Method &&
+            executable.declaringClass.name.endsWith("DynamicIslandBaseContentView") &&
+            executable.name == "updateBackgroundBg" &&
+            executable.parameterCount == 2
+    }
+
+    private fun isIslandClosingToExpandedHook(executable: Executable): Boolean {
+        return executable is Method &&
+            executable.declaringClass.name.endsWith("DynamicIslandContentFakeView") &&
+            executable.name == "setClosingToExpanded" &&
+            executable.parameterCount == 2
     }
 
     /**

@@ -3,6 +3,7 @@ package com.lidesheng.hyperlyric.root.mediacard.notification.background
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
+import android.graphics.ColorFilter
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
@@ -39,6 +40,7 @@ internal object NotificationMediaBackgroundController {
         Collections.newSetFromMap(WeakHashMap<ClassLoader, Boolean>())
     )
     private val seekBarColors = Collections.synchronizedMap(WeakHashMap<SeekBar, Int>())
+    private val seekBarStates = Collections.synchronizedMap(WeakHashMap<SeekBar, SeekBarState>())
 
     @Volatile
     private var module: XposedModule? = null
@@ -77,9 +79,8 @@ internal object NotificationMediaBackgroundController {
         val context = readField(controller, "context") as? Context ?: return
         val holder = readField(controller, "holder") ?: return
         val mediaBg = readField(holder, "mediaBg") as? ImageView ?: return
-        if (state.mediaBg !== mediaBg) {
-            state.mediaBg = mediaBg
-            state.originalClipToOutline = mediaBg.clipToOutline
+        if (state.mediaBg !== mediaBg || (!state.customApplied && !state.renderPending)) {
+            captureNativeBackground(state, mediaBg)
         }
         val packageName = readField(mediaData, "packageName") as? String ?: return
         val artwork = readField(mediaData, "artwork") as? Icon
@@ -128,18 +129,29 @@ internal object NotificationMediaBackgroundController {
                     rendered.bitmap.recycle()
                     return@post
                 }
+                if (
+                    state.customApplied && state.appliedToken == token &&
+                    state.artworkFingerprint == rendered.artworkFingerprint
+                ) {
+                    rendered.bitmap.recycle()
+                    state.renderPending = false
+                    return@post
+                }
                 applyBackground(mediaBg, rendered.bitmap)
                 applyForeground(holder, rendered.colors)
                 state.customApplied = true
+                state.appliedToken = token
+                state.artworkFingerprint = rendered.artworkFingerprint
                 state.renderPending = false
             }
         }
     }
 
     fun onDetach(controller: Any) {
+        clearSeekBarColor(controller)
         states.remove(controller)?.let { state ->
             state.request.incrementAndGet()
-            restoreClipping(state)
+            restoreMediaBackground(state)
         }
     }
 
@@ -154,9 +166,11 @@ internal object NotificationMediaBackgroundController {
                     onBind(controller, state.lastMediaData)
                 } else {
                     clearSeekBarColor(controller)
-                    refreshNative(controller)
-                    restoreClipping(state)
+                    restoreMediaBackground(state)
                     state.customApplied = false
+                    state.appliedToken = null
+                    state.artworkFingerprint = null
+                    refreshNative(controller)
                 }
             }
         }
@@ -178,17 +192,22 @@ internal object NotificationMediaBackgroundController {
     }
 
     fun releaseAll() {
+        executor.shutdownNow()
         val snapshot = synchronized(states) { states.values.toList() }
         snapshot.forEach { state ->
             state.request.incrementAndGet()
-            restoreClipping(state)
+            restoreMediaBackground(state)
         }
+        val rendererSnapshot = synchronized(renderers) { renderers.values.toList() }
+        rendererSnapshot.forEach(NotificationMediaBackgroundRenderer::close)
         states.clear()
         renderers.clear()
         unavailableLoaders.clear()
         supportedLoaders.clear()
+        val seekBarSnapshot = synchronized(seekBarStates) { seekBarStates.toMap() }
+        seekBarSnapshot.forEach { (seekBar, state) -> restoreSeekBarState(seekBar, state) }
+        seekBarStates.clear()
         seekBarColors.clear()
-        executor.shutdownNow()
     }
 
     private fun applyBackground(mediaBg: ImageView, bitmap: Bitmap) {
@@ -227,6 +246,18 @@ internal object NotificationMediaBackgroundController {
         (readField(holder, "elapsedTimeView") as? TextView)?.setTextColor(colors.textPrimary)
         (readField(holder, "totalTimeView") as? TextView)?.setTextColor(colors.textPrimary)
         val seekBar = readField(holder, "seekBar") as? SeekBar ?: return
+        seekBarStates.getOrPut(seekBar) {
+            SeekBarState(
+                thumbTintList = seekBar.thumbTintList,
+                progressTintList = seekBar.progressTintList,
+                progressBackgroundTintList = seekBar.progressBackgroundTintList,
+                paintColorFilter = (readField(seekBar, "mPaint") as? Paint)?.colorFilter,
+                progressDrawableColorFilter =
+                    (readField(seekBar, "mProgressDrawable") as? Drawable)?.colorFilter,
+                backgroundDrawableColorFilter =
+                    (readField(seekBar, "mBackgroundDrawable") as? Drawable)?.colorFilter
+            )
+        }
         seekBar.thumbTintList = primary
         seekBar.progressTintList = primary
         seekBar.progressBackgroundTintList = ColorStateList.valueOf(
@@ -240,10 +271,44 @@ internal object NotificationMediaBackgroundController {
         val holder = readField(controller, "holder") ?: return
         val seekBar = readField(holder, "seekBar") as? SeekBar ?: return
         seekBarColors.remove(seekBar)
+        seekBarStates.remove(seekBar)?.let { state ->
+            restoreSeekBarState(seekBar, state)
+        }
     }
 
-    private fun restoreClipping(state: ControllerState) {
-        state.mediaBg?.clipToOutline = state.originalClipToOutline
+    private fun restoreSeekBarState(seekBar: SeekBar, state: SeekBarState) {
+        seekBar.thumbTintList = state.thumbTintList
+        seekBar.progressTintList = state.progressTintList
+        seekBar.progressBackgroundTintList = state.progressBackgroundTintList
+        (readField(seekBar, "mPaint") as? Paint)?.colorFilter = state.paintColorFilter
+        (readField(seekBar, "mProgressDrawable") as? Drawable)?.colorFilter =
+            state.progressDrawableColorFilter
+        (readField(seekBar, "mBackgroundDrawable") as? Drawable)?.colorFilter =
+            state.backgroundDrawableColorFilter
+        seekBar.invalidate()
+    }
+
+    private fun captureNativeBackground(state: ControllerState, mediaBg: ImageView) {
+        state.mediaBg = mediaBg
+        state.originalDrawable = mediaBg.drawable
+        state.originalScaleType = mediaBg.scaleType
+        state.originalClipToOutline = mediaBg.clipToOutline
+        state.originalPadding = intArrayOf(
+            mediaBg.paddingLeft,
+            mediaBg.paddingTop,
+            mediaBg.paddingRight,
+            mediaBg.paddingBottom
+        )
+    }
+
+    private fun restoreMediaBackground(state: ControllerState) {
+        val mediaBg = state.mediaBg ?: return
+        mediaBg.setImageDrawable(state.originalDrawable)
+        state.originalScaleType?.let { mediaBg.scaleType = it }
+        val padding = state.originalPadding
+        mediaBg.setPadding(padding[0], padding[1], padding[2], padding[3])
+        mediaBg.clipToOutline = state.originalClipToOutline
+        mediaBg.invalidate()
     }
 
     private fun resolveRenderer(classLoader: ClassLoader?): NotificationMediaBackgroundRenderer? {
@@ -307,10 +372,24 @@ internal object NotificationMediaBackgroundController {
     private data class ControllerState(
         var lastMediaData: Any? = null,
         var token: String? = null,
+        var appliedToken: String? = null,
+        var artworkFingerprint: Long? = null,
         var customApplied: Boolean = false,
         var renderPending: Boolean = false,
         var mediaBg: ImageView? = null,
+        var originalDrawable: Drawable? = null,
+        var originalScaleType: ImageView.ScaleType? = null,
+        var originalPadding: IntArray = intArrayOf(0, 0, 0, 0),
         var originalClipToOutline: Boolean = false,
         val request: AtomicInteger = AtomicInteger()
+    )
+
+    private data class SeekBarState(
+        val thumbTintList: ColorStateList?,
+        val progressTintList: ColorStateList?,
+        val progressBackgroundTintList: ColorStateList?,
+        val paintColorFilter: ColorFilter?,
+        val progressDrawableColorFilter: ColorFilter?,
+        val backgroundDrawableColorFilter: ColorFilter?
     )
 }
