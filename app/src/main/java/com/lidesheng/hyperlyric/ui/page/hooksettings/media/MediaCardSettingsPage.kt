@@ -65,6 +65,28 @@ fun MediaCardSettingsPage() {
             )
         )
     }
+    var notificationCardTheme by remember {
+        mutableIntStateOf(
+            prefs.getInt(
+                RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_CARD_THEME,
+                RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_CARD_THEME
+            ).coerceIn(
+                RootConstants.MEDIA_CARD_THEME_FOLLOW_SYSTEM,
+                RootConstants.MEDIA_CARD_THEME_ALWAYS_DARK
+            )
+        )
+    }
+    var islandExpandedCardTheme by remember {
+        mutableIntStateOf(
+            prefs.getInt(
+                RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_CARD_THEME,
+                RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_CARD_THEME
+            ).coerceIn(
+                RootConstants.MEDIA_CARD_THEME_FOLLOW_SYSTEM,
+                RootConstants.MEDIA_CARD_THEME_ALWAYS_DARK
+            )
+        )
+    }
 
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
@@ -111,6 +133,17 @@ fun MediaCardSettingsPage() {
                 contentPadding = contentPadding
             ) {
                 notificationCenterMediaCardSection(
+                    cardTheme = notificationCardTheme,
+                    onCardThemeChange = { theme ->
+                        notificationCardTheme = theme
+                        prefs.edit {
+                            putInt(RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_CARD_THEME, theme)
+                        }
+                        PrefsBridge.putInt(
+                            RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_CARD_THEME,
+                            theme
+                        )
+                    },
                     ambientFlowMode = notificationAmbientFlowMode,
                     onAmbientFlowModeChange = { mode ->
                         notificationAmbientFlowMode = mode
@@ -127,6 +160,17 @@ fun MediaCardSettingsPage() {
                     }
                 )
                 islandExpandedMediaCardSection(
+                    cardTheme = islandExpandedCardTheme,
+                    onCardThemeChange = { theme ->
+                        islandExpandedCardTheme = theme
+                        prefs.edit {
+                            putInt(RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_CARD_THEME, theme)
+                        }
+                        PrefsBridge.putInt(
+                            RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_CARD_THEME,
+                            theme
+                        )
+                    },
                     ambientFlowMode = islandExpandedAmbientFlowMode,
                     onAmbientFlowModeChange = { mode ->
                         islandExpandedAmbientFlowMode = mode

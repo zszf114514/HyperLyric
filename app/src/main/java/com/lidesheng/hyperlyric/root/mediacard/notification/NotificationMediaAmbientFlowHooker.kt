@@ -1,6 +1,7 @@
 package com.lidesheng.hyperlyric.root.mediacard.notification
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.Icon
@@ -36,7 +37,12 @@ object NotificationMediaAmbientFlowHooker {
         Collections.newSetFromMap(WeakHashMap<ClassLoader, Boolean>())
     )
     private val states = Collections.synchronizedMap(WeakHashMap<Any, ControllerState>())
+    private val activeControllers = Collections.synchronizedSet(
+        Collections.newSetFromMap(WeakHashMap<Any, Boolean>())
+    )
+    private val themeStates = Collections.synchronizedMap(WeakHashMap<Any, ControllerThemeState>())
     private val nativeApis = Collections.synchronizedMap(WeakHashMap<ClassLoader, NativeMusicBgApi>())
+    private val themeApis = Collections.synchronizedMap(WeakHashMap<ClassLoader, CardThemeApi>())
     private val nativeUnavailableClassLoaders = Collections.synchronizedSet(
         Collections.newSetFromMap(WeakHashMap<ClassLoader, Boolean>())
     )
@@ -116,11 +122,16 @@ object NotificationMediaAmbientFlowHooker {
 
     fun releaseAll() {
         val snapshot = synchronized(states) { states.toMap() }
+        val controllers = synchronized(activeControllers) { activeControllers.toList() }
         states.clear()
+        activeControllers.clear()
         colorExecutor.shutdownNow()
         val cleanup = Runnable {
+            controllers.forEach(::restoreCardTheme)
             snapshot.values.forEach(::disposeState)
+            themeStates.clear()
             nativeApis.clear()
+            themeApis.clear()
             nativeUnavailableClassLoaders.clear()
         }
         if (Looper.myLooper() == Looper.getMainLooper()) {
@@ -133,12 +144,25 @@ object NotificationMediaAmbientFlowHooker {
     class ControllerHook(private val action: Action) : Hooker {
         override fun intercept(chain: Chain): Any? {
             val controller = chain.thisObject ?: return chain.proceed()
-            if (action == Action.DETACH) removeView(controller)
+            if (action == Action.DETACH) {
+                activeControllers.remove(controller)
+                removeView(controller)
+                restoreCardTheme(controller)
+            } else {
+                runCatching { prepareCardTheme(controller) }
+                    .onFailure { HookLogger.e(TAG, "Failed to prepare native media card theme", it) }
+            }
             val result = chain.proceed()
             runCatching {
                 when (action) {
-                    Action.ATTACH -> syncView(controller)
-                    Action.BIND -> bind(controller, chain.args.firstOrNull())
+                    Action.ATTACH -> {
+                        activeControllers.add(controller)
+                        syncView(controller)
+                    }
+                    Action.BIND -> {
+                        activeControllers.add(controller)
+                        bind(controller, chain.args.firstOrNull())
+                    }
                     Action.DETACH -> Unit
                 }
             }.onFailure { error ->
@@ -149,6 +173,42 @@ object NotificationMediaAmbientFlowHooker {
     }
 
     enum class Action { ATTACH, DETACH, BIND }
+
+    fun refreshCardTheme() {
+        val refresh = Runnable {
+            val snapshot = synchronized(activeControllers) { activeControllers.toList() }
+            snapshot.forEach { controller ->
+                runCatching { refreshCardTheme(controller) }
+                    .onFailure { HookLogger.e(TAG, "Failed to refresh media card theme", it) }
+            }
+        }
+        if (Looper.myLooper() == Looper.getMainLooper()) refresh.run()
+        else Handler(Looper.getMainLooper()).post(refresh)
+    }
+
+    private fun prepareCardTheme(controller: Any) {
+        val api = resolveThemeApi(controller.javaClass.classLoader) ?: return
+        api.apply(controller, currentCardTheme(), refreshViews = false)
+    }
+
+    private fun refreshCardTheme(controller: Any) {
+        val api = resolveThemeApi(controller.javaClass.classLoader) ?: return
+        api.apply(controller, currentCardTheme(), refreshViews = true)
+    }
+
+    private fun restoreCardTheme(controller: Any) {
+        val api = resolveThemeApi(controller.javaClass.classLoader) ?: return
+        api.restore(controller)
+    }
+
+    private fun resolveThemeApi(classLoader: ClassLoader?): CardThemeApi? {
+        classLoader ?: return null
+        themeApis[classLoader]?.let { return it }
+        return runCatching { CardThemeApi.create(classLoader) }
+            .onSuccess { themeApis[classLoader] = it }
+            .onFailure { HookLogger.w(TAG, "Native media card theme API unavailable: ${it.message}") }
+            .getOrNull()
+    }
 
     private fun syncView(controller: Any) {
         if (currentMode() != RootConstants.NOTIFICATION_MEDIA_AMBIENT_FLOW_MODE_DISABLED) {
@@ -367,6 +427,16 @@ object NotificationMediaAmbientFlowHooker {
         ) ?: RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_AMBIENT_FLOW_MODE
     }
 
+    private fun currentCardTheme(): Int {
+        return prefs?.getInt(
+            RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_CARD_THEME,
+            RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_CARD_THEME
+        )?.coerceIn(
+            RootConstants.MEDIA_CARD_THEME_FOLLOW_SYSTEM,
+            RootConstants.MEDIA_CARD_THEME_ALWAYS_DARK
+        ) ?: RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_CARD_THEME
+    }
+
     private data class ControllerState(
         var view: View? = null,
         var nativeApi: NativeMusicBgApi? = null,
@@ -376,10 +446,87 @@ object NotificationMediaAmbientFlowHooker {
         val colorRequest: AtomicInteger = AtomicInteger()
     )
 
+    private data class ControllerThemeState(val originalContext: Context)
+
     private data class MediaPalette(
         val mainColor: Int,
         val colors: IntArray
     )
+
+    private class CardThemeApi private constructor(
+        private val contextField: Field,
+        private val updateForegroundColorsMethod: Method,
+        private val updateMediaBackgroundMethod: Method
+    ) {
+        fun apply(controller: Any, theme: Int, refreshViews: Boolean) {
+            val existingState = themeStates[controller]
+            val originalContext = existingState?.originalContext
+                ?: contextField.get(controller) as Context
+            val themedContext = when (theme) {
+                RootConstants.MEDIA_CARD_THEME_ALWAYS_LIGHT ->
+                    originalContext.withNightMode(Configuration.UI_MODE_NIGHT_NO)
+                RootConstants.MEDIA_CARD_THEME_ALWAYS_DARK ->
+                    originalContext.withNightMode(Configuration.UI_MODE_NIGHT_YES)
+                else -> originalContext
+            }
+
+            if (theme == RootConstants.MEDIA_CARD_THEME_FOLLOW_SYSTEM) {
+                if (existingState != null) {
+                    contextField.set(controller, originalContext)
+                    themeStates.remove(controller)
+                }
+            } else {
+                themeStates[controller] = ControllerThemeState(originalContext)
+                contextField.set(controller, themedContext)
+            }
+
+            if (refreshViews) {
+                updateForegroundColorsMethod.invoke(controller)
+                updateMediaBackgroundMethod.invoke(controller)
+            }
+        }
+
+        fun restore(controller: Any) {
+            val state = themeStates.remove(controller) ?: return
+            contextField.set(controller, state.originalContext)
+        }
+
+        private fun Context.withNightMode(nightMode: Int): Context {
+            val configuration = Configuration(resources.configuration).apply {
+                uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or nightMode
+            }
+            return createConfigurationContext(configuration)
+        }
+
+        companion object {
+            fun create(classLoader: ClassLoader): CardThemeApi {
+                val controllerClass = controllerClassNames.firstNotNullOfOrNull { className ->
+                    runCatching { classLoader.loadClass(className) }.getOrNull()
+                } ?: error("Media controller class is unavailable")
+                return CardThemeApi(
+                    contextField = findRequiredField(controllerClass, "context"),
+                    updateForegroundColorsMethod = controllerClass.declaredMethods.single {
+                        it.name == "updateForegroundColors" && it.parameterCount == 0
+                    }.apply { isAccessible = true },
+                    updateMediaBackgroundMethod = controllerClass.declaredMethods.single {
+                        it.name == "updateMediaBackground" && it.parameterCount == 0
+                    }.apply { isAccessible = true }
+                )
+            }
+
+            private fun findRequiredField(type: Class<*>, name: String): Field {
+                var current: Class<*>? = type
+                while (current != null) {
+                    runCatching { current.getDeclaredField(name) }.getOrNull()?.let { field ->
+                        field.isAccessible = true
+                        return field
+                    }
+                    current = current.superclass
+                }
+                error("No field $name in ${type.name}")
+            }
+        }
+    }
 
     private class NativeMusicBgApi private constructor(
         private val viewClass: Class<*>,

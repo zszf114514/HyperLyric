@@ -369,6 +369,16 @@ class HookEntry : XposedModule() {
                             BaseIslandRenderer.refreshActiveIsland()
                         }
                     }
+                    RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_CARD_THEME -> {
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            NotificationMediaAmbientFlowHooker.refreshCardTheme()
+                        }
+                    }
+                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_CARD_THEME -> {
+                        android.os.Handler(android.os.Looper.getMainLooper()).post {
+                            IslandExpandedMediaAmbientFlowHooker.refreshCardTheme()
+                        }
+                    }
                     in SUPER_ISLAND_RUNTIME_REFRESH_KEYS -> {
                         android.os.Handler(android.os.Looper.getMainLooper()).post {
                             BaseIslandRenderer.refreshActiveIsland()
