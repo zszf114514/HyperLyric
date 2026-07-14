@@ -1,5 +1,6 @@
 package com.lidesheng.hyperlyric.root.island
 
+import com.lidesheng.hyperlyric.root.mediacard.island.IslandExpandedMediaAmbientFlowHooker
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import io.github.libxposed.api.XposedModule
 
@@ -14,6 +15,8 @@ internal object IslandTextHooker {
     private const val TAG = IslandTextHookerSupport.TAG
     private const val CONTENT_VIEW_CLASS = "miui.systemui.dynamicisland.window.content.DynamicIslandContentView"
     private const val FAKE_CONTENT_VIEW_CLASS = "miui.systemui.dynamicisland.window.content.DynamicIslandContentFakeView"
+    private const val BASE_CONTENT_VIEW_CLASS =
+        "miui.systemui.dynamicisland.window.content.DynamicIslandBaseContentView"
     private const val TEMPLATE_BUILDER_CLASS = "miui.systemui.dynamicisland.template.IslandTemplateBuilder"
     private const val ADAPTER_CLASS = "miui.systemui.dynamicisland.module.IslandModuleViewHolderAdapter"
 
@@ -80,6 +83,7 @@ internal object IslandTextHooker {
         }
 
         installFeature("模块恢复") {
+            installMiniBarHook(module, cl)
             cl.loadClass(TEMPLATE_BUILDER_CLASS).declaredMethods
                 .filter { it.name == "updateModuleView" && it.parameterTypes.size == 3 }
                 .forEach { method ->
@@ -97,6 +101,25 @@ internal object IslandTextHooker {
                     module.hook(method).intercept(IslandModuleRestoreHooker.AdapterUpdateViewHook())
                     HookLogger.d(TAG, "已 Hook adapter.updateView: $method")
                 }
+        }
+    }
+
+    internal fun installMiniBarHook(module: XposedModule, cl: ClassLoader) {
+        try {
+            cl.loadClass(BASE_CONTENT_VIEW_CLASS).declaredMethods
+                .filter { it.name == "updateMiniBar" && it.parameterTypes.size == 1 }
+                .forEach { method ->
+                    method.isAccessible = true
+                    module.deoptimize(method)
+                    module.hook(method).intercept(
+                        IslandExpandedMediaAmbientFlowHooker.MiniBarUpdateHook()
+                    )
+                    HookLogger.d(TAG, "已 Hook updateMiniBar: $method")
+                }
+        } catch (e: ClassNotFoundException) {
+            HookLogger.w(TAG, "跳过不支持的 media mini bar Hook: ${e.message}")
+        } catch (e: Exception) {
+            HookLogger.e(TAG, "安装 media mini bar Hook 失败", e)
         }
     }
 

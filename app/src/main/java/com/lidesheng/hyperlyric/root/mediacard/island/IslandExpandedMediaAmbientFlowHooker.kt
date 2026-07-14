@@ -131,9 +131,6 @@ object IslandExpandedMediaAmbientFlowHooker {
             SEEK_BAR_HEAD_ALPHA_LISTENER_CLASS ->
                 method.name == "onUpdate" && method.parameterCount == 2
 
-            BASE_CONTENT_VIEW_CLASS ->
-                method.name == "updateMiniBar" && method.parameterCount == 1
-
             else -> false
         }
     }
@@ -155,7 +152,6 @@ object IslandExpandedMediaAmbientFlowHooker {
 
             MUSIC_BG_VIEW_CLASS -> PlaybackStartHook()
             SEEK_BAR_HEAD_ALPHA_LISTENER_CLASS -> HeadGlowUpdateHook()
-            BASE_CONTENT_VIEW_CLASS -> MiniBarUpdateHook()
             else -> null
         }
     }
@@ -265,7 +261,7 @@ object IslandExpandedMediaAmbientFlowHooker {
         }
     }
 
-    private class MiniBarUpdateHook : Hooker {
+    internal class MiniBarUpdateHook : Hooker {
         override fun intercept(chain: Chain): Any? {
             val result = chain.proceed()
             runCatching {
@@ -916,7 +912,6 @@ object IslandExpandedMediaAmbientFlowHooker {
         companion object {
             fun create(classLoader: ClassLoader): NativeApi {
                 val binderClass = classLoader.loadClass(BINDER_CLASS)
-                val baseContentViewClass = classLoader.loadClass(BASE_CONTENT_VIEW_CLASS)
                 val holderClass = classLoader.loadClass(
                     "com.android.systemui.statusbar.notification.mediaisland.MiuiIslandMediaViewHolder"
                 )
@@ -967,10 +962,7 @@ object IslandExpandedMediaAmbientFlowHooker {
                         }.apply { isAccessible = true },
                         start,
                         resume,
-                        headAlphaUpdate,
-                        baseContentViewClass.declaredMethods.single {
-                            it.name == "updateMiniBar" && it.parameterCount == 1
-                        }.apply { isAccessible = true }
+                        headAlphaUpdate
                     ),
                     holderField = binderClass.getDeclaredField("holder").apply {
                         isAccessible = true

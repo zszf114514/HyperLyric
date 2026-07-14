@@ -8,6 +8,7 @@ import com.lidesheng.hyperlyric.lyric.source.SourceManager
 import com.lidesheng.hyperlyric.root.island.FakeIslandTransitionHooker
 import com.lidesheng.hyperlyric.root.island.IslandAlbumCoverStyleHooker
 import com.lidesheng.hyperlyric.root.island.IslandMusicWaveColorHooker
+import com.lidesheng.hyperlyric.root.island.IslandTextHooker
 import com.lidesheng.hyperlyric.root.island.IslandProgressGlowHooker
 import com.lidesheng.hyperlyric.root.island.IslandModuleRestoreHooker
 import com.lidesheng.hyperlyric.root.island.SystemUIHookRegistry
@@ -176,6 +177,23 @@ class HookEntry : XposedModule() {
         } else {
             findCurrentApplication()?.classLoader
         }
+        val hadMiniBarHook = param.oldHookHandles.any {
+            isIslandMiniBarHook(it.executable)
+        }
+        val miniBarClassLoader = if (hadMiniBarHook) {
+            null
+        } else {
+            param.oldHookHandles.asSequence()
+                .mapNotNull { it.executable.declaringClass.classLoader }
+                .distinct()
+                .firstOrNull { classLoader ->
+                    runCatching {
+                        classLoader.loadClass(
+                            "miui.systemui.dynamicisland.window.content.DynamicIslandBaseContentView"
+                        )
+                    }.isSuccess
+                }
+        }
 
         var replacedCount = 0
         var removedCount = 0
@@ -225,6 +243,9 @@ class HookEntry : XposedModule() {
             }.onFailure { e ->
                 HookLogger.e("HookEntry", "Failed to install expanded island media flow hook", e)
             }
+        }
+        miniBarClassLoader?.let { classLoader ->
+            IslandTextHooker.installMiniBarHook(this, classLoader)
         }
 
         val state = param.savedInstanceState as? Bundle
@@ -491,6 +512,8 @@ class HookEntry : XposedModule() {
                 IslandModuleRestoreHooker.AdapterUpdateViewHook()
             owner.endsWith("DynamicIslandBaseContentView") && name == "updateTemplate" ->
                 HookIslandGlow.UpdateTemplateHook()
+            owner.endsWith("DynamicIslandBaseContentView") && name == "updateMiniBar" ->
+                IslandExpandedMediaAmbientFlowHooker.MiniBarUpdateHook()
             isIslandExpandedMediaAmbientFlowHook(executable) ->
                 IslandExpandedMediaAmbientFlowHooker.hookerFor(executable)
             isNotificationAmbientFlowHook(executable) -> null
@@ -517,6 +540,13 @@ class HookEntry : XposedModule() {
     private fun isIslandExpandedMediaAmbientFlowHook(executable: Executable): Boolean {
         return executable is Method &&
             IslandExpandedMediaAmbientFlowHooker.isTargetMethod(executable)
+    }
+
+    private fun isIslandMiniBarHook(executable: Executable): Boolean {
+        return executable is Method &&
+            executable.declaringClass.name.endsWith("DynamicIslandBaseContentView") &&
+            executable.name == "updateMiniBar" &&
+            executable.parameterCount == 1
     }
 
     /**
