@@ -14,6 +14,15 @@ data class MigrationNote(
 object MigrationData {
     val notes = listOf(
         MigrationNote(
+            versionCode = 1934,
+            items = listOf(
+                MigrationItem(
+                    text = "本次更新请重启系统界面",
+                    summary = "重启手机也行~"
+                )
+            )
+        ),
+        MigrationNote(
             versionCode = 1933,
             items = listOf(
                 MigrationItem(
