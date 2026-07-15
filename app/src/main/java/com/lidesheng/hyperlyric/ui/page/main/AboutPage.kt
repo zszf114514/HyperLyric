@@ -46,6 +46,7 @@ fun AboutPage(
                 TopAppBar(
                     color = barColor,
                     title = stringResource(R.string.about),
+                    largeTitle = "",
                     scrollBehavior = topAppBarScrollBehavior,
                 )
             }
