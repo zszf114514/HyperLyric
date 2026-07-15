@@ -88,7 +88,7 @@ fun SuperIslandSettingsPage() {
                 RootConstants.DEFAULT_HOOK_ISLAND_PROGRESS_STYLE
             ).coerceIn(
                 RootConstants.ISLAND_PROGRESS_STYLE_TOP_CLOCKWISE,
-                RootConstants.ISLAND_PROGRESS_STYLE_LEFT_BIDIRECTIONAL
+                RootConstants.ISLAND_PROGRESS_STYLE_BOTTOM_BIDIRECTIONAL
             )
         )
     }
@@ -139,7 +139,9 @@ fun SuperIslandSettingsPage() {
             R.string.option_island_progress_right_clockwise,
             R.string.option_island_progress_bottom_clockwise,
             R.string.option_island_progress_left_clockwise,
-            R.string.option_island_progress_left_bidirectional
+            R.string.option_island_progress_left_bidirectional,
+            R.string.option_island_progress_top_bidirectional,
+            R.string.option_island_progress_bottom_bidirectional
         )
     }.map { stringResource(id = it) }
 

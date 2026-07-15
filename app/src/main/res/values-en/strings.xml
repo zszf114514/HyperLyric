@@ -354,6 +354,8 @@
     <string name="option_island_progress_bottom_clockwise">Bottom start (clockwise)</string>
     <string name="option_island_progress_left_clockwise">Left start (clockwise)</string>
     <string name="option_island_progress_left_bidirectional">Left start (bidirectional)</string>
+    <string name="option_island_progress_top_bidirectional">Top start (bidirectional)</string>
+    <string name="option_island_progress_bottom_bidirectional">Bottom start (bidirectional)</string>
 
     <!-- ———————————————————————— Shared ———————————————————————— -->
     <string name="filter">Filter</string>

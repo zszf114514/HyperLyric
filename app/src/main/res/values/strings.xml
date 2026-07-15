@@ -355,6 +355,8 @@
     <string name="option_island_progress_bottom_clockwise">下方起点（顺时针）</string>
     <string name="option_island_progress_left_clockwise">左侧起点（顺时针）</string>
     <string name="option_island_progress_left_bidirectional">左侧起点（上下双向）</string>
+    <string name="option_island_progress_top_bidirectional">上方起点（左右双向）</string>
+    <string name="option_island_progress_bottom_bidirectional">下方起点（左右双向）</string>
 
     <!-- ———————————————————————— Shared ———————————————————————— -->
     <string name="filter">筛选</string>

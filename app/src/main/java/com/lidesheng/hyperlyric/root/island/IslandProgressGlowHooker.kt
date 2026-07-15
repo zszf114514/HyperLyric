@@ -296,18 +296,31 @@ internal object IslandProgressGlowHooker {
             progressPathFraction = fraction
             progressPathStyle = style
             progressPath.reset()
-            if (style == RootConstants.ISLAND_PROGRESS_STYLE_LEFT_BIDIRECTIONAL) {
-                val branchLength = trackLength * 0.5f * fraction
-                appendWrappedSegment(
-                    startDistance = trackLength * LEFT_START_FRACTION - branchLength,
-                    segmentLength = branchLength * 2f
-                )
-            } else {
-                appendWrappedSegment(
-                    startDistance = trackLength * startFraction(style),
-                    segmentLength = trackLength * fraction
-                )
+            when (style) {
+                RootConstants.ISLAND_PROGRESS_STYLE_LEFT_BIDIRECTIONAL -> {
+                    appendBidirectionalSegment(LEFT_START_FRACTION, fraction)
+                }
+                RootConstants.ISLAND_PROGRESS_STYLE_TOP_BIDIRECTIONAL -> {
+                    appendBidirectionalSegment(TOP_START_FRACTION, fraction)
+                }
+                RootConstants.ISLAND_PROGRESS_STYLE_BOTTOM_BIDIRECTIONAL -> {
+                    appendBidirectionalSegment(BOTTOM_START_FRACTION, fraction)
+                }
+                else -> {
+                    appendWrappedSegment(
+                        startDistance = trackLength * startFraction(style),
+                        segmentLength = trackLength * fraction
+                    )
+                }
             }
+        }
+
+        private fun appendBidirectionalSegment(startFraction: Float, fraction: Float) {
+            val branchLength = trackLength * 0.5f * fraction
+            appendWrappedSegment(
+                startDistance = trackLength * startFraction - branchLength,
+                segmentLength = branchLength * 2f
+            )
         }
 
         private fun updateProgressPaint(pathLeft: Float, pathRight: Float) {
@@ -418,6 +431,8 @@ internal object IslandProgressGlowHooker {
     private const val PROGRESS_ALPHA = 255
     private const val STROKE_WIDTH_RATIO = 1f
     private const val PROGRESS_MAIN_COLOR_STOP = 0.7f
+    private const val TOP_START_FRACTION = 0f
+    private const val BOTTOM_START_FRACTION = 0.5f
     private const val LEFT_START_FRACTION = 0.75f
     private const val EDGE_OVERLAP_PX = 0.5f
     private const val ISLAND_DIMEN_CLASS = "miui.systemui.dynamicisland.R\$dimen"
