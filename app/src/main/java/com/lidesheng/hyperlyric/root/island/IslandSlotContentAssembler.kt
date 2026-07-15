@@ -53,9 +53,7 @@ internal object IslandSlotContentAssembler {
             mediaInfo.title,
             mediaInfo.artist,
             mediaInfo.album,
-            mediaInfo.albumArt?.generationId ?: 0,
-            LyriconDataBridge.isDisplayTranslation,
-            LyriconDataBridge.isDisplayRoma
+            mediaInfo.albumArt?.generationId ?: 0
         ).joinToString("|")
 
         if (!force && lastStyleSignatures[view] == signature) return
@@ -78,13 +76,13 @@ internal object IslandSlotContentAssembler {
         )
         when (view) {
             is RichLyricLineView -> {
-                view.displayTranslation = LyriconDataBridge.isDisplayTranslation && !disableAll
-                view.displayRoma = LyriconDataBridge.isDisplayRoma && !disableAll && !translationOnly
+                view.displayTranslation = !disableAll
+                view.displayRoma = !disableAll && !translationOnly
                 view.setStyle(style)
             }
             is SpaceGateRichLyricLineView -> {
-                view.displayTranslation = LyriconDataBridge.isDisplayTranslation && !disableAll
-                view.displayRoma = LyriconDataBridge.isDisplayRoma && !disableAll && !translationOnly
+                view.displayTranslation = !disableAll
+                view.displayRoma = !disableAll && !translationOnly
                 view.setStyle(style)
             }
         }

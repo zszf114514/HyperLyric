@@ -43,14 +43,6 @@ object LyriconDataBridge : StateResetter {
     @Volatile
     var isTextMode: Boolean = false
 
-    /** 是否显示翻译（由插件回调控制；AI 翻译成功也会置 true） */
-    @Volatile
-    var isDisplayTranslation: Boolean = true
-
-    /** 是否显示罗马音（由插件回调控制） */
-    @Volatile
-    var isDisplayRoma: Boolean = true
-
     /** AI 翻译完成后的回调，由 LyriconSource 设置 */
     var onAiTranslationComplete: (() -> Unit)? = null
 
@@ -88,7 +80,6 @@ object LyriconDataBridge : StateResetter {
         val processor = SongPreprocessor(TitleSlot.NAME_ARTIST)
         val lines = processor.prepare(translatedSong)
         timingNavigator = TimingNavigator(lines.toTypedArray())
-        isDisplayTranslation = true
     }
 
     fun updatePosition(position: Long): Boolean {
@@ -148,8 +139,6 @@ object LyriconDataBridge : StateResetter {
         activePackageName = null
         currentLyricPackageName = null
         isTextMode = false
-        isDisplayTranslation = true
-        isDisplayRoma = true
         timingNavigator = TimingNavigator(emptyArray())
 
         versionCounter.incrementAndGet()

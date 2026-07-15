@@ -130,14 +130,9 @@ class LyriconSource : LyricSource {
             sink?.onPlainText(text)
         }
 
-        override fun onDisplayTranslationChanged(isDisplayTranslation: Boolean) {
-            LyriconDataBridge.isDisplayTranslation = isDisplayTranslation
-            BaseIslandRenderer.refreshActiveIsland()
-        }
+        // 提供器只负责提供歌词内容；翻译和罗马音是否显示由 HyperLyric 显示端配置决定。
+        override fun onDisplayTranslationChanged(isDisplayTranslation: Boolean) = Unit
 
-        override fun onDisplayRomaChanged(isDisplayRoma: Boolean) {
-            LyriconDataBridge.isDisplayRoma = isDisplayRoma
-            BaseIslandRenderer.refreshActiveIsland()
-        }
+        override fun onDisplayRomaChanged(isDisplayRoma: Boolean) = Unit
     }
 }

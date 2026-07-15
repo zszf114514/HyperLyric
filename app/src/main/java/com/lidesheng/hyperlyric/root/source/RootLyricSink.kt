@@ -28,7 +28,6 @@ class RootLyricSink(
 
     private val aiTransScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var activeAiTranslationJob: Job? = null
-    private var aiSetDisplayTranslation: Boolean = false
     private val mainHandler = Handler(Looper.getMainLooper())
     private var lastPositionDispatchTimeMs = 0L
     private var pendingPosition: Long? = null
@@ -61,9 +60,6 @@ class RootLyricSink(
             )
             if (aiEnabled) {
                 startAiTranslation(song, prefs)
-            } else if (aiSetDisplayTranslation) {
-                LyriconDataBridge.isDisplayTranslation = false
-                aiSetDisplayTranslation = false
             }
         }
     }
@@ -85,7 +81,6 @@ class RootLyricSink(
     override fun onStop() {
         activeAiTranslationJob?.cancel()
         activeAiTranslationJob = null
-        aiSetDisplayTranslation = false
         playbackActive = false
         cancelPendingPositionDispatch()
         lastReceivedPosition = Long.MIN_VALUE
@@ -194,7 +189,6 @@ class RootLyricSink(
 
                 if (translatedSong !== song && translatedSong.lyrics != null) {
                     LyriconDataBridge.applyTranslation(translatedSong)
-                    aiSetDisplayTranslation = true
                     LyriconDataBridge.onAiTranslationComplete?.invoke()
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
