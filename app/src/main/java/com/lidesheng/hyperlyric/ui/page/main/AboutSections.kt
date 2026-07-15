@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -21,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import com.lidesheng.hyperlyric.R
 import top.yukonga.miuix.kmp.basic.BasicComponent
@@ -44,11 +47,21 @@ fun LazyListScope.aboutPageSections(
 ) {
     item(key = "about_header") {
         val version = aboutAppVersion ?: stringResource(R.string.version_unknown)
+        val context = LocalContext.current
+        val appIcon = remember(context) {
+            context.applicationInfo.loadIcon(context.packageManager).toBitmap().asImageBitmap()
+        }
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(20.dp))
+            Image(
+                bitmap = appIcon,
+                contentDescription = null,
+                modifier = Modifier.size(80.dp),
+            )
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "HyperLyric",
                 style = MiuixTheme.textStyles.title1,

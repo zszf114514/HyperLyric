@@ -322,7 +322,8 @@ fun MainPage() {
     val aboutAppVersion: String? = remember {
         try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            "v ${pInfo.versionName}-${PackageInfoCompat.getLongVersionCode(pInfo)}"
+            val versionName = pInfo.versionName ?: return@remember null
+            "${PackageInfoCompat.getLongVersionCode(pInfo)} - $versionName"
         } catch (_: Exception) {
             null
         }
