@@ -511,6 +511,7 @@ fun MainPage() {
                         enableDynamicIsland = enableDynamicIsland,
                         onDynamicIslandToggle = toggleDynamicIsland,
                         onSuperIslandConfigClick = { navigator.navigate(Route.HookSettings) },
+                        onMediaCardConfigClick = { navigator.navigate(Route.MediaCardSettings) },
                         onDynamicIslandConfigClick = { navigator.navigate(Route.DynamicIslandNotification) },
                         onRestartClick = { showRestartDialog = true },
                         removeFocusWhitelist = removeFocusWhitelist,

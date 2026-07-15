@@ -26,6 +26,7 @@ fun LazyListScope.homePageSections(
     enableDynamicIsland: Boolean,
     onDynamicIslandToggle: (Boolean) -> Unit,
     onSuperIslandConfigClick: () -> Unit,
+    onMediaCardConfigClick: () -> Unit,
     onDynamicIslandConfigClick: () -> Unit,
     onRestartClick: () -> Unit,
     removeFocusWhitelist: Boolean,
@@ -60,16 +61,22 @@ fun LazyListScope.homePageSections(
         Card(modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp).fillMaxWidth()) {
             Column {
                 SwitchPreference(
-                    title = stringResource(R.string.title_super_island_lyrics),
-                    summary = stringResource(R.string.summary_super_island_lyrics),
+                    title = stringResource(R.string.title_miui_systemui_enhancement),
+                    summary = stringResource(R.string.summary_miui_systemui_enhancement),
                     checked = enableSuperIsland,
                     onCheckedChange = onSuperIslandToggle,
                 )
                 AnimatedVisibility(visible = enableSuperIsland) {
-                    ArrowPreference(
-                        title = stringResource(R.string.title_super_island_config),
-                        onClick = onSuperIslandConfigClick,
-                    )
+                    Column {
+                        ArrowPreference(
+                            title = stringResource(R.string.title_super_island_lyrics),
+                            onClick = onSuperIslandConfigClick,
+                        )
+                        ArrowPreference(
+                            title = stringResource(R.string.title_media_cards),
+                            onClick = onMediaCardConfigClick,
+                        )
+                    }
                 }
                 SwitchPreference(
                     title = stringResource(R.string.title_dynamic_island_lyrics),
