@@ -9,6 +9,7 @@ import android.view.ViewOutlineProvider
 import android.widget.ImageView
 import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.root.HookEntry
+import com.lidesheng.hyperlyric.root.SystemUiEnhancementGate
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import io.github.libxposed.api.XposedInterface.Chain
 import io.github.libxposed.api.XposedInterface.Hooker
@@ -30,6 +31,7 @@ internal object IslandAlbumCoverStyleHooker {
         Collections.newSetFromMap(WeakHashMap<ClassLoader, Boolean>())
     )
     private val trackedHolders = WeakHashMap<Any, TrackedHolder>()
+    private val restoringNative = ThreadLocal<Boolean>()
     private val circleOutlineProvider = object : ViewOutlineProvider() {
         override fun getOutline(view: View, outline: Outline) {
             outline.setOval(0, 0, view.width, view.height)
@@ -98,6 +100,26 @@ internal object IslandAlbumCoverStyleHooker {
 
     fun onPlaybackStateChanged(isPlaying: Boolean) {
         IslandAlbumCoverRotationController.setPlaybackActive(isPlaying)
+    }
+
+    fun releaseAll() {
+        val holders = synchronized(trackedHolders) {
+            trackedHolders.mapNotNull { (holder, tracked) ->
+                tracked.dataRef.get()?.let { Triple(holder, it, tracked.accessor) }
+            }
+        }
+        runOnMain {
+            IslandAlbumCoverRotationController.cleanup()
+            restoringNative.set(true)
+            try {
+                holders.forEach { (holder, data, accessor) ->
+                    runCatching { accessor.setFixIconMethod.invoke(holder, data) }
+                        .onFailure { HookLogger.e(TAG, "Failed to restore native album cover", it) }
+                }
+            } finally {
+                restoringNative.remove()
+            }
+        }
     }
 
     fun cleanup() {
@@ -172,6 +194,9 @@ internal object IslandAlbumCoverStyleHooker {
     }
 
     private fun currentStyle(): Int {
+        if (!SystemUiEnhancementGate.isEnabled()) {
+            return RootConstants.ISLAND_ALBUM_COVER_STYLE_DEFAULT
+        }
         val sharedPrefs = prefs ?: return RootConstants.DEFAULT_HOOK_ISLAND_ALBUM_COVER_STYLE
         if (!sharedPrefs.getBoolean(
                 RootConstants.KEY_HOOK_ISLAND_LEFT_ALBUM,
@@ -202,6 +227,7 @@ internal object IslandAlbumCoverStyleHooker {
     ) : Hooker {
         override fun intercept(chain: Chain): Any? {
             val result = chain.proceed()
+            if (restoringNative.get() == true) return result
             runCatching {
                 val holder = chain.thisObject ?: return@runCatching
                 val data = chain.args.firstOrNull() ?: return@runCatching

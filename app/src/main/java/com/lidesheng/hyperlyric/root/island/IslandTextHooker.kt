@@ -22,7 +22,7 @@ internal object IslandTextHooker {
     private const val TEMPLATE_BUILDER_CLASS = "miui.systemui.dynamicisland.template.IslandTemplateBuilder"
     private const val ADAPTER_CLASS = "miui.systemui.dynamicisland.module.IslandModuleViewHolderAdapter"
 
-    fun hook(module: XposedModule, cl: ClassLoader) {
+    fun hook(module: XposedModule, cl: ClassLoader, includeMediaHooks: Boolean = true) {
         installFeature("真实岛") {
             val contentViewClass = cl.loadClass(CONTENT_VIEW_CLASS)
 
@@ -85,7 +85,9 @@ internal object IslandTextHooker {
         }
 
         installFeature("模块恢复") {
-            installMiniBarHook(module, cl)
+            if (includeMediaHooks) {
+                installMiniBarHook(module, cl)
+            }
             cl.loadClass(TEMPLATE_BUILDER_CLASS).declaredMethods
                 .filter { it.name == "updateModuleView" && it.parameterTypes.size == 3 }
                 .forEach { method ->

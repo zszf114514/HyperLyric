@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.common.color.ColorExtractor
 import com.lidesheng.hyperlyric.root.HookEntry
+import com.lidesheng.hyperlyric.root.SystemUiEnhancementGate
 import com.lidesheng.hyperlyric.root.mediacard.MediaArtworkSampler
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import io.github.libxposed.api.XposedInterface.Chain
@@ -265,7 +266,7 @@ internal object IslandMusicWaveColorHooker {
     }
 
     private fun isEnabled(sharedPrefs: SharedPreferences): Boolean {
-        return sharedPrefs.getBoolean(
+        return SystemUiEnhancementGate.isEnabled() && sharedPrefs.getBoolean(
             RootConstants.KEY_HOOK_ISLAND_RIGHT_ICON,
             RootConstants.DEFAULT_HOOK_ISLAND_RIGHT_ICON
         ) && sharedPrefs.getBoolean(

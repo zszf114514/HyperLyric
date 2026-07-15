@@ -9,6 +9,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.util.ArrayDeque
@@ -73,6 +74,26 @@ internal class AITranslationScheduler(
         }
     }
 
+    fun cancelAll() {
+        val runningJobs = synchronized(lock) {
+            while (pending.isNotEmpty()) {
+                val job = pending.removeFirst()
+                job.state = TranslationJobState.CANCELLED
+                jobs.remove(job.key, job)
+                job.deferred.complete(null)
+            }
+            jobs.values.mapNotNull { job ->
+                if (job.state != TranslationJobState.RUNNING) return@mapNotNull null
+                job.state = TranslationJobState.CANCELLED
+                jobs.remove(job.key, job)
+                running = (running - 1).coerceAtLeast(0)
+                job.deferred.cancel(CancellationException("AI translation cancelled"))
+                job.coroutineJob
+            }
+        }
+        runningJobs.forEach { it.cancel() }
+    }
+
     private fun trimPendingLocked() {
         while (pending.size > maxPending) {
             val dropped = pending.removeFirst()
@@ -93,7 +114,7 @@ internal class AITranslationScheduler(
             job.state = TranslationJobState.RUNNING
             running++
             HookLogger.d("AITranslationScheduler", "开始翻译 ${job.songName}（等待中=${pending.size}，运行中=$running）")
-            scope.launch { runJob(job) }
+            job.coroutineJob = scope.launch { runJob(job) }
         }
     }
 
@@ -101,6 +122,7 @@ internal class AITranslationScheduler(
         try {
             val apiResults =
                 OpenAiTranslationClient.request(job.configs, job.song, job.originalLines)
+            if (job.state == TranslationJobState.CANCELLED) return
             if (!apiResults.isNullOrEmpty() && job.generation == generation.get()) {
                 HookLogger.d("AITranslationScheduler", " ${job.songName}翻译成功（翻译已缓存）")
                 cache.putMemory(job.key, apiResults)
@@ -118,9 +140,10 @@ internal class AITranslationScheduler(
             job.deferred.complete(null)
         } finally {
             synchronized(lock) {
-                running = (running - 1).coerceAtLeast(0)
-                jobs.remove(job.key, job)
-                dispatchNextLocked()
+                if (jobs.remove(job.key, job)) {
+                    running = (running - 1).coerceAtLeast(0)
+                    dispatchNextLocked()
+                }
             }
         }
     }
@@ -133,6 +156,8 @@ internal class AITranslationScheduler(
         val originalLines: List<String>,
         val generation: Int,
         val deferred: CompletableDeferred<List<TranslationItem>?> = CompletableDeferred(),
+        var coroutineJob: Job? = null,
+        @Volatile
         var state: TranslationJobState = TranslationJobState.PENDING
     )
 

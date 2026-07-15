@@ -15,6 +15,8 @@ class SourceManager(
     private var activeSource: LyricSource? = null
 
     fun start() {
+        if (activeSource != null) return
+
         val sourceId = prefs.getString(prefKey, defaultSourceId) ?: defaultSourceId
         val source = sources.find { it.id == sourceId && it.isAvailable() }
             ?: sources.firstOrNull { it.isAvailable() }

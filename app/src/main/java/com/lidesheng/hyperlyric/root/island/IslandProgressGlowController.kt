@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.common.media.MediaMetadataHelper
+import com.lidesheng.hyperlyric.root.SystemUiEnhancementGate
 import com.lidesheng.hyperlyric.root.utils.CoverColorHelper
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import java.lang.ref.WeakReference
@@ -44,6 +45,10 @@ internal object IslandProgressGlowController {
         mediaInfo: MediaMetadataHelper.MediaInfo?,
         prefs: SharedPreferences
     ) {
+        if (!SystemUiEnhancementGate.isEnabled()) {
+            clear(rootView)
+            return
+        }
         if (!prefs.getBoolean(
                 RootConstants.KEY_HOOK_ISLAND_PROGRESS_GLOW,
                 RootConstants.DEFAULT_HOOK_ISLAND_PROGRESS_GLOW
@@ -122,6 +127,14 @@ internal object IslandProgressGlowController {
             backgroundViewsByRoot.remove(rootView)
         }?.get() ?: return
         IslandProgressGlowHooker.clearMediaProgress(backgroundView)
+    }
+
+    fun clearAll() {
+        synchronized(backgroundViewsByRoot) { backgroundViewsByRoot.clear() }
+        synchronized(diagnosticStageByRoot) { diagnosticStageByRoot.clear() }
+        synchronized(lastUpdateByRoot) { lastUpdateByRoot.clear() }
+        synchronized(playbackProgressByPackage) { playbackProgressByPackage.clear() }
+        IslandProgressGlowHooker.clearAllMediaProgress()
     }
 
     fun onPlaybackStateChanged(isPlaying: Boolean) {

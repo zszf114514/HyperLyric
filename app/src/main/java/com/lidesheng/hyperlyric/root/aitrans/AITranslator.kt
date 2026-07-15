@@ -80,6 +80,10 @@ object AITranslator {
         cache.clear(callback)
     }
 
+    fun cancelActiveRequests() {
+        scheduler.cancelAll()
+    }
+
     private suspend fun translateSong(
         song: Song,
         configs: AiTranslationConfigs,

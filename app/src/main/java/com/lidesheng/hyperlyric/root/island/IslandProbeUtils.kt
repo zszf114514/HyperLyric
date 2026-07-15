@@ -3,8 +3,7 @@ package com.lidesheng.hyperlyric.root.island
 import android.app.PendingIntent
 import android.os.Bundle
 import android.view.ViewGroup
-import com.lidesheng.hyperlyric.common.RootConstants
-import com.lidesheng.hyperlyric.root.HookEntry
+import com.lidesheng.hyperlyric.root.SystemUiEnhancementGate
 
 internal object IslandProbeUtils {
     const val LEFT_PARENT_NAME = "island_container_module_image_text_1"
@@ -17,11 +16,7 @@ internal object IslandProbeUtils {
     const val RIGHT_TEST_WRAPPER_TAG = "HYPERLYRIC_RIGHT_VIEW_WRAPPER"
 
     fun isSuperIslandEnabled(): Boolean {
-        val prefs = HookEntry.instance?.prefs ?: return false
-        return prefs.getBoolean(
-            RootConstants.KEY_HOOK_ENABLE_SUPER_ISLAND,
-            RootConstants.DEFAULT_HOOK_ENABLE_SUPER_ISLAND
-        )
+        return SystemUiEnhancementGate.isEnabled()
     }
 
     fun extractMediaIslandInfo(data: Any?): MediaIslandInfo? {

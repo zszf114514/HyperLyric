@@ -16,6 +16,7 @@ import android.os.Looper
 import android.view.View
 import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.root.HookEntry
+import com.lidesheng.hyperlyric.root.SystemUiEnhancementGate
 import com.lidesheng.hyperlyric.root.mediacard.notification.background.MediaBackgroundRendererPool
 import com.lidesheng.hyperlyric.root.mediacard.notification.background.NotificationMediaColorConfig
 import com.lidesheng.hyperlyric.root.utils.HookLogger
@@ -676,13 +677,18 @@ internal object IslandExpandedMediaBackgroundController {
         }
     }
 
-    private fun currentStyle(): Int = prefs?.getInt(
-        RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE,
-        RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE
-    )?.coerceIn(
-        RootConstants.ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE_DEFAULT,
-        RootConstants.ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE_LINEAR_GRADIENT
-    ) ?: RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE
+    private fun currentStyle(): Int {
+        if (!SystemUiEnhancementGate.isEnabled()) {
+            return RootConstants.ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE_DEFAULT
+        }
+        return prefs?.getInt(
+            RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE,
+            RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE
+        )?.coerceIn(
+            RootConstants.ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE_DEFAULT,
+            RootConstants.ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE_LINEAR_GRADIENT
+        ) ?: RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE
+    }
 
     private fun currentBlurAmount(): Int = prefs?.getInt(
         RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_BLUR,

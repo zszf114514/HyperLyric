@@ -10,6 +10,7 @@ import android.view.ViewOutlineProvider
 import android.widget.ImageView
 import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.root.HookEntry
+import com.lidesheng.hyperlyric.root.SystemUiEnhancementGate
 import com.lidesheng.hyperlyric.root.mediacard.MediaCoverRotationController
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import io.github.libxposed.api.XposedInterface.Chain
@@ -164,6 +165,17 @@ object NotificationMediaCoverStyleHooker {
     private class ControllerHook(private val methodName: String) : Hooker {
         override fun intercept(chain: Chain): Any? {
             val controller = chain.thisObject ?: return chain.proceed()
+            if (!SystemUiEnhancementGate.isEnabled()) {
+                if (methodName == "detach") {
+                    activeControllers.remove(controller)
+                    restoreStyle(controller)
+                }
+                val result = chain.proceed()
+                if (methodName == "attach" || methodName == "bindMediaData") {
+                    activeControllers.add(controller)
+                }
+                return result
+            }
             if (methodName == "setSeamless" && hideDeviceSwitch()) return null
             if (methodName == "detach") {
                 activeControllers.remove(controller)
@@ -190,7 +202,7 @@ object NotificationMediaCoverStyleHooker {
             val result = chain.proceed()
             val controller = chain.thisObject ?: return result
             layoutControllers.add(controller)
-            if (restoringNativeLayout.get() != true) {
+            if (SystemUiEnhancementGate.isEnabled() && restoringNativeLayout.get() != true) {
                 runCatching {
                     resolveApi(controller.javaClass.classLoader)?.applyLoadedLayout(
                         controller,
@@ -253,6 +265,9 @@ object NotificationMediaCoverStyleHooker {
     }
 
     private fun currentStyle(): Int {
+        if (!SystemUiEnhancementGate.isEnabled()) {
+            return RootConstants.NOTIFICATION_MEDIA_COVER_STYLE_DEFAULT
+        }
         return prefs?.getInt(
             RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_COVER_STYLE,
             RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_COVER_STYLE
@@ -263,6 +278,7 @@ object NotificationMediaCoverStyleHooker {
     }
 
     private fun hideCoverSource(): Boolean {
+        if (!SystemUiEnhancementGate.isEnabled()) return false
         return prefs?.getBoolean(
             RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_HIDE_COVER_SOURCE,
             RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_HIDE_COVER_SOURCE
@@ -270,6 +286,7 @@ object NotificationMediaCoverStyleHooker {
     }
 
     private fun hideDeviceSwitch(): Boolean {
+        if (!SystemUiEnhancementGate.isEnabled()) return false
         return prefs?.getBoolean(
             RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_HIDE_DEVICE_SWITCH,
             RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_HIDE_DEVICE_SWITCH

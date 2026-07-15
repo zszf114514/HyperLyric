@@ -21,6 +21,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.root.HookEntry
+import com.lidesheng.hyperlyric.root.SystemUiEnhancementGate
 import com.lidesheng.hyperlyric.root.island.IslandAlbumCoverStyleHooker
 import com.lidesheng.hyperlyric.root.island.IslandProbeUtils
 import com.lidesheng.hyperlyric.root.mediacard.MediaAmbientFlowPalette
@@ -195,6 +196,14 @@ object IslandExpandedMediaAmbientFlowHooker {
     private class BinderHook(private val action: Action) : Hooker {
         override fun intercept(chain: Chain): Any? {
             val binder = chain.thisObject ?: return chain.proceed()
+            if (!SystemUiEnhancementGate.isEnabled()) {
+                if (action == Action.DETACH) cleanupBinder(binder)
+                val result = chain.proceed()
+                if (action == Action.ATTACH || action == Action.BIND) {
+                    activeBinders.add(binder)
+                }
+                return result
+            }
             if (action == Action.DETACH) cleanupBinder(binder)
             val nestedInBind = action != Action.BIND && bindingBinder.get() === binder
             val previousBinding = if (action == Action.BIND) bindingBinder.get() else null
@@ -243,6 +252,7 @@ object IslandExpandedMediaAmbientFlowHooker {
 
     private class PlaybackStartHook : Hooker {
         override fun intercept(chain: Chain): Any? {
+            if (!SystemUiEnhancementGate.isEnabled()) return chain.proceed()
             val view = chain.thisObject as? View ?: return chain.proceed()
             if ((IslandExpandedMediaBackgroundController.isActive() ||
                     currentMode() == RootConstants.ISLAND_EXPANDED_MEDIA_AMBIENT_FLOW_MODE_DISABLED) &&
@@ -256,6 +266,7 @@ object IslandExpandedMediaAmbientFlowHooker {
 
     private class ForegroundColorsHook : Hooker {
         override fun intercept(chain: Chain): Any? {
+            if (!SystemUiEnhancementGate.isEnabled()) return chain.proceed()
             if (restoringNativeForeground.get() == true) return chain.proceed()
             val binder = chain.thisObject ?: return chain.proceed()
             val holder = chain.args.firstOrNull() ?: return chain.proceed()
@@ -294,6 +305,7 @@ object IslandExpandedMediaAmbientFlowHooker {
     private class HeadGlowUpdateHook : Hooker {
         override fun intercept(chain: Chain): Any? {
             val result = chain.proceed()
+            if (!SystemUiEnhancementGate.isEnabled()) return result
             val api = nativeApi ?: return result
             val listener = chain.thisObject ?: return result
             val seekBar = api.getHeadAlphaListenerSeekBar(listener)
@@ -306,6 +318,7 @@ object IslandExpandedMediaAmbientFlowHooker {
 
     internal class BackgroundUpdateHook : Hooker {
         override fun intercept(chain: Chain): Any? {
+            if (!SystemUiEnhancementGate.isEnabled()) return chain.proceed()
             val view = chain.args.firstOrNull() as? View
             return if (
                 view != null &&
@@ -321,6 +334,7 @@ object IslandExpandedMediaAmbientFlowHooker {
     internal class ExpandedVisibilityHook : Hooker {
         override fun intercept(chain: Chain): Any? {
             val result = chain.proceed()
+            if (!SystemUiEnhancementGate.isEnabled()) return result
             val visibility = (chain.args.getOrNull(1) as? Number)?.toInt()
             val view = chain.thisObject as? View
             if (visibility == View.VISIBLE && view?.isShown == true) {
@@ -333,6 +347,7 @@ object IslandExpandedMediaAmbientFlowHooker {
     internal class ClosingToExpandedHook : Hooker {
         override fun intercept(chain: Chain): Any? {
             val result = chain.proceed()
+            if (!SystemUiEnhancementGate.isEnabled()) return result
             if (chain.args.getOrNull(1) == true) {
                 (chain.thisObject as? ViewGroup)?.let(::restoreFakeTransitionTheme)
             }
@@ -343,6 +358,7 @@ object IslandExpandedMediaAmbientFlowHooker {
     internal class MiniBarUpdateHook : Hooker {
         override fun intercept(chain: Chain): Any? {
             val result = chain.proceed()
+            if (!SystemUiEnhancementGate.isEnabled()) return result
             runCatching {
                 val contentView = chain.thisObject as? View ?: return@runCatching
                 applyContentViewTheme(contentView)
@@ -704,6 +720,9 @@ object IslandExpandedMediaAmbientFlowHooker {
     }
 
     private fun currentMode(): Int {
+        if (!SystemUiEnhancementGate.isEnabled()) {
+            return RootConstants.ISLAND_EXPANDED_MEDIA_AMBIENT_FLOW_MODE_DEFAULT
+        }
         return prefs?.getInt(
             RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_AMBIENT_FLOW_MODE,
             RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_AMBIENT_FLOW_MODE
@@ -714,6 +733,9 @@ object IslandExpandedMediaAmbientFlowHooker {
     }
 
     private fun currentCardTheme(): Int {
+        if (!SystemUiEnhancementGate.isEnabled()) {
+            return RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_CARD_THEME
+        }
         return prefs?.getInt(
             RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_CARD_THEME,
             RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_CARD_THEME
@@ -724,6 +746,9 @@ object IslandExpandedMediaAmbientFlowHooker {
     }
 
     private fun currentCoverStyle(): Int {
+        if (!SystemUiEnhancementGate.isEnabled()) {
+            return RootConstants.ISLAND_EXPANDED_MEDIA_COVER_STYLE_DEFAULT
+        }
         return prefs?.getInt(
             RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_COVER_STYLE,
             RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_COVER_STYLE
@@ -734,6 +759,7 @@ object IslandExpandedMediaAmbientFlowHooker {
     }
 
     private fun hideCoverSource(): Boolean {
+        if (!SystemUiEnhancementGate.isEnabled()) return false
         return prefs?.getBoolean(
             RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_HIDE_COVER_SOURCE,
             RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_HIDE_COVER_SOURCE
@@ -741,6 +767,7 @@ object IslandExpandedMediaAmbientFlowHooker {
     }
 
     private fun hideDeviceSwitch(): Boolean {
+        if (!SystemUiEnhancementGate.isEnabled()) return false
         return prefs?.getBoolean(
             RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_HIDE_DEVICE_SWITCH,
             RootConstants.DEFAULT_HOOK_ISLAND_EXPANDED_MEDIA_HIDE_DEVICE_SWITCH

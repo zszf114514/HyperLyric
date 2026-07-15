@@ -18,6 +18,7 @@ import android.widget.SeekBar
 import android.widget.TextView
 import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.root.HookEntry
+import com.lidesheng.hyperlyric.root.SystemUiEnhancementGate
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import io.github.libxposed.api.XposedModule
 import java.lang.reflect.Field
@@ -316,13 +317,18 @@ internal object NotificationMediaBackgroundController {
             .getOrNull()
     }
 
-    private fun currentStyle(): Int = prefs?.getInt(
-        RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_STYLE,
-        RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_BACKGROUND_STYLE
-    )?.coerceIn(
-        RootConstants.NOTIFICATION_MEDIA_BACKGROUND_STYLE_DEFAULT,
-        RootConstants.NOTIFICATION_MEDIA_BACKGROUND_STYLE_LINEAR_GRADIENT
-    ) ?: RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_BACKGROUND_STYLE
+    private fun currentStyle(): Int {
+        if (!SystemUiEnhancementGate.isEnabled()) {
+            return RootConstants.NOTIFICATION_MEDIA_BACKGROUND_STYLE_DEFAULT
+        }
+        return prefs?.getInt(
+            RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_STYLE,
+            RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_BACKGROUND_STYLE
+        )?.coerceIn(
+            RootConstants.NOTIFICATION_MEDIA_BACKGROUND_STYLE_DEFAULT,
+            RootConstants.NOTIFICATION_MEDIA_BACKGROUND_STYLE_LINEAR_GRADIENT
+        ) ?: RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_BACKGROUND_STYLE
+    }
 
     private fun currentBlurAmount(): Int = prefs?.getInt(
         RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_BLUR,

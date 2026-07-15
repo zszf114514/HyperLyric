@@ -10,6 +10,7 @@ import android.graphics.RectF
 import android.graphics.Shader
 import android.view.View
 import com.lidesheng.hyperlyric.common.RootConstants
+import com.lidesheng.hyperlyric.root.SystemUiEnhancementGate
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import io.github.libxposed.api.XposedInterface.Chain
 import io.github.libxposed.api.XposedInterface.Hooker
@@ -107,9 +108,17 @@ internal object IslandProgressGlowHooker {
         if (removed) backgroundView.invalidate()
     }
 
+    fun clearAllMediaProgress() {
+        val views = synchronized(stateByBackgroundView) {
+            stateByBackgroundView.keys.toList().also { stateByBackgroundView.clear() }
+        }
+        views.forEach(View::invalidate)
+    }
+
     class BackgroundDrawHook : Hooker {
         override fun intercept(chain: Chain): Any? {
             val result = chain.proceed()
+            if (!SystemUiEnhancementGate.isEnabled()) return result
             val backgroundView = chain.thisObject as? View ?: return result
             val canvas = chain.args.firstOrNull() as? Canvas ?: return result
             val state = synchronized(stateByBackgroundView) {

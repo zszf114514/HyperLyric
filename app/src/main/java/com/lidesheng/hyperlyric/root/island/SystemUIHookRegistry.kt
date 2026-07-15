@@ -19,7 +19,7 @@ object SystemUIHookRegistry {
     var isHookedSuccess = false
         private set
 
-    fun hook(xposedModule: XposedModule, cl: ClassLoader) {
+    fun hook(xposedModule: XposedModule, cl: ClassLoader, lyricsOnly: Boolean = false) {
         if (cl.javaClass.name.contains("BootClassLoader")) return
 
         val islandPkg = "miui.systemui.dynamicisland"
@@ -32,14 +32,19 @@ object SystemUIHookRegistry {
         module = xposedModule
 
         try {
-            IslandTextHooker.hook(module, cl)
-            HookIslandGlow.init(module, cl)
-            IslandProgressGlowHooker.hook(module, cl)
-            IslandMusicWaveColorHooker.hook(module, cl)
-            IslandAlbumCoverStyleHooker.hook(module, cl)
+            IslandTextHooker.hook(module, cl, includeMediaHooks = !lyricsOnly)
+            if (!lyricsOnly) {
+                HookIslandGlow.init(module, cl)
+                IslandProgressGlowHooker.hook(module, cl)
+                IslandMusicWaveColorHooker.hook(module, cl)
+                IslandAlbumCoverStyleHooker.hook(module, cl)
+            }
 
             isHookedSuccess = true
-            HookLogger.i("SystemUIHookRegistry", "超级岛 Hook 已初始化")
+            HookLogger.i(
+                "SystemUIHookRegistry",
+                if (lyricsOnly) "超级岛歌词 Hook 已初始化" else "超级岛 Hook 已初始化"
+            )
         } catch (e: ClassNotFoundException) {
             HookLogger.w("SystemUIHookRegistry", "跳过不支持的超级岛插件: ${e.message}")
         } catch (e: Exception) {

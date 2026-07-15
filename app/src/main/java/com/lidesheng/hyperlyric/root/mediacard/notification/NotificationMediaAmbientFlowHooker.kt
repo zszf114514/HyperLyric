@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.root.HookEntry
+import com.lidesheng.hyperlyric.root.SystemUiEnhancementGate
 import com.lidesheng.hyperlyric.root.mediacard.MediaAmbientFlowPalette
 import com.lidesheng.hyperlyric.root.mediacard.MediaAmbientFlowPaletteExtractor
 import com.lidesheng.hyperlyric.root.mediacard.MediaArtworkSampler
@@ -174,6 +175,19 @@ object NotificationMediaAmbientFlowHooker {
     class ControllerHook(private val action: Action) : Hooker {
         override fun intercept(chain: Chain): Any? {
             val controller = chain.thisObject ?: return chain.proceed()
+            if (!SystemUiEnhancementGate.isEnabled()) {
+                if (action == Action.DETACH) {
+                    activeControllers.remove(controller)
+                    removeView(controller)
+                    NotificationMediaBackgroundController.onDetach(controller)
+                    restoreCardTheme(controller)
+                }
+                val result = chain.proceed()
+                if (action == Action.ATTACH || action == Action.BIND) {
+                    activeControllers.add(controller)
+                }
+                return result
+            }
             if (action == Action.DETACH) {
                 activeControllers.remove(controller)
                 removeView(controller)
@@ -218,6 +232,7 @@ object NotificationMediaAmbientFlowHooker {
 
     class NativeBackgroundUpdateHook : Hooker {
         override fun intercept(chain: Chain): Any? {
+            if (!SystemUiEnhancementGate.isEnabled()) return chain.proceed()
             val controller = chain.thisObject ?: return chain.proceed()
             return if (NotificationMediaBackgroundController.isActive(controller)) {
                 null
@@ -229,7 +244,9 @@ object NotificationMediaAmbientFlowHooker {
 
     class ProgressDrawHook : Hooker {
         override fun intercept(chain: Chain): Any? {
-            chain.thisObject?.let(NotificationMediaBackgroundController::applySeekBarColor)
+            if (SystemUiEnhancementGate.isEnabled()) {
+                chain.thisObject?.let(NotificationMediaBackgroundController::applySeekBarColor)
+            }
             return chain.proceed()
         }
     }
@@ -543,6 +560,9 @@ object NotificationMediaAmbientFlowHooker {
     }
 
     private fun currentMode(): Int {
+        if (!SystemUiEnhancementGate.isEnabled()) {
+            return RootConstants.NOTIFICATION_MEDIA_AMBIENT_FLOW_MODE_DISABLED
+        }
         return prefs?.getInt(
             RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_AMBIENT_FLOW_MODE,
             RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_AMBIENT_FLOW_MODE
@@ -553,6 +573,9 @@ object NotificationMediaAmbientFlowHooker {
     }
 
     private fun currentCardTheme(): Int {
+        if (!SystemUiEnhancementGate.isEnabled()) {
+            return RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_CARD_THEME
+        }
         return prefs?.getInt(
             RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_CARD_THEME,
             RootConstants.DEFAULT_HOOK_NOTIFICATION_MEDIA_CARD_THEME
