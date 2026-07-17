@@ -24,6 +24,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -78,9 +80,14 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Slider
+import top.yukonga.miuix.kmp.basic.Text
+import com.lidesheng.hyperlyric.common.PrefsBridge
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
+
 
 @Composable
 fun LyricProviderPage() {
@@ -251,7 +258,7 @@ private fun LazyListScope.providerSections(
                                 if (module.tags.isNotEmpty()) {
                                     ModuleTagsFlow(module.tags)
                                 }
-                                
+
                                 Column(modifier = Modifier.padding(PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 0.dp))) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
