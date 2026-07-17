@@ -171,7 +171,7 @@ internal object IslandSlotContentAssembler {
         var rawLine = LyriconDataBridge.currentLyricLine
             ?: RichLyricLine(text = songName, words = emptyList())
 
-        if (config != null && isNextLinePreviewEnabled(prefs, config)) {
+        if (config != null && isNextLinePreviewEnabled(prefs, config, rawLine)) {
             return rawLine.withNextLinePreview(LyriconDataBridge.currentNextLyricLine)
         }
 
@@ -349,11 +349,20 @@ internal object IslandSlotContentAssembler {
 
     private fun isNextLinePreviewEnabled(
         prefs: SharedPreferences,
-        config: IslandSlotRuntimeConfig
+        config: IslandSlotRuntimeConfig,
+        currentLine: IRichLyricLine? = LyriconDataBridge.currentLyricLine
     ): Boolean {
         if (!config.nextLyricLine || config.isSplitMode) return false
+        if (LyriconDataBridge.isTextMode) return false
         val source = prefs.getString(RootConstants.KEY_HOOK_LYRIC_SOURCE, RootConstants.DEFAULT_HOOK_LYRIC_SOURCE)
-        return source == "lyricon" || source == "lyricinfo"
+        if (source != "lyricon" && source != "lyricinfo") return false
+
+        if (config.autoSwitchTranslation) {
+            val hasSongTranslation = LyriconDataBridge.currentSong?.lyrics?.any { !it.translation.isNullOrBlank() } == true
+            val hasLineTranslation = !currentLine?.translation.isNullOrBlank()
+            if (hasSongTranslation || hasLineTranslation) return false
+        }
+        return true
     }
 
     private fun IRichLyricLine.withNextLinePreview(nextLine: IRichLyricLine?): IRichLyricLine {

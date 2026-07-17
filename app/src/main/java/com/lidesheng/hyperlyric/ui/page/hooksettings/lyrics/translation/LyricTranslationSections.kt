@@ -27,6 +27,8 @@ fun LazyListScope.translationSections(
     onSwapTranslationChange: (Boolean) -> Unit,
     nextLyricLine: Boolean,
     onNextLyricLineChange: (Boolean) -> Unit,
+    autoSwitchTranslation: Boolean,
+    onAutoSwitchTranslationChange: (Boolean) -> Unit,
     aiTransEnabled: Boolean,
     onAiTransEnabledChange: (Boolean) -> Unit,
     autoIgnoreChinese: Boolean,
@@ -48,7 +50,7 @@ fun LazyListScope.translationSections(
 ) {
     item(key = "translation") {
         val supportsNextLyricLine = (lyricSource == "lyricon" || lyricSource == "lyricinfo") && lyricMode == 0
-        val translationControlsEnabled = !supportsNextLyricLine || !nextLyricLine
+        val translationControlsEnabled = !supportsNextLyricLine || !nextLyricLine || autoSwitchTranslation
         val translationActionColor = if (translationControlsEnabled) {
             MiuixTheme.colorScheme.onSurfaceVariantActions
         } else {
@@ -59,12 +61,21 @@ fun LazyListScope.translationSections(
             SmallTitle(text = stringResource(id = R.string.title_translation))
             if (supportsNextLyricLine) {
                 Card(modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp).fillMaxWidth()) {
-                    SwitchPreference(
-                        title = stringResource(id = R.string.title_next_lyric_line),
-                        summary = stringResource(id = R.string.summary_next_lyric_line),
-                        checked = nextLyricLine,
-                        onCheckedChange = onNextLyricLineChange
-                    )
+                    Column {
+                        SwitchPreference(
+                            title = stringResource(id = R.string.title_next_lyric_line),
+                            summary = stringResource(id = R.string.summary_next_lyric_line),
+                            checked = nextLyricLine,
+                            onCheckedChange = onNextLyricLineChange
+                        )
+                        SwitchPreference(
+                            title = stringResource(id = R.string.title_auto_switch_translation),
+                            summary = stringResource(id = R.string.summary_auto_switch_translation),
+                            checked = autoSwitchTranslation,
+                            onCheckedChange = onAutoSwitchTranslationChange,
+                            enabled = nextLyricLine
+                        )
+                    }
                 }
             }
             Card(modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp).fillMaxWidth()) {

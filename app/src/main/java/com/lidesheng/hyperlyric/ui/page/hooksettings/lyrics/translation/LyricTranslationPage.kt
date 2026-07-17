@@ -27,6 +27,7 @@ fun LyricTranslationPage() {
     var translationOnly by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_TRANSLATION_ONLY, RootConstants.DEFAULT_HOOK_TRANSLATION_ONLY)) }
     var swapTranslation by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_SWAP_TRANSLATION, RootConstants.DEFAULT_HOOK_SWAP_TRANSLATION)) }
     var nextLyricLine by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_NEXT_LYRIC_LINE, RootConstants.DEFAULT_HOOK_NEXT_LYRIC_LINE)) }
+    var autoSwitchTranslation by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_AUTO_SWITCH_TRANSLATION, RootConstants.DEFAULT_HOOK_AUTO_SWITCH_TRANSLATION)) }
     var aiTransEnabled by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_AI_TRANS_ENABLE, RootConstants.DEFAULT_HOOK_AI_TRANS_ENABLE)) }
     var autoIgnoreChinese by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_AI_TRANS_AUTO_IGNORE_CHINESE, RootConstants.DEFAULT_HOOK_AI_TRANS_AUTO_IGNORE_CHINESE)) }
     var skipExistingTranslation by remember { mutableStateOf(prefs.getBoolean(RootConstants.KEY_HOOK_AI_TRANS_SKIP_EXISTING_TRANSLATION, RootConstants.DEFAULT_HOOK_AI_TRANS_SKIP_EXISTING_TRANSLATION)) }
@@ -126,6 +127,11 @@ fun LyricTranslationPage() {
             onNextLyricLineChange = {
                 nextLyricLine = it
                 saveConfig(RootConstants.KEY_HOOK_NEXT_LYRIC_LINE, it)
+            },
+            autoSwitchTranslation = autoSwitchTranslation,
+            onAutoSwitchTranslationChange = {
+                autoSwitchTranslation = it
+                saveConfig(RootConstants.KEY_HOOK_AUTO_SWITCH_TRANSLATION, it)
             },
             aiTransEnabled = aiTransEnabled,
             onAiTransEnabledChange = {

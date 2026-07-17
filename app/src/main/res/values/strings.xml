@@ -274,6 +274,8 @@
     <string name="title_swap_translation">原词翻译对调位置</string>
     <string name="title_next_lyric_line">显示下一句歌词</string>
     <string name="summary_next_lyric_line">占用第二行，开启后不显示翻译</string>
+    <string name="title_auto_switch_translation">自动切换翻译</string>
+    <string name="summary_auto_switch_translation">有翻译的歌曲，显示歌词翻译</string>
     <string name="title_extract_cover_color">提取封面色</string>
     <string name="title_extract_cover_gradient">提取封面渐变色</string>
     <string name="title_word_motion">字词上浮动画</string>

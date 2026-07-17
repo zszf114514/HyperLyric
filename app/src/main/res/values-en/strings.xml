@@ -274,6 +274,8 @@
     <string name="title_swap_translation">Swap Lyric and Translation</string>
     <string name="title_next_lyric_line">Show Next Lyric Line</string>
     <string name="summary_next_lyric_line">Uses the second line. Translations will not be displayed when enabled.</string>
+    <string name="title_auto_switch_translation">Auto Switch Translation</string>
+    <string name="summary_auto_switch_translation">Show translation when available, otherwise next line</string>
     <string name="title_extract_cover_color">Extract Cover Color</string>
     <string name="title_extract_cover_gradient">Extract Cover Gradient</string>
     <string name="title_word_motion">Word Lift Animation</string>
