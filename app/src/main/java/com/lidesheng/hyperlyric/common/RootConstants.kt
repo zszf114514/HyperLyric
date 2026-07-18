@@ -7,6 +7,8 @@ object RootConstants {
     const val KEY_HOOK_LYRIC_MODE = "key_hook_lyric_mode"
     const val KEY_HOOK_LYRIC_SOURCE = "key_hook_lyric_source"
     const val DEFAULT_HOOK_LYRIC_SOURCE = "lyricon"
+    const val KEY_HOOK_LYRICON_PROVIDER_DELAY_PREFIX = "key_hook_lyricon_provider_delay_"
+
 
     const val KEY_HOOK_ISLAND_LEFT_ALBUM = "key_hook_island_left_album"
     const val KEY_HOOK_ISLAND_ALBUM_COVER_STYLE = "key_hook_island_album_cover_style"
@@ -138,6 +140,10 @@ object RootConstants {
 
     // ================= DEFAULTS =================
     const val DEFAULT_HOOK_LYRIC_MODE = 0
+    const val DEFAULT_HOOK_LYRICON_PROVIDER_DELAY = 0
+    const val MIN_HOOK_LYRICON_PROVIDER_DELAY = -5000
+    const val MAX_HOOK_LYRICON_PROVIDER_DELAY = 5000
+
     const val DEFAULT_HOOK_ENABLE_SUPER_ISLAND = false
     const val DEFAULT_HOOK_ENABLE_DYNAMIC_ISLAND = false
     const val DEFAULT_HOOK_ISLAND_LEFT_ALBUM = true

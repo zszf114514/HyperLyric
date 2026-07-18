@@ -138,6 +138,8 @@
     <string name="title_lyrics">音乐信息</string>
     <string name="title_lyric_anim">歌词切换动画</string>
     <string name="title_lyric_provider">歌词提供者 (Lyricon)</string>
+    <string name="title_lyric_delay">歌词延迟</string>
+    <string name="summary_lyric_delay">正数延后显示，负数提前显示</string>
     <string name="title_lyric_whitelist">歌词白名单</string>
 
     <!-- ———————————————————————— DynamicIslandNotificationPage ———————————————————————— -->
@@ -314,7 +316,7 @@
     <string name="summary_no_provider">请给予本应用获取应用列表权限或点击右上角图标前往 LyricProvider 仓库下载安装并启用插件</string>
     <string name="category_others">其他</string>
     <string name="unknown_author">未知作者</string>
-    <string name="format_version_author">%1$s | %2$s</string>
+    <string name="format_version_author">%1$s, 作者 %2$s</string>
     <string name="module_tag_syllable">逐字歌词</string>
     <string name="module_tag_translation">翻译</string>
     <string name="module_tag_bluetooth">车载蓝牙歌词</string>

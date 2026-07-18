@@ -5,6 +5,8 @@ import com.lidesheng.hyperlyric.lyric.source.LyricSink
 import com.lidesheng.hyperlyric.lyric.source.LyricSource
 import com.lidesheng.hyperlyric.root.island.renderer.BaseIslandRenderer
 import com.lidesheng.hyperlyric.root.LyriconDataBridge
+import com.lidesheng.hyperlyric.common.RootConstants
+
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import io.github.proify.lyricon.lyric.model.Song
 import io.github.proify.lyricon.subscriber.ActivePlayerListener
@@ -37,6 +39,11 @@ class LyriconSource : LyricSource {
     @Volatile
     private var subscriber: LyriconSubscriber? = null
 
+    private var activeProviderPackageName: String? = null
+    private var activeProviderDelayMs: Int = RootConstants.DEFAULT_HOOK_LYRICON_PROVIDER_DELAY
+    private var prefs: android.content.SharedPreferences? = null
+
+
     override fun isAvailable(): Boolean = true
 
     override fun start(sink: LyricSink) {
@@ -68,13 +75,36 @@ class LyriconSource : LyricSource {
         HookLogger.i(TAG, "数据源已停止")
     }
 
-    fun initialize(app: Application) {
+    fun initialize(app: Application, prefs: android.content.SharedPreferences?) {
         this.app = app
+        this.prefs = prefs
 
         LyriconDataBridge.onAiTranslationComplete = {
             BaseIslandRenderer.refreshActiveIsland()
         }
     }
+
+    fun onPreferenceChanged(key: String?) {
+        val packageName = activeProviderPackageName ?: return
+        if (key == providerDelayKey(packageName)) {
+            activeProviderDelayMs = readProviderDelay(packageName)
+        }
+    }
+
+    private fun providerDelayKey(packageName: String): String {
+        return RootConstants.KEY_HOOK_LYRICON_PROVIDER_DELAY_PREFIX + packageName
+    }
+
+    private fun readProviderDelay(packageName: String): Int {
+        return prefs?.getInt(
+            providerDelayKey(packageName),
+            RootConstants.DEFAULT_HOOK_LYRICON_PROVIDER_DELAY
+        )?.coerceIn(
+            RootConstants.MIN_HOOK_LYRICON_PROVIDER_DELAY,
+            RootConstants.MAX_HOOK_LYRICON_PROVIDER_DELAY
+        ) ?: RootConstants.DEFAULT_HOOK_LYRICON_PROVIDER_DELAY
+    }
+
 
     private fun initializeSubscriber(app: Application) {
         val sub = LyriconFactory.createSubscriber(app)
@@ -106,8 +136,13 @@ class LyriconSource : LyricSource {
     private val activePlayerListener = object : ActivePlayerListener {
         override fun onActiveProviderChanged(providerInfo: ProviderInfo?) {
             sink?.onStop()
+            activeProviderPackageName = providerInfo?.providerPackageName
+            activeProviderDelayMs = providerInfo?.providerPackageName
+                ?.let(::readProviderDelay)
+                ?: RootConstants.DEFAULT_HOOK_LYRICON_PROVIDER_DELAY
             LyriconDataBridge.updateLyricPackage(providerInfo?.playerPackageName)
         }
+
 
         override fun onSongChanged(song: Song?) {
             val localSong = song?.toLocalSong()
@@ -121,8 +156,10 @@ class LyriconSource : LyricSource {
         }
 
         override fun onPositionChanged(position: Long) {
-            sink?.onPositionChanged(position)
+            val adjustedPosition = (position - activeProviderDelayMs).coerceAtLeast(0L)
+            sink?.onPositionChanged(adjustedPosition)
         }
+
 
         override fun onSeekTo(position: Long) {}
 

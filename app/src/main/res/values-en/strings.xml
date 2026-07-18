@@ -138,6 +138,8 @@
     <string name="title_lyrics">Media Info</string>
     <string name="title_lyric_anim">Lyric Animation</string>
     <string name="title_lyric_provider">Lyric Provider (Lyricon)</string>
+    <string name="title_lyric_delay">Lyric delay</string>
+    <string name="summary_lyric_delay">Positive values show lyrics later, negative values earlier</string>
     <string name="title_lyric_whitelist">Lyric Whitelist</string>
 
     <!-- ———————————————————————— DynamicIslandNotificationPage ———————————————————————— -->
@@ -313,7 +315,7 @@
     <string name="summary_no_provider">Click the top right icon to visit LyricProvider repo, download and enable plugins</string>
     <string name="category_others">Others</string>
     <string name="unknown_author">Unknown Author</string>
-    <string name="format_version_author">%1$s | %2$s</string>
+    <string name="format_version_author">%1$s, Author %2$s</string>
     <string name="module_tag_syllable">Verbatim Lyrics</string>
     <string name="module_tag_translation">Translation</string>
     <string name="module_tag_bluetooth">车载蓝牙歌词</string>

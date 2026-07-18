@@ -10,8 +10,14 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
+
 import androidx.compose.foundation.layout.size
+
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -21,15 +27,28 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.Alignment
+
 import androidx.compose.ui.Modifier
+
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
 import androidx.core.net.toUri
 import com.lidesheng.hyperlyric.R
+import com.lidesheng.hyperlyric.common.PrefsBridge
+import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.ui.navigation.LocalNavigator
+
 import com.lidesheng.hyperlyric.ui.component.ProComponent
 import com.lidesheng.hyperlyric.ui.component.TagComponent
 import com.lidesheng.hyperlyric.utils.LyricProviderManager
@@ -41,15 +60,22 @@ import com.lidesheng.hyperlyric.ui.utils.pageScrollModifiers
 import com.lidesheng.hyperlyric.ui.utils.rememberBlurBackdrop
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.basic.Card
+
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.Slider
+import top.yukonga.miuix.kmp.basic.SliderDefaults
 import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+
+
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.blur.layerBackdrop
@@ -164,6 +190,13 @@ private fun LazyListScope.providerSections(
                 val packageName = module.packageInfo.packageName
                 val isExpanded = expandedStates[packageName] ?: false
 
+                val delayKey = RootConstants.KEY_HOOK_LYRICON_PROVIDER_DELAY_PREFIX + packageName
+                val initialDelay = remember(packageName) {
+                    PrefsBridge.getInt(delayKey, RootConstants.DEFAULT_HOOK_LYRICON_PROVIDER_DELAY)
+                }
+                var currentDelay by remember(packageName) { mutableIntStateOf(initialDelay) }
+                var sliderPosition by remember(packageName) { mutableFloatStateOf(initialDelay.toFloat()) }
+
                 Card(
                     modifier = Modifier
                         .padding(horizontal = 12.dp)
@@ -171,6 +204,7 @@ private fun LazyListScope.providerSections(
                         .fillMaxWidth(),
                     onClick = { expandedStates[packageName] = !isExpanded }
                 ) {
+
                     Column {
                         ProComponent(
                             title = module.label,
@@ -197,8 +231,16 @@ private fun LazyListScope.providerSections(
                                     }
                                 }
                             },
+                            endActions = {
+                                Text(
+                                    text = if (currentDelay > 0) "+$currentDelay ms" else "$currentDelay ms",
+                                    color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                    fontSize = 14.sp
+                                )
+                            },
                             showIndication = false
                         )
+
                         AnimatedVisibility(visible = isExpanded) {
                             Column(modifier = Modifier.padding(bottom = 16.dp)) {
                                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -209,9 +251,47 @@ private fun LazyListScope.providerSections(
                                 if (module.tags.isNotEmpty()) {
                                     ModuleTagsFlow(module.tags)
                                 }
+                                
+                                Column(modifier = Modifier.padding(PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 0.dp))) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = stringResource(R.string.title_lyric_delay),
+                                            color = Color.Black,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = stringResource(R.string.summary_lyric_delay),
+                                            color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Slider(
+                                        value = sliderPosition,
+                                        onValueChange = { sliderValue ->
+                                            sliderPosition = sliderValue
+                                            currentDelay = (sliderValue / 50f).roundToInt() * 50
+                                        },
+                                        onValueChangeFinished = {
+                                            val finalValue = (sliderPosition / 50f).roundToInt() * 50
+                                            sliderPosition = finalValue.toFloat()
+                                            currentDelay = finalValue
+                                            PrefsBridge.putInt(delayKey, finalValue)
+                                        },
+                                        valueRange = RootConstants.MIN_HOOK_LYRICON_PROVIDER_DELAY.toFloat()..RootConstants.MAX_HOOK_LYRICON_PROVIDER_DELAY.toFloat(),
+                                        steps = 199,
+                                        showKeyPoints = true,
+                                        keyPoints = listOf(-5000f, -4000f, -3000f, -2000f, -1000f, 0f, 1000f, 2000f, 3000f, 4000f, 5000f),
+                                        hapticEffect = SliderDefaults.SliderHapticEffect.Step
+                                    )
+                                }
                             }
                         }
                     }
+
+
                 }
             }
         }

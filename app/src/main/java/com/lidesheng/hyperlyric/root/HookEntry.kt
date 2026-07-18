@@ -271,7 +271,7 @@ class HookEntry : XposedModule() {
             val renderer = BaseIslandRenderer
             val sink = RootLyricSink(renderer, prefs)
 
-            lyriconSource.initialize(app)
+            lyriconSource.initialize(app, prefs)
             superLyricSource.initialize(app)
             lyricInfoSource = LyricInfoSource(app)
 
@@ -295,6 +295,9 @@ class HookEntry : XposedModule() {
             }
 
             prefListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (key?.startsWith(RootConstants.KEY_HOOK_LYRICON_PROVIDER_DELAY_PREFIX) == true) {
+                    lyriconSource.onPreferenceChanged(key)
+                }
                 when (key) {
                     RootConstants.KEY_HOOK_LYRIC_SOURCE -> {
                         val newSourceId = prefs.getString(key, RootConstants.DEFAULT_HOOK_LYRIC_SOURCE)
