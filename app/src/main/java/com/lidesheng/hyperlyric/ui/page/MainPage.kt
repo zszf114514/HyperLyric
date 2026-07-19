@@ -157,7 +157,7 @@ fun MainPage() {
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             scope.launch {
-                snackbarHostState.showSnackbar(
+                sheetSnackbarHostState.showSnackbar(
                     message = if (isGranted) msgPermissionGranted else msgPermissionDenied,
                     duration = SnackbarDuration.Custom(2000L)
                 )

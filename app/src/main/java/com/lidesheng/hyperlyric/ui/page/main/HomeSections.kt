@@ -57,7 +57,7 @@ fun LazyListScope.homePageSections(
         )
     }
 
-    item(key = "basic_features_content") {
+    item(key = "basic_features_content_super_island") {
         Card(modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp).fillMaxWidth()) {
             Column {
                 SwitchPreference(
@@ -78,6 +78,13 @@ fun LazyListScope.homePageSections(
                         )
                     }
                 }
+            }
+        }
+    }
+
+    item(key = "basic_features_content_dynamic_island") {
+        Card(modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp).fillMaxWidth()) {
+            Column {
                 SwitchPreference(
                     title = stringResource(R.string.title_dynamic_island_lyrics),
                     summary = stringResource(R.string.summary_dynamic_island_lyrics),
