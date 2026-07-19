@@ -531,6 +531,7 @@ fun MainPage() {
                         onHelpClick = { navigator.navigate(Route.Help) },
                         onLicensesClick = { navigator.navigate(Route.Licenses) },
                         onChangelogClick = { navigator.navigate(Route.Changelog) },
+                        onContributorsClick = { navigator.navigate(Route.Contributors) },
                     )
                 }
             }

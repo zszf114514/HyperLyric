@@ -10,6 +10,13 @@ object ChangelogData {
     fun getChangelog(): List<ChangelogItem> {
         return listOf(
             ChangelogItem(
+                version = "",
+                title = "",
+                summary = "- 新增 lyricon 歌词提供器歌词偏移功能\n" +
+                        "- 修复歌词刷新后的宽度状态同步问题\n" +
+                        "- 优化关于页与贡献者页面布局"
+            ),
+            ChangelogItem(
                 version = "6.5-1934",
                 title = "",
                 summary = "- 新增显示下一句歌词“自动切换翻译”功能\n" +

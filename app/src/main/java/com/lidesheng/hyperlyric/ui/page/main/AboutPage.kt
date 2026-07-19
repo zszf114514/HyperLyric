@@ -33,6 +33,7 @@ fun AboutPage(
     onHelpClick: () -> Unit,
     onLicensesClick: () -> Unit,
     onChangelogClick: () -> Unit,
+    onContributorsClick: () -> Unit,
 ) {
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
@@ -76,6 +77,7 @@ fun AboutPage(
                     onHelpClick = onHelpClick,
                     onLicensesClick = onLicensesClick,
                     onChangelogClick = onChangelogClick,
+                    onContributorsClick = onContributorsClick,
                 )
             }
         }

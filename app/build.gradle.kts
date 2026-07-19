@@ -129,3 +129,8 @@ dependencies {
     implementation(libs.daimajia.animations) { artifact { type = "aar" } }
     implementation(libs.daimajia.easing) { artifact { type = "aar" } }
 }
+
+apply(from = "fetch_contributors.gradle.kts")
+tasks.named("preBuild") {
+    dependsOn("generateContributors")
+}

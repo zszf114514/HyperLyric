@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -21,13 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import com.lidesheng.hyperlyric.R
 import com.lidesheng.hyperlyric.ui.navigation.LocalNavigator
 import com.lidesheng.hyperlyric.ui.utils.BlurredBar
-import com.lidesheng.hyperlyric.ui.utils.LicenseProvider
+import com.lidesheng.hyperlyric.ui.utils.ContributorsProvider
 import com.lidesheng.hyperlyric.ui.utils.pageScrollModifiers
 import com.lidesheng.hyperlyric.ui.utils.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
@@ -42,17 +39,22 @@ import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
-import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.preference.ArrowPreference
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.layout.ContentScale
 
-data class LicenseItem(
-    val name: String,
-    val author: String,
-    val url: String
-)
 
 @Composable
-fun LicensesPage() {
+fun ContributorsPage() {
     val navigator = LocalNavigator.current
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
@@ -63,7 +65,7 @@ fun LicensesPage() {
             BlurredBar(backdrop, blurActive) {
                 TopAppBar(
                     color = barColor,
-                    title = stringResource(R.string.title_licenses),
+                    title = stringResource(R.string.title_contributors),
                     scrollBehavior = topAppBarScrollBehavior,
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
@@ -91,7 +93,7 @@ fun LicensesPage() {
                 modifier = Modifier.pageScrollModifiers(true, true, topAppBarScrollBehavior),
                 contentPadding = contentPadding,
             ) {
-                licensesPageSections()
+                contributorsPageSections()
             }
             VerticalScrollBar(
                 adapter = rememberScrollBarAdapter(lazyListState),
@@ -102,19 +104,44 @@ fun LicensesPage() {
     }
 }
 
-private fun LazyListScope.licensesPageSections() {
-    item(key = "licenses_card") {
-        val context = LocalContext.current
-        val licenses = remember { LicenseProvider.getLicenses() }
+private fun LazyListScope.contributorsPageSections() {
+    item(key = "acknowledgments_card") {
         Card(modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp).fillMaxWidth()) {
             Column {
-                licenses.forEach { license ->
+                BasicComponent(
+                    summary = stringResource(R.string.summary_acknowledgments)
+                )
+                BasicComponent(
+                    summary = stringResource(R.string.summary_contributors)
+                )
+            }
+        }
+    }
+    item(key = "contributors_card") {
+        val context = LocalContext.current
+        Card(modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp).fillMaxWidth()) {
+            Column {
+                ContributorsProvider.list.forEach { contributor ->
                     ArrowPreference(
-                        title = license.name,
-                        summary = license.author,
+                        title = contributor.name,
+                        summary = contributor.summary.ifEmpty { null },
+                        startAction = {
+                            Image(
+                                painter = painterResource(id = contributor.avatarRes),
+                                contentDescription = contributor.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .padding(end = 8.dp)
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(MiuixTheme.colorScheme.primaryContainer)
+                            )
+                        },
                         onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, license.url.toUri())
-                            context.startActivity(intent)
+                            if (contributor.githubUrl.isNotEmpty()) {
+                                val intent = Intent(Intent.ACTION_VIEW, contributor.githubUrl.toUri())
+                                context.startActivity(intent)
+                            }
                         }
                     )
                 }

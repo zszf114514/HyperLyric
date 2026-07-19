@@ -28,6 +28,7 @@ import com.lidesheng.hyperlyric.ui.page.hooksettings.lyrics.verbatim.VerbatimLyr
 import com.lidesheng.hyperlyric.ui.page.DynamicIslandNotificationPage
 import com.lidesheng.hyperlyric.ui.page.HelpPage
 import com.lidesheng.hyperlyric.ui.page.ChangelogPage
+import com.lidesheng.hyperlyric.ui.page.ContributorsPage
 
 @Composable
 fun AppNavigation(startRoute: Route) {
@@ -62,6 +63,7 @@ fun AppNavigation(startRoute: Route) {
                 entry<Route.Poetry> { PoetryPage() }
                 entry<Route.Help> { HelpPage() }
                 entry<Route.Changelog> { ChangelogPage() }
+                entry<Route.Contributors> { ContributorsPage() }
             }
         }
         val entries = rememberDecoratedNavEntries(

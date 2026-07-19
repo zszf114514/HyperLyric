@@ -50,8 +50,12 @@
     <string name="title_changelog">更新日志</string>
     <string name="title_developer">开发者</string>
     <string name="dev_name">李得胜</string>
-    <string name="title_licenses">项目引用与参考</string>
-    <string name="summary_licenses">感谢@FrancOS 和@于逸风 的帮助，以及一些没列出的项目</string>
+    <string name="title_project">项目地址</string>
+    <string name="title_contributors">贡献者</string>
+    <string name="title_licenses">引用</string>
+    <string name="title_acknowledgments">致谢</string>
+    <string name="summary_acknowledgments">感谢@FrancOS 和@于逸风 的帮助，以及一些没列出的项目</string>
+    <string name="summary_contributors">感谢以下贡献者为 HyperLyric 的开发提供的帮助（排名不分先后）</string>
 
     <!-- ———————————————————————— SettingsPage ———————————————————————— -->
     <string name="toast_backup_success">备份成功</string>

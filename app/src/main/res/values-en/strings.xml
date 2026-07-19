@@ -50,8 +50,12 @@
     <string name="title_changelog">Changelog</string>
     <string name="title_developer">Developer</string>
     <string name="dev_name">lidesheng</string>
-    <string name="title_licenses">Licenses</string>
-    <string name="summary_licenses">Thanks to @FrancOS and @于逸风 for their help, and some unlisted projects</string>
+    <string name="title_project">Project</string>
+    <string name="title_contributors">Contributors</string>
+    <string name="title_licenses">References</string>
+    <string name="title_acknowledgments">Acknowledgments</string>
+    <string name="summary_acknowledgments">Thanks to @FrancOS and @于逸风 for their help, and some unlisted projects</string>
+    <string name="summary_contributors">Thanks to the following contributors for their help in the development of HyperLyric (in no particular order)</string>
 
     <!-- ———————————————————————— SettingsPage ———————————————————————— -->
     <string name="toast_backup_success">Backup successful</string>

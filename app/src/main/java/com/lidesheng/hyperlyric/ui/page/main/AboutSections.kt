@@ -47,6 +47,7 @@ fun LazyListScope.aboutPageSections(
     onHelpClick: () -> Unit,
     onLicensesClick: () -> Unit,
     onChangelogClick: () -> Unit,
+    onContributorsClick: () -> Unit,
 ) {
     item(key = "about_header") {
         val version = aboutAppVersion ?: stringResource(R.string.version_unknown)
@@ -93,12 +94,6 @@ fun LazyListScope.aboutPageSections(
         Spacer(modifier = Modifier.height(104.dp))
     }
 
-    item(key = "system_info_title") {
-        SmallTitle(
-            text = stringResource(R.string.title_system_info)
-        )
-    }
-
     item(key = "system_info_content") {
         Card(modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp).fillMaxWidth()) {
             Column {
@@ -130,53 +125,24 @@ fun LazyListScope.aboutPageSections(
         }
     }
 
-    item(key = "developer_title") {
-        SmallTitle(
-            text = stringResource(R.string.title_developer)
-        )
-    }
-
     item(key = "developer_content") {
         val context = LocalContext.current
         Card(modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp).fillMaxWidth()) {
-            BasicComponent(
-                title = stringResource(R.string.dev_name),
-                startAction = {
-                    Image(
-                        painter = painterResource(id = R.drawable.avatar),
-                        contentDescription = stringResource(R.string.content_description_avatar),
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(MiuixTheme.colorScheme.primaryContainer)
-                    )
-                },
-                endActions = {
-                    Icon(
-                        imageVector = MiuixIcons.Basic.ArrowRight,
-                        contentDescription = stringResource(R.string.content_description_go),
-                        tint = MiuixTheme.colorScheme.onSurfaceVariantActions
-                    )
-                },
+
+            ArrowPreference(
+                title = stringResource(R.string.title_contributors),
+                onClick = onContributorsClick,
+            )
+            ArrowPreference(
+                title = stringResource(R.string.title_project),
                 onClick = {
                     val uri = "https://github.com/limczhh/HyperLyric".toUri()
                     val intent = Intent(Intent.ACTION_VIEW, uri)
-                    try {
-                        intent.setPackage("com.coolapk.market")
-                        context.startActivity(intent)
-                    } catch (_: Exception) {
-                        intent.setPackage(null)
-                        try {
-                            context.startActivity(intent)
-                        } catch (_: Exception) {
-                        }
-                    }
+                    context.startActivity(intent)
                 }
             )
             ArrowPreference(
                 title = stringResource(R.string.title_licenses),
-                summary = stringResource(R.string.summary_licenses),
                 onClick = onLicensesClick,
             )
         }

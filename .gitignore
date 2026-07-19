@@ -15,7 +15,6 @@ local.properties
 .kotlin/
 .vscode/
 docs/
-资料/
 小米超级岛反编译相关/
 app/build/
 app/release/
@@ -25,3 +24,5 @@ app/src/androidTest
 app/src/test
 AGENTS.md
 CLAUDE.md
+app/src/main/java/com/lidesheng/hyperlyric/ui/utils/ContributorsProvider.kt
+app/src/main/res/drawable/contributor_*.png

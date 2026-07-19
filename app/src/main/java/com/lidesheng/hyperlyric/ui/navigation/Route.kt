@@ -43,4 +43,6 @@ sealed interface Route : NavKey {
     data object Help : Route
     @Serializable
     data object Changelog : Route
+    @Serializable
+    data object Contributors : Route
 }
