@@ -4,13 +4,13 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.lidesheng.hyperlyric.R
+import com.lidesheng.hyperlyric.ui.component.icon.GeminiColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.lidesheng.hyperlyric.R
-import com.lidesheng.hyperlyric.ui.component.icon.GeminiColor
 import java.text.Collator
 import java.util.Locale
 
@@ -50,13 +50,15 @@ object LyricProviderManager {
         withContext(Dispatchers.IO) {
             try {
                 val packageManager = context.packageManager
+
                 @Suppress("DEPRECATION")
                 val getSignFlag =
                     PackageManager.GET_SIGNING_CERTIFICATES
 
                 // 获取全部包名列表，减少初次获取的数据量
-                val packageInfos = packageManager.getInstalledPackages(PackageManager.GET_META_DATA or getSignFlag)
-                
+                val packageInfos =
+                    packageManager.getInstalledPackages(PackageManager.GET_META_DATA or getSignFlag)
+
                 val targetPackages = packageInfos.filter { packageInfo ->
                     isValidModule(packageInfo)
                 }
@@ -81,7 +83,7 @@ object LyricProviderManager {
                         }
                     }
 
-                    stateFlow.update { 
+                    stateFlow.update {
                         it.copy(
                             modules = sortedList.toList(),
                             isLoading = loadedModules.size < targetPackages.size
@@ -125,7 +127,11 @@ object LyricProviderManager {
         }
     }
 
-    private fun extractTags(pm: PackageManager, appInfo: ApplicationInfo, metaData: android.os.Bundle): List<ModuleTag> {
+    private fun extractTags(
+        pm: PackageManager,
+        appInfo: ApplicationInfo,
+        metaData: android.os.Bundle
+    ): List<ModuleTag> {
         val tagsResId = metaData.getInt("lyricon_module_tags")
         val rawTags = if (tagsResId != 0) {
             runCatching {
@@ -148,10 +154,12 @@ object LyricProviderManager {
                 titleRes = R.string.module_tag_syllable,
                 isRainbow = true
             )
+
             $$"$translation" -> ModuleTag(
                 iconRes = R.drawable.translate_24px,
                 titleRes = R.string.module_tag_translation
             )
+
             $$"$bluetooth" -> ModuleTag(titleRes = R.string.module_tag_bluetooth)
             else -> null
         }
@@ -160,17 +168,20 @@ object LyricProviderManager {
     private fun validateSignature(packageInfo: PackageInfo): Boolean {
         // 简化版的签名校验逻辑，实际项目中可能需要更复杂的实现
         // 这里暂时返回 false，或者你可以实现完整的校验
-        return false 
+        return false
     }
 
-    fun categorizeModules(modules: List<LyricModule>, defaultCategory: String): List<ModuleCategory> {
+    fun categorizeModules(
+        modules: List<LyricModule>,
+        defaultCategory: String
+    ): List<ModuleCategory> {
         if (modules.isEmpty()) return emptyList()
         val grouped = modules.groupBy { it.category ?: defaultCategory }
-        
+
         if (grouped.size == 1 && grouped.containsKey(defaultCategory)) {
             return listOf(ModuleCategory("", grouped[defaultCategory]!!))
         }
-        
+
         return grouped.map { (name, items) -> ModuleCategory(name, items) }
             .sortedBy { it.name }
     }

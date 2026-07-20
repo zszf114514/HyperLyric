@@ -6,9 +6,9 @@
 
 package com.lidesheng.hyperlyric.lyric.view
 
-import android.annotation.SuppressLint
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.view.Gravity
@@ -237,12 +237,20 @@ class SpaceGateRichLyricLineView(
 
     private var oldLine: IRichLyricLine? = null
 
-    private fun refreshLines(allowNextLinePromotion: Boolean = true, bypassIdentityCheck: Boolean = false) {
+    private fun refreshLines(
+        allowNextLinePromotion: Boolean = true,
+        bypassIdentityCheck: Boolean = false
+    ) {
         if (nextLineTransitionRunning) return
         if (!bypassIdentityCheck && oldLine === line && line.isTitleLine()) return
         oldLine = line
 
-        assembler.updateFlags(displayTranslation, displayRoma, enableRelativeProgress, enableRelativeProgressHighlight)
+        assembler.updateFlags(
+            displayTranslation,
+            displayRoma,
+            enableRelativeProgress,
+            enableRelativeProgressHighlight
+        )
         val mainResult = assembler.buildMain(line)
         val secResult = assembler.buildSecondary(line)
 

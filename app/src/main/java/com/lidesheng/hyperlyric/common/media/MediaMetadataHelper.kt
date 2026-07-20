@@ -26,9 +26,10 @@ object MediaMetadataHelper {
     @Volatile
     private var activeControllers: List<MediaController> = emptyList()
 
-    private val activeSessionsListener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
-        activeControllers = controllers.orEmpty()
-    }
+    private val activeSessionsListener =
+        MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
+            activeControllers = controllers.orEmpty()
+        }
 
     data class MediaInfo(
         val title: String = "",
@@ -55,7 +56,11 @@ object MediaMetadataHelper {
     /**
      * 获取指定包名的当前媒体信息
      */
-    fun getMediaInfo(context: Context, packageName: String, logger: HyperLogger? = null): MediaInfo {
+    fun getMediaInfo(
+        context: Context,
+        packageName: String,
+        logger: HyperLogger? = null
+    ): MediaInfo {
         if (packageName.isEmpty()) return MediaInfo()
 
         return try {
@@ -117,7 +122,8 @@ object MediaMetadataHelper {
         if (state.state != PlaybackState.STATE_PLAYING || state.lastPositionUpdateTime <= 0L) {
             return basePosition
         }
-        val elapsed = (SystemClock.elapsedRealtime() - state.lastPositionUpdateTime).coerceAtLeast(0L)
+        val elapsed =
+            (SystemClock.elapsedRealtime() - state.lastPositionUpdateTime).coerceAtLeast(0L)
         return (basePosition + elapsed * state.playbackSpeed).toLong().coerceAtLeast(0L)
     }
 
@@ -151,9 +157,11 @@ object MediaMetadataHelper {
         if (mediaSessionManager != null) return
         synchronized(sessionLock) {
             if (mediaSessionManager != null) return
-            val manager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+            val manager =
+                context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
             mediaSessionManager = manager
-            activeControllers = runCatching { manager.getActiveSessions(null) }.getOrDefault(emptyList())
+            activeControllers =
+                runCatching { manager.getActiveSessions(null) }.getOrDefault(emptyList())
             val registerListener: () -> Unit = {
                 runCatching {
                     manager.addOnActiveSessionsChangedListener(activeSessionsListener, null)
@@ -170,7 +178,8 @@ object MediaMetadataHelper {
 
     private fun refreshSessionSnapshot() {
         val manager = mediaSessionManager ?: return
-        activeControllers = runCatching { manager.getActiveSessions(null) }.getOrDefault(activeControllers)
+        activeControllers =
+            runCatching { manager.getActiveSessions(null) }.getOrDefault(activeControllers)
     }
 
     /**

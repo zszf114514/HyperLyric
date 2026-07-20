@@ -15,11 +15,13 @@ object ServiceConstants {
     const val KEY_NOTIFICATION_SHOW_PROGRESS = "key_notification_show_progress"
     const val KEY_NOTIFICATION_PROGRESS_COLOR = "key_notification_progress_color"
     const val KEY_NOTIFICATION_ALBUM = "key_notification_album"
-    const val KEY_NOTIFICATION_ISLAND_DISABLE_LYRIC_SPLIT = "key_notification_island_disable_lyric_split"
+    const val KEY_NOTIFICATION_ISLAND_DISABLE_LYRIC_SPLIT =
+        "key_notification_island_disable_lyric_split"
     const val KEY_NOTIFICATION_ISLAND_LIMIT_WIDTH = "key_notification_island_limit_width"
     const val KEY_NOTIFICATION_ISLAND_MAX_WIDTH = "key_notification_island_max_width"
     const val KEY_NOTIFICATION_HIGHLIGHT_COLOR = "key_notification_island_highlight_color"
-    const val KEY_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR = "key_notification_song_info_highlight_color"
+    const val KEY_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR =
+        "key_notification_song_info_highlight_color"
     const val KEY_ONLINE_LYRIC_ENABLED = "key_online_lyric_enabled"
     const val KEY_BYPASS_FOCUS_NOTIFICATION_LIMIT = "key_bypass_focus_notification_limit"
     const val KEY_SERVICE_LYRIC_SOURCE = "key_service_lyric_source"
@@ -36,7 +38,8 @@ object ServiceConstants {
     const val DEFAULT_NOTIFICATION_TYPE = 0
     const val DEFAULT_NOTIFICATION_FOCUS_STYLE = 0
     const val DEFAULT_NOTIFICATION_FOCUS_SHOW = true
-    const val DEFAULT_ISLAND_LEFT_ICON = 0 // 0=music note, 1=rounded album, 2=circular album, 3=none
+    const val DEFAULT_ISLAND_LEFT_ICON =
+        0 // 0=music note, 1=rounded album, 2=circular album, 3=none
     const val DEFAULT_NOTIFICATION_TITLE_STYLE = 4
     const val DEFAULT_NOTIFICATION_CLICK_ACTION = 0
 

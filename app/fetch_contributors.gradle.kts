@@ -1,6 +1,6 @@
 import groovy.json.JsonSlurper
-import java.net.URL
 import java.io.File
+import java.net.URL
 
 tasks.register("generateContributors") {
     doLast {
@@ -9,10 +9,10 @@ tasks.register("generateContributors") {
             val connection = url.openConnection()
             connection.setRequestProperty("User-Agent", "Mozilla/5.0")
             val response = connection.getInputStream().bufferedReader().use { it.readText() }
-            
+
             val jsonParser = JsonSlurper()
             val contributors = jsonParser.parseText(response) as List<Map<String, Any>>
-            
+
             var content = """package com.lidesheng.hyperlyric.ui.utils
 
 data class ContributorItem(
@@ -31,17 +31,19 @@ object ContributorsProvider {
                 // GitHub 头像 URL 默认带有 ?v=4 等参数，我们直接追加 &s=120 限制分辨率为 120x120
                 val avatarUrl = (user["avatar_url"] as String) + "&s=120"
                 if (login.endsWith("[bot]")) continue
-                
+
                 val safeLogin = login.lowercase().replace("-", "_")
                 val drawableName = "contributor_" + safeLogin
-                
+
                 try {
                     val imgBytes = URL(avatarUrl).readBytes()
-                    File(projectDir, "src/main/res/drawable/" + drawableName + ".png").writeBytes(imgBytes)
-                } catch(e: Exception) {
+                    File(projectDir, "src/main/res/drawable/" + drawableName + ".png").writeBytes(
+                        imgBytes
+                    )
+                } catch (e: Exception) {
                     println("Failed to download avatar for " + login)
                 }
-                
+
                 var name = login
                 try {
                     val userUrl = URL("https://api.github.com/users/" + login)
@@ -53,15 +55,18 @@ object ContributorsProvider {
                     if (!actualName.isNullOrEmpty()) {
                         name = actualName
                     }
-                } catch(e: Exception) {
+                } catch (e: Exception) {
                     // Fallback to login
                 }
-                
+
                 content += "        ContributorItem(\"" + name + "\", \"@" + login + "\", \"" + htmlUrl + "\", com.lidesheng.hyperlyric.R.drawable." + drawableName + "),\n"
             }
             content += "    )\n}\n"
-            
-            val file = File(projectDir, "src/main/java/com/lidesheng/hyperlyric/ui/utils/ContributorsProvider.kt")
+
+            val file = File(
+                projectDir,
+                "src/main/java/com/lidesheng/hyperlyric/ui/utils/ContributorsProvider.kt"
+            )
             file.writeText(content)
             println("ContributorsProvider.kt generated.")
         } catch (e: Exception) {

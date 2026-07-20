@@ -1,8 +1,8 @@
 package com.lidesheng.hyperlyric.service.source
 
 import com.lidesheng.hyperlyric.BuildConfig
-import com.lidesheng.hyperlyric.lyric.LrcLine
 import com.lidesheng.hyperlyric.lyric.ILyricProvider
+import com.lidesheng.hyperlyric.lyric.LrcLine
 import com.lidesheng.hyperlyric.lyric.LyricSearchParams
 
 class OnlineLyricSource(private val lyricProvider: ILyricProvider) : ServiceLyricSource {

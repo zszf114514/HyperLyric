@@ -25,6 +25,7 @@ class RootApplication : Application() {
                 xposedService = service
                 syncAllPreferences(this@RootApplication)
             }
+
             override fun onServiceDied(service: XposedService) {
                 xposedService = null
             }
@@ -32,7 +33,7 @@ class RootApplication : Application() {
     }
 
     companion object {
-        
+
         @JvmStatic
         var xposedService: XposedService? = null
             private set

@@ -12,15 +12,19 @@ object PrefsBridge {
     }
 
     fun getPrefs(): SharedPreferences {
-        return prefs ?: throw IllegalStateException("PrefsBridge not initialized. Call init() first.")
+        return prefs
+            ?: throw IllegalStateException("PrefsBridge not initialized. Call init() first.")
     }
 
     fun getBoolean(key: String, default: Boolean): Boolean = getPrefs().getBoolean(key, default)
     fun getInt(key: String, default: Int): Int = getPrefs().getInt(key, default)
-    fun getString(key: String, default: String? = null): String? = getPrefs().getString(key, default)
+    fun getString(key: String, default: String? = null): String? =
+        getPrefs().getString(key, default)
+
     fun getLong(key: String, default: Long): Long = getPrefs().getLong(key, default)
     fun getFloat(key: String, default: Float): Float = getPrefs().getFloat(key, default)
-    fun getStringSet(key: String, default: Set<String>? = null): Set<String>? = getPrefs().getStringSet(key, default)
+    fun getStringSet(key: String, default: Set<String>? = null): Set<String>? =
+        getPrefs().getStringSet(key, default)
 
     fun putBoolean(key: String, value: Boolean) {
         getPrefs().edit().putBoolean(key, value).apply()

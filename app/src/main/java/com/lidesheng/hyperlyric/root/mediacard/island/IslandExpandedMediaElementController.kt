@@ -120,7 +120,8 @@ internal object IslandExpandedMediaElementController {
 
             RootConstants.ISLAND_EXPANDED_MEDIA_COVER_STYLE_HIDDEN -> {
                 if (albumViewId != 0) {
-                    fakeExpandedView.findViewById<View>(albumViewId)?.let { it.visibility = View.GONE }
+                    fakeExpandedView.findViewById<View>(albumViewId)
+                        ?.let { it.visibility = View.GONE }
                 }
             }
         }
@@ -192,8 +193,8 @@ internal object IslandExpandedMediaElementController {
             val albumHeight = elements.albumView.height.takeIf { it > 0 }
                 ?: elements.albumView.layoutParams.height
             val textGoneStartMargin = (
-                26f * elements.player.resources.displayMetrics.density
-            ).roundToInt()
+                    26f * elements.player.resources.displayMetrics.density
+                    ).roundToInt()
             elements.title.setGoneMargin(
                 GONE_START_MARGIN_FIELD,
                 textGoneStartMargin

@@ -50,7 +50,8 @@ object AlbumImageHelper {
             isFilterBitmap = true
             xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
         }
-        val srcRect = android.graphics.Rect(xOffset, yOffset, xOffset + cropSize, yOffset + cropSize)
+        val srcRect =
+            android.graphics.Rect(xOffset, yOffset, xOffset + cropSize, yOffset + cropSize)
         val dstRect = android.graphics.Rect(0, 0, targetSize, targetSize)
         canvas.drawBitmap(source, srcRect, dstRect, bitmapPaint)
 
@@ -75,7 +76,8 @@ object AlbumImageHelper {
             isFilterBitmap = true
             xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
         }
-        val srcRect = android.graphics.Rect(xOffset, yOffset, xOffset + cropSize, yOffset + cropSize)
+        val srcRect =
+            android.graphics.Rect(xOffset, yOffset, xOffset + cropSize, yOffset + cropSize)
         val dstRect = android.graphics.Rect(0, 0, targetSize, targetSize)
         canvas.drawBitmap(source, srcRect, dstRect, bitmapPaint)
 
@@ -89,7 +91,7 @@ object AlbumImageHelper {
     fun extractColors(bitmap: Bitmap?): ExtractedColors {
         val fallback = ExtractedColors(defaultColor, defaultColor)
         if (bitmap == null || bitmap.isRecycled) return fallback
-        
+
         return try {
             val targetBitmap = if (bitmap.width > 100 || bitmap.height > 100) {
                 bitmap.scale(100, 100, false)
@@ -97,15 +99,24 @@ object AlbumImageHelper {
 
             // 使用 ColorExtractor 提取调色板
             val palette = ColorExtractor.extractThemePalette(targetBitmap, 2)
-            
+
             if (targetBitmap != bitmap && !targetBitmap.isRecycled) targetBitmap.recycle()
 
             // 统一取 onBlackBackground (高亮度) 的结果
             val result = ExtractedColors(
                 main = palette.onBlackBackground.getOrNull(0) ?: defaultColor,
-                secondary = palette.onBlackBackground.getOrNull(1) ?: (palette.onBlackBackground.getOrNull(0) ?: defaultColor)
+                secondary = palette.onBlackBackground.getOrNull(1)
+                    ?: (palette.onBlackBackground.getOrNull(0) ?: defaultColor)
             )
-            LogManager.d("AlbumProcessor", "正在提取取色: ${bitmap.width}x${bitmap.height}, 主色=${String.format("#%06X", 0xFFFFFF and result.main)}, 次色=${String.format("#%06X", 0xFFFFFF and result.secondary)}")
+            LogManager.d(
+                "AlbumProcessor",
+                "正在提取取色: ${bitmap.width}x${bitmap.height}, 主色=${
+                    String.format(
+                        "#%06X",
+                        0xFFFFFF and result.main
+                    )
+                }, 次色=${String.format("#%06X", 0xFFFFFF and result.secondary)}"
+            )
             result
         } catch (e: Exception) {
             LogManager.e("AlbumProcessor", "取色失败: ${bitmap.width}x${bitmap.height}", e)

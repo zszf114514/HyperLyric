@@ -1,7 +1,7 @@
 ﻿package com.lidesheng.hyperlyric.root.aitrans
 
-import com.lidesheng.hyperlyric.root.utils.HookLogger
 import com.lidesheng.hyperlyric.lyric.model.Song
+import com.lidesheng.hyperlyric.root.utils.HookLogger
 
 /** Applies validated translation items back to lyric lines. */
 internal object AITranslationApplicator {

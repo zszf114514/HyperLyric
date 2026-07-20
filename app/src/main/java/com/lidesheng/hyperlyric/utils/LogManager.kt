@@ -4,8 +4,8 @@ import android.content.Context
 import android.util.Log
 import com.lidesheng.hyperlyric.R
 import com.lidesheng.hyperlyric.common.HyperLogger
-import com.lidesheng.hyperlyric.ui.page.log.LogEntry
 import com.lidesheng.hyperlyric.common.UIConstants
+import com.lidesheng.hyperlyric.ui.page.log.LogEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
@@ -74,7 +74,8 @@ object LogManager : HyperLogger {
     }
 
     private fun shouldWrite(level: String): Boolean {
-        val prefs = appContext?.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE) ?: return true
+        val prefs = appContext?.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
+            ?: return true
         val logLevel = prefs.getInt(UIConstants.KEY_LOG_LEVEL, UIConstants.DEFAULT_LOG_LEVEL)
         if (logLevel == LEVEL_DEBUG) return true
         return level == "I" || level == "W" || level == "E" || level == "C"
@@ -100,7 +101,9 @@ object LogManager : HyperLogger {
             val lines = file.readLines()
             val keepCount = lines.size / 2
             if (keepCount > 0) {
-                file.writeText(lines.subList(lines.size - keepCount, lines.size).joinToString("\n") + "\n")
+                file.writeText(
+                    lines.subList(lines.size - keepCount, lines.size).joinToString("\n") + "\n"
+                )
             }
         } catch (_: Exception) {
         }
@@ -145,116 +148,175 @@ object LogManager : HyperLogger {
         return readXposedLogs(context)
     }
 
-    private suspend fun readXposedLogs(context: Context): List<LogEntry> = withContext(Dispatchers.IO) {
-        val entries = mutableListOf<LogEntry>()
-        try {
-            val logDir = "/data/adb/lspd/log"
-            val checkProcess = Runtime.getRuntime().exec(
-                arrayOf("su", "-c", "ls -d $logDir 2>/dev/null || echo '__NONE__'")
-            )
-            val foundDir = BufferedReader(InputStreamReader(checkProcess.inputStream))
-                .readLines().firstOrNull { it.isNotBlank() && it != "__NONE__" }
-            checkProcess.waitFor()
+    private suspend fun readXposedLogs(context: Context): List<LogEntry> =
+        withContext(Dispatchers.IO) {
+            val entries = mutableListOf<LogEntry>()
+            try {
+                val logDir = "/data/adb/lspd/log"
+                val checkProcess = Runtime.getRuntime().exec(
+                    arrayOf("su", "-c", "ls -d $logDir 2>/dev/null || echo '__NONE__'")
+                )
+                val foundDir = BufferedReader(InputStreamReader(checkProcess.inputStream))
+                    .readLines().firstOrNull { it.isNotBlank() && it != "__NONE__" }
+                checkProcess.waitFor()
 
-            if (foundDir == null) {
-                val msg = context.getString(R.string.lsposed_not_found)
-                entries.add(LogEntry("NOW", "W", context.getString(R.string.tag_logger), msg, rawLog = msg))
-                return@withContext entries
-            }
-
-            val dirsArg = foundDir
-            val listProcess = Runtime.getRuntime().exec(
-                arrayOf("su", "-c", "find $dirsArg -name '*.log' ! -name 'kmsg*' -type f 2>/dev/null")
-            )
-            val logFiles = BufferedReader(InputStreamReader(listProcess.inputStream))
-                .readLines().filter { it.isNotBlank() }
-            listProcess.waitFor()
-
-            if (logFiles.isEmpty()) {
-                val msg = context.getString(R.string.format_log_files_not_found, dirsArg)
-                entries.add(LogEntry("NOW", "W", context.getString(R.string.tag_logger), msg, rawLog = msg))
-                return@withContext entries
-            }
-
-            val catCmd = logFiles.joinToString(" ") { "'$it'" }
-            val process = Runtime.getRuntime().exec(
-                arrayOf("su", "-c", "cat $catCmd 2>/dev/null")
-            )
-
-            val timeRegex = Pattern.compile("^(?:\\[\\s*)?(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3})")
-            val levelRegex = Pattern.compile("\\s+([VDIWEC])/")
-            val moduleTagRegex = Pattern.compile("com\\.lidesheng\\.hyperlyric[^\\]]*\\][ \\t]*\\[([^\\]]+)]")
-
-            BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
-                val currentBlock = java.lang.StringBuilder()
-
-                fun processCurrentBlock() {
-                    val blockStr = currentBlock.toString()
-                    if (!blockStr.contains("hyperlyric", ignoreCase = true)) return
-
-                    val firstLine = blockStr.lineSequence().firstOrNull() ?: ""
-
-                    val timeMatcher = timeRegex.matcher(firstLine)
-                    val rawTime = if (timeMatcher.find()) timeMatcher.group(1) ?: context.getString(R.string.unknown_time) else context.getString(R.string.unknown_time)
-                    val time = if (rawTime.length >= 19 && rawTime != context.getString(R.string.unknown_time)) rawTime.substring(5).replace('T', ' ') else rawTime
-
-                    val levelMatcher = levelRegex.matcher(firstLine)
-                    val level = if (levelMatcher.find()) levelMatcher.group(1) ?: "I" else "I"
-                    if (level == "V") return
-
-                    // 提取模块标签作为 source，用 matcher.end() 定位消息起始
-                    val moduleTagMatcher = moduleTagRegex.matcher(firstLine)
-                    val source: String
-                    val messageStart: Int
-                    if (moduleTagMatcher.find()) {
-                        source = moduleTagMatcher.group(1) ?: "HyperLyric"
-                        messageStart = moduleTagMatcher.end()
-                    } else {
-                        source = "HyperLyric"
-                        val lastBracket = firstLine.lastIndexOf(']')
-                        messageStart = if (lastBracket != -1) lastBracket + 1 else 0
-                    }
-
-                    val headerMsg = firstLine.substring(messageStart).trim()
-                    val remainingLines = if (blockStr.contains('\n')) blockStr.substringAfter('\n') else ""
-                    val message = if (remainingLines.isNotBlank()) "$headerMsg\n$remainingLines" else headerMsg
-
-                    entries.add(LogEntry(time, level, context.getString(R.string.tag_lsposed), message.trim(), source = source, rawLog = blockStr))
+                if (foundDir == null) {
+                    val msg = context.getString(R.string.lsposed_not_found)
+                    entries.add(
+                        LogEntry(
+                            "NOW",
+                            "W",
+                            context.getString(R.string.tag_logger),
+                            msg,
+                            rawLog = msg
+                        )
+                    )
+                    return@withContext entries
                 }
 
-                reader.lineSequence().forEach { line ->
-                    if (timeRegex.matcher(line).find()) {
-                        if (currentBlock.isNotEmpty()) {
-                            processCurrentBlock()
-                            currentBlock.clear()
+                val dirsArg = foundDir
+                val listProcess = Runtime.getRuntime().exec(
+                    arrayOf(
+                        "su",
+                        "-c",
+                        "find $dirsArg -name '*.log' ! -name 'kmsg*' -type f 2>/dev/null"
+                    )
+                )
+                val logFiles = BufferedReader(InputStreamReader(listProcess.inputStream))
+                    .readLines().filter { it.isNotBlank() }
+                listProcess.waitFor()
+
+                if (logFiles.isEmpty()) {
+                    val msg = context.getString(R.string.format_log_files_not_found, dirsArg)
+                    entries.add(
+                        LogEntry(
+                            "NOW",
+                            "W",
+                            context.getString(R.string.tag_logger),
+                            msg,
+                            rawLog = msg
+                        )
+                    )
+                    return@withContext entries
+                }
+
+                val catCmd = logFiles.joinToString(" ") { "'$it'" }
+                val process = Runtime.getRuntime().exec(
+                    arrayOf("su", "-c", "cat $catCmd 2>/dev/null")
+                )
+
+                val timeRegex =
+                    Pattern.compile("^(?:\\[\\s*)?(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3})")
+                val levelRegex = Pattern.compile("\\s+([VDIWEC])/")
+                val moduleTagRegex =
+                    Pattern.compile("com\\.lidesheng\\.hyperlyric[^\\]]*\\][ \\t]*\\[([^\\]]+)]")
+
+                BufferedReader(InputStreamReader(process.inputStream)).use { reader ->
+                    val currentBlock = java.lang.StringBuilder()
+
+                    fun processCurrentBlock() {
+                        val blockStr = currentBlock.toString()
+                        if (!blockStr.contains("hyperlyric", ignoreCase = true)) return
+
+                        val firstLine = blockStr.lineSequence().firstOrNull() ?: ""
+
+                        val timeMatcher = timeRegex.matcher(firstLine)
+                        val rawTime = if (timeMatcher.find()) timeMatcher.group(1)
+                            ?: context.getString(R.string.unknown_time) else context.getString(R.string.unknown_time)
+                        val time =
+                            if (rawTime.length >= 19 && rawTime != context.getString(R.string.unknown_time)) rawTime.substring(
+                                5
+                            ).replace('T', ' ') else rawTime
+
+                        val levelMatcher = levelRegex.matcher(firstLine)
+                        val level = if (levelMatcher.find()) levelMatcher.group(1) ?: "I" else "I"
+                        if (level == "V") return
+
+                        // 提取模块标签作为 source，用 matcher.end() 定位消息起始
+                        val moduleTagMatcher = moduleTagRegex.matcher(firstLine)
+                        val source: String
+                        val messageStart: Int
+                        if (moduleTagMatcher.find()) {
+                            source = moduleTagMatcher.group(1) ?: "HyperLyric"
+                            messageStart = moduleTagMatcher.end()
+                        } else {
+                            source = "HyperLyric"
+                            val lastBracket = firstLine.lastIndexOf(']')
+                            messageStart = if (lastBracket != -1) lastBracket + 1 else 0
                         }
-                    }
-                    if (currentBlock.isNotEmpty()) currentBlock.append("\n")
-                    currentBlock.append(line)
-                }
-                if (currentBlock.isNotEmpty()) {
-                    processCurrentBlock()
-                }
-            }
-            process.waitFor()
 
-            if (entries.isEmpty()) {
-                val msg = context.getString(R.string.format_logs_scanned_no_match, logFiles.size, dirsArg)
-                entries.add(LogEntry("NOW", "I", context.getString(R.string.tag_logger), msg, rawLog = msg))
+                        val headerMsg = firstLine.substring(messageStart).trim()
+                        val remainingLines =
+                            if (blockStr.contains('\n')) blockStr.substringAfter('\n') else ""
+                        val message =
+                            if (remainingLines.isNotBlank()) "$headerMsg\n$remainingLines" else headerMsg
+
+                        entries.add(
+                            LogEntry(
+                                time,
+                                level,
+                                context.getString(R.string.tag_lsposed),
+                                message.trim(),
+                                source = source,
+                                rawLog = blockStr
+                            )
+                        )
+                    }
+
+                    reader.lineSequence().forEach { line ->
+                        if (timeRegex.matcher(line).find()) {
+                            if (currentBlock.isNotEmpty()) {
+                                processCurrentBlock()
+                                currentBlock.clear()
+                            }
+                        }
+                        if (currentBlock.isNotEmpty()) currentBlock.append("\n")
+                        currentBlock.append(line)
+                    }
+                    if (currentBlock.isNotEmpty()) {
+                        processCurrentBlock()
+                    }
+                }
+                process.waitFor()
+
+                if (entries.isEmpty()) {
+                    val msg = context.getString(
+                        R.string.format_logs_scanned_no_match,
+                        logFiles.size,
+                        dirsArg
+                    )
+                    entries.add(
+                        LogEntry(
+                            "NOW",
+                            "I",
+                            context.getString(R.string.tag_logger),
+                            msg,
+                            rawLog = msg
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                val msg = if (e.message?.contains("Permission denied") == true ||
+                    e.message?.contains("su:") == true ||
+                    e.message?.contains("not found") == true
+                ) {
+                    context.getString(R.string.no_root_permission)
+                } else {
+                    context.getString(R.string.format_log_read_failed, e.message)
+                }
+                entries.add(
+                    LogEntry(
+                        "NOW",
+                        "E",
+                        context.getString(R.string.tag_logger),
+                        msg,
+                        rawLog = msg
+                    )
+                )
             }
-        } catch (e: Exception) {
-            val msg = if (e.message?.contains("Permission denied") == true ||
-                          e.message?.contains("su:") == true ||
-                          e.message?.contains("not found") == true) {
-                context.getString(R.string.no_root_permission)
-            } else {
-                context.getString(R.string.format_log_read_failed, e.message)
+            val sortedList = entries.sortedByDescending { it.timestamp }
+            sortedList.mapIndexed { index, entry ->
+                entry.copy(id = "log_${index}_${entry.timestamp}")
             }
-            entries.add(LogEntry("NOW", "E", context.getString(R.string.tag_logger), msg, rawLog = msg))
         }
-        val sortedList = entries.sortedByDescending { it.timestamp }
-        sortedList.mapIndexed { index, entry ->
-            entry.copy(id = "log_${index}_${entry.timestamp}")
-        }
-    }
 }

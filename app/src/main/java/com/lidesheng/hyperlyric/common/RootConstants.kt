@@ -126,7 +126,8 @@ object RootConstants {
     // ================= AI TRANSLATION KEYS =================
     const val KEY_HOOK_AI_TRANS_ENABLE = "key_hook_ai_trans_enable"
     const val KEY_HOOK_AI_TRANS_AUTO_IGNORE_CHINESE = "key_hook_ai_trans_auto_ignore_chinese"
-    const val KEY_HOOK_AI_TRANS_SKIP_EXISTING_TRANSLATION = "key_hook_ai_trans_skip_existing_translation"
+    const val KEY_HOOK_AI_TRANS_SKIP_EXISTING_TRANSLATION =
+        "key_hook_ai_trans_skip_existing_translation"
     const val KEY_HOOK_AI_TRANS_FORCE_OVERRIDE = "key_hook_ai_trans_force_override"
     const val KEY_HOOK_AI_TRANS_PROVIDER = "key_hook_ai_trans_provider"
     const val KEY_HOOK_AI_TRANS_API_KEY = "key_hook_ai_trans_api_key"

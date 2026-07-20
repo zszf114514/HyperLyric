@@ -106,6 +106,7 @@ object LyricInfoParser {
                 val wordRe = Pattern.compile("<\\d{2}:\\d{2}\\.\\d{2,3}>")
                 wordRe.matcher(wordPart).replaceAll("").trim().takeIf { it.isNotBlank() }
             }
+
             else -> parseLrcLine(raw)?.text
         }
     }
@@ -119,7 +120,8 @@ object LyricInfoParser {
         if (!m.find()) return -1
         return m.group(1)!!.toLong() * 60000 +
                 m.group(2)!!.toLong() * 1000 +
-                (if (m.group(3)!!.length == 2) m.group(3)!!.toLong() * 10 else m.group(3)!!.toLong())
+                (if (m.group(3)!!.length == 2) m.group(3)!!.toLong() * 10 else m.group(3)!!
+                    .toLong())
     }
 
     /**
@@ -141,10 +143,18 @@ object LyricInfoParser {
         while (wm.find()) {
             val wordBegin = wm.group(1)!!.toLong() * 60000 +
                     wm.group(2)!!.toLong() * 1000 +
-                    (if (wm.group(3)!!.length == 2) wm.group(3)!!.toLong() * 10 else wm.group(3)!!.toLong())
+                    (if (wm.group(3)!!.length == 2) wm.group(3)!!.toLong() * 10 else wm.group(3)!!
+                        .toLong())
             val wordText = wm.group(4) ?: ""
             if (wordText.isBlank()) continue
-            words.add(LyricWord(begin = wordBegin, end = wordBegin + 500, duration = 500, text = wordText))
+            words.add(
+                LyricWord(
+                    begin = wordBegin,
+                    end = wordBegin + 500,
+                    duration = 500,
+                    text = wordText
+                )
+            )
         }
 
         if (words.isEmpty()) return null
@@ -161,7 +171,13 @@ object LyricInfoParser {
         val lineBegin = words.first().begin
         val lineEnd = words.last().end
         val lineText = words.joinToString("") { it.text.orEmpty() }
-        return RichLyricLine(begin = lineBegin, end = lineEnd, duration = lineEnd - lineBegin, text = lineText, words = words)
+        return RichLyricLine(
+            begin = lineBegin,
+            end = lineEnd,
+            duration = lineEnd - lineBegin,
+            text = lineText,
+            words = words
+        )
     }
 
     /**
@@ -172,7 +188,8 @@ object LyricInfoParser {
         val m = re.matcher(raw.trim())
         if (!m.matches()) return null
         val ms = m.group(1)!!.toLong() * 60000 + m.group(2)!!.toLong() * 1000 +
-                (if (m.group(3)!!.length == 2) m.group(3)!!.toLong() * 10 else m.group(3)!!.toLong())
+                (if (m.group(3)!!.length == 2) m.group(3)!!.toLong() * 10 else m.group(3)!!
+                    .toLong())
         val text = m.group(4)!!.trim()
         if (text.isBlank()) return null
         return RichLyricLine(begin = ms, text = text)
@@ -188,7 +205,8 @@ object LyricInfoParser {
                 format = obj.optString("format", ""),
                 translationFormat = obj.optString("translation", ""),
                 lyricLength = obj.optString("lyric", "").length,
-                lyricPreview = obj.optString("lyric", "").lines().filter { it.isNotBlank() }.drop(3).take(10)
+                lyricPreview = obj.optString("lyric", "").lines().filter { it.isNotBlank() }.drop(3)
+                    .take(10)
             )
         } catch (_: Exception) {
             null

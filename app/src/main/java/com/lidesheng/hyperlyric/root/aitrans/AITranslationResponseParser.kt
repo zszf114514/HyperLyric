@@ -1,7 +1,7 @@
 ﻿package com.lidesheng.hyperlyric.root.aitrans
 
-import com.lidesheng.hyperlyric.root.utils.HookLogger
 import com.lidesheng.hyperlyric.common.extensions.json
+import com.lidesheng.hyperlyric.root.utils.HookLogger
 
 internal object AITranslationResponseParser {
     private const val TAG = "AITranslationResponseParser"

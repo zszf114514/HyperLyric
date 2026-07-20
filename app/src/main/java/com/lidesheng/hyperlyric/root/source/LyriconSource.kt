@@ -1,13 +1,11 @@
 package com.lidesheng.hyperlyric.root.source
 
 import android.app.Application
+import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.lyric.source.LyricSink
 import com.lidesheng.hyperlyric.lyric.source.LyricSource
-import com.lidesheng.hyperlyric.root.island.renderer.BaseIslandRenderer
-import com.lidesheng.hyperlyric.root.HookEntry
 import com.lidesheng.hyperlyric.root.LyriconDataBridge
-import com.lidesheng.hyperlyric.common.RootConstants
-
+import com.lidesheng.hyperlyric.root.island.renderer.BaseIslandRenderer
 import com.lidesheng.hyperlyric.root.utils.HookLogger
 import io.github.proify.lyricon.lyric.model.Song
 import io.github.proify.lyricon.subscriber.ActivePlayerListener
@@ -16,8 +14,6 @@ import io.github.proify.lyricon.subscriber.LyriconFactory
 import io.github.proify.lyricon.subscriber.LyriconSubscriber
 import io.github.proify.lyricon.subscriber.ProviderInfo
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
 
 class LyriconSource : LyricSource {
 
@@ -46,10 +42,14 @@ class LyriconSource : LyricSource {
         var index = currentArtist.indexOf(trimmedSong, ignoreCase = true)
         while (index != -1) {
             val beforeOk = index == 0 || !currentArtist[index - 1].isLetterOrDigit()
-            val afterOk = index + trimmedSong.length == currentArtist.length || !currentArtist[index + trimmedSong.length].isLetterOrDigit()
+            val afterOk =
+                index + trimmedSong.length == currentArtist.length || !currentArtist[index + trimmedSong.length].isLetterOrDigit()
 
             if (beforeOk && afterOk) {
-                currentArtist = currentArtist.substring(0, index) + currentArtist.substring(index + trimmedSong.length)
+                currentArtist = currentArtist.substring(
+                    0,
+                    index
+                ) + currentArtist.substring(index + trimmedSong.length)
                 index = currentArtist.indexOf(trimmedSong, ignoreCase = true)
             } else {
                 index = currentArtist.indexOf(trimmedSong, index + 1, ignoreCase = true)
@@ -57,7 +57,25 @@ class LyriconSource : LyricSource {
         }
 
         var cleaned = currentArtist.trim()
-        val charactersToTrim = charArrayOf('-', '_', '—', '~', '～', '/', '\\', '|', '(', ')', '[', ']', '【', '】', '（', '）', ' ')
+        val charactersToTrim = charArrayOf(
+            '-',
+            '_',
+            '—',
+            '~',
+            '～',
+            '/',
+            '\\',
+            '|',
+            '(',
+            ')',
+            '[',
+            ']',
+            '【',
+            '】',
+            '（',
+            '）',
+            ' '
+        )
 
         cleaned = cleaned.trim { it in charactersToTrim }.trim()
 
@@ -80,6 +98,7 @@ class LyriconSource : LyricSource {
     @Volatile
     private var sink: LyricSink? = null
     private var app: Application? = null
+
     @Volatile
     private var subscriber: LyriconSubscriber? = null
 
@@ -161,19 +180,19 @@ class LyriconSource : LyricSource {
 
     private val connectionListener = object : ConnectionListener {
         override fun onConnected(subscriber: LyriconSubscriber) {
-                HookLogger.i(TAG, "订阅连接已建立")
+            HookLogger.i(TAG, "订阅连接已建立")
         }
 
         override fun onReconnected(subscriber: LyriconSubscriber) {
-                HookLogger.i(TAG, "订阅连接已恢复")
+            HookLogger.i(TAG, "订阅连接已恢复")
         }
 
         override fun onDisconnected(subscriber: LyriconSubscriber) {
-                HookLogger.w(TAG, "订阅连接已断开")
+            HookLogger.w(TAG, "订阅连接已断开")
         }
 
         override fun onConnectTimeout(subscriber: LyriconSubscriber) {
-                HookLogger.w(TAG, "订阅连接超时")
+            HookLogger.w(TAG, "订阅连接超时")
         }
     }
 

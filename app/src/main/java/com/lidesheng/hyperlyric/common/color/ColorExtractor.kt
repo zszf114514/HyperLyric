@@ -55,13 +55,21 @@ object ColorExtractor {
         scaled.getPixels(rawPixels, 0, scaled.width, 0, 0, scaled.width, scaled.height)
         if (scaled != bitmap) scaled.recycle()
 
-        val lArr = FloatArray(size); val aArr = FloatArray(size); val bArr = FloatArray(size); val wArr = FloatArray(size)
+        val lArr = FloatArray(size);
+        val aArr = FloatArray(size);
+        val bArr = FloatArray(size);
+        val wArr = FloatArray(size)
         val outLab = DoubleArray(3)
-        var sumL = 0f; var sumA = 0f; var sumB = 0f; var totalW = 0f
+        var sumL = 0f;
+        var sumA = 0f;
+        var sumB = 0f;
+        var totalW = 0f
 
         for (i in 0 until size) {
             ColorUtils.colorToLAB(rawPixels[i], outLab)
-            val l = outLab[0].toFloat(); val a = outLab[1].toFloat(); val b = outLab[2].toFloat()
+            val l = outLab[0].toFloat();
+            val a = outLab[1].toFloat();
+            val b = outLab[2].toFloat()
             val chroma = sqrt(a * a + b * b)
             lArr[i] = l; aArr[i] = a; bArr[i] = b
             val weight = if (chroma > 5.0f) chroma * chroma else 0.1f
@@ -71,7 +79,9 @@ object ColorExtractor {
 
         if (totalW == 0f) return emptyList()
 
-        val anchorL = sumL / totalW; val anchorA = sumA / totalW; val anchorB = sumB / totalW
+        val anchorL = sumL / totalW;
+        val anchorA = sumA / totalW;
+        val anchorB = sumB / totalW
         for (i in 0 until size) {
             val distSq = (lArr[i] - anchorL).let { it * it } +
                     (aArr[i] - anchorA).let { it * it } +
@@ -113,9 +123,14 @@ object ColorExtractor {
 
         for (cluster in clusters) {
             if (selected.size >= maxColors) break
-            val color = ColorUtils.LABToColor(cluster[0].toDouble(), cluster[1].toDouble(), cluster[2].toDouble())
+            val color = ColorUtils.LABToColor(
+                cluster[0].toDouble(),
+                cluster[1].toDouble(),
+                cluster[2].toDouble()
+            )
             ColorUtils.colorToHSL(color, outHsl)
-            val h = outHsl[0]; val s = outHsl[1]
+            val h = outHsl[0];
+            val s = outHsl[1]
 
             var isDistinct = true
             if (s > 0.15f) {
@@ -139,36 +154,64 @@ object ColorExtractor {
             }
         }
         if (selected.isEmpty() && clusters.isNotEmpty()) {
-            selected.add(ColorUtils.LABToColor(clusters[0][0].toDouble(), clusters[0][1].toDouble(), clusters[0][2].toDouble()))
+            selected.add(
+                ColorUtils.LABToColor(
+                    clusters[0][0].toDouble(),
+                    clusters[0][1].toDouble(),
+                    clusters[0][2].toDouble()
+                )
+            )
         }
         return selected
     }
 
     private fun calculateLabDistance(c1: Int, c2: Int): Double {
-        val lab1 = DoubleArray(3); val lab2 = DoubleArray(3)
+        val lab1 = DoubleArray(3);
+        val lab2 = DoubleArray(3)
         ColorUtils.colorToLAB(c1, lab1); ColorUtils.colorToLAB(c2, lab2)
         return sqrt((lab1[0] - lab2[0]).let { it * it } + (lab1[1] - lab2[1]).let { it * it } + (lab1[2] - lab2[2]).let { it * it })
     }
 
-    private fun kMeansLabOptimized(lArr: FloatArray, aArr: FloatArray, bArr: FloatArray, wArr: FloatArray, k: Int): List<FloatArray> {
+    private fun kMeansLabOptimized(
+        lArr: FloatArray,
+        aArr: FloatArray,
+        bArr: FloatArray,
+        wArr: FloatArray,
+        k: Int
+    ): List<FloatArray> {
         val size = lArr.size
-        val cL = FloatArray(k); val cA = FloatArray(k); val cB = FloatArray(k); val assignments = IntArray(size)
-        repeat(k) { i -> val idx = Random.nextInt(size); cL[i] = lArr[idx]; cA[i] = aArr[idx]; cB[i] = bArr[idx] }
+        val cL = FloatArray(k);
+        val cA = FloatArray(k);
+        val cB = FloatArray(k);
+        val assignments = IntArray(size)
+        repeat(k) { i ->
+            val idx = Random.nextInt(size); cL[i] = lArr[idx]; cA[i] = aArr[idx]; cB[i] = bArr[idx]
+        }
         repeat(KMEANS_ITERATIONS) {
             for (i in 0 until size) {
-                var minDist = Float.MAX_VALUE; var closest = 0
+                var minDist = Float.MAX_VALUE;
+                var closest = 0
                 for (ci in 0 until k) {
-                    val d = (lArr[i] - cL[ci]).let { it * it } + (aArr[i] - cA[ci]).let { it * it } + (bArr[i] - cB[ci]).let { it * it }
-                    if (d < minDist) { minDist = d; closest = ci }
+                    val d =
+                        (lArr[i] - cL[ci]).let { it * it } + (aArr[i] - cA[ci]).let { it * it } + (bArr[i] - cB[ci]).let { it * it }
+                    if (d < minDist) {
+                        minDist = d; closest = ci
+                    }
                 }
                 assignments[i] = closest
             }
-            val nL = FloatArray(k); val nA = FloatArray(k); val nB = FloatArray(k); val nW = FloatArray(k)
+            val nL = FloatArray(k);
+            val nA = FloatArray(k);
+            val nB = FloatArray(k);
+            val nW = FloatArray(k)
             for (i in 0 until size) {
-                val ci = assignments[i]; val w = wArr[i]
+                val ci = assignments[i];
+                val w = wArr[i]
                 nL[ci] += lArr[i] * w; nA[ci] += aArr[i] * w; nB[ci] += bArr[i] * w; nW[ci] += w
             }
-            for (ci in 0 until k) if (nW[ci] > 0) { cL[ci] = nL[ci] / nW[ci]; cA[ci] = nA[ci] / nW[ci]; cB[ci] = nB[ci] / nW[ci] }
+            for (ci in 0 until k) if (nW[ci] > 0) {
+                cL[ci] = nL[ci] / nW[ci]; cA[ci] = nA[ci] / nW[ci]; cB[ci] = nB[ci] / nW[ci]
+            }
         }
         return List(k) { i ->
             var tw = 0f
@@ -181,7 +224,10 @@ object ColorExtractor {
         val totalPixels = bitmap.width * bitmap.height
         if (totalPixels <= maxPixels) return bitmap
         val scale = sqrt(maxPixels.toFloat() / totalPixels)
-        return bitmap.scale((bitmap.width * scale).toInt().coerceAtLeast(1), (bitmap.height * scale).toInt().coerceAtLeast(1))
+        return bitmap.scale(
+            (bitmap.width * scale).toInt().coerceAtLeast(1),
+            (bitmap.height * scale).toInt().coerceAtLeast(1)
+        )
     }
 
     /**

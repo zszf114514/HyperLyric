@@ -1,9 +1,9 @@
 ﻿package com.lidesheng.hyperlyric.root.aitrans
 
 import android.content.Context
-import com.lidesheng.hyperlyric.root.utils.HookLogger
 import com.lidesheng.hyperlyric.lyric.model.Song
 import com.lidesheng.hyperlyric.lyric.style.AiTranslationConfigs
+import com.lidesheng.hyperlyric.root.utils.HookLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

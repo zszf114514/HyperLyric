@@ -52,6 +52,7 @@ internal class NotificationMediaBackgroundRenderer(
 ) {
     private val monet = MonetApi.create(classLoader)
     private val cacheLock = Any()
+
     @Volatile
     private var closed = false
     private val profileCache = LruCache<Long, ArtworkProfile>(12)
@@ -192,16 +193,19 @@ internal class NotificationMediaBackgroundRenderer(
                 palette.accent1[2], palette.accent1[2],
                 palette.accent1[8], palette.accent1[8]
             )
+
             2, 3 -> NotificationMediaColorConfig(
                 palette.neutral1[1], palette.neutral2[3],
                 palette.accent2[9], palette.accent1[9]
             )
+
             4 -> {
                 val reverse = autoInvert && profile.brightness >= 192f
                 val text = palette.accent1[if (reverse) 8 else 2]
                 val background = palette.accent1[if (reverse) 3 else 8]
                 NotificationMediaColorConfig(text, text, background, background)
             }
+
             5 -> {
                 val tone = softCoverTone.toFlowTone()
                 val surface = MediaSoftArtworkFactory.appearance(tone).surface
@@ -221,6 +225,7 @@ internal class NotificationMediaBackgroundRenderer(
                     )
                 }
             }
+
             else -> NotificationMediaColorConfig(Color.WHITE, Color.WHITE, Color.BLACK, Color.BLACK)
         }
     }
@@ -265,12 +270,14 @@ internal class NotificationMediaBackgroundRenderer(
             in 100f..<200f -> -20f
             else -> -40f
         }
-        val colorMatrix = ColorMatrix(floatArrayOf(
-            1f, 0f, 0f, 0f, correction,
-            0f, 1f, 0f, 0f, correction,
-            0f, 0f, 1f, 0f, correction,
-            0f, 0f, 0f, 1f, 0f
-        ))
+        val colorMatrix = ColorMatrix(
+            floatArrayOf(
+                1f, 0f, 0f, 0f, correction,
+                0f, 1f, 0f, 0f, correction,
+                0f, 0f, 1f, 0f, correction,
+                0f, 0f, 0f, 1f, 0f
+            )
+        )
         val corrected = createBitmap(mosaic.width, mosaic.height)
         val correctedCanvas = Canvas(corrected)
         correctedCanvas.drawBitmap(mosaic, 0f, 0f, Paint().apply {
@@ -481,7 +488,7 @@ internal class NotificationMediaBackgroundRenderer(
             for (y in 0 until height step step) {
                 val pixel = getPixel(x, y)
                 total += Color.red(pixel) * 0.299f +
-                    Color.green(pixel) * 0.587f + Color.blue(pixel) * 0.114f
+                        Color.green(pixel) * 0.587f + Color.blue(pixel) * 0.114f
                 count++
             }
         }
@@ -513,7 +520,13 @@ internal class NotificationMediaBackgroundRenderer(
             renderer.setSurface(reader.surface)
             renderer.setContentRoot(node)
             node.setPosition(0, 0, width, height)
-            node.setRenderEffect(RenderEffect.createBlurEffect(radius, radius, Shader.TileMode.MIRROR))
+            node.setRenderEffect(
+                RenderEffect.createBlurEffect(
+                    radius,
+                    radius,
+                    Shader.TileMode.MIRROR
+                )
+            )
             node.beginRecording().also { canvas ->
                 canvas.drawBitmap(this, 0f, 0f, null)
                 node.endRecording()
@@ -603,8 +616,9 @@ internal class NotificationMediaBackgroundRenderer(
                 val schemeClass = classLoader.loadClass("com.android.systemui.monet.ColorScheme")
                 val paletteClass = classLoader.loadClass("com.android.systemui.monet.TonalPalette")
                 val styleClass = classLoader.loadClass("com.android.systemui.monet.Style")
-                val constructor = schemeClass.declaredConstructors.singleOrNull { it.parameterCount == 3 }
-                    ?: schemeClass.declaredConstructors.single { it.parameterCount == 2 }
+                val constructor =
+                    schemeClass.declaredConstructors.singleOrNull { it.parameterCount == 3 }
+                        ?: schemeClass.declaredConstructors.single { it.parameterCount == 2 }
                 constructor.isAccessible = true
                 val valueOf = styleClass.getDeclaredMethod("valueOf", String::class.java).apply {
                     isAccessible = true

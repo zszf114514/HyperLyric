@@ -3,8 +3,6 @@ package com.lidesheng.hyperlyric.utils
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import top.yukonga.miuix.kmp.basic.SnackbarDuration
-import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -12,16 +10,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.edit
 import com.lidesheng.hyperlyric.R
+import com.lidesheng.hyperlyric.common.RootConstants
+import com.lidesheng.hyperlyric.common.ServiceConstants
+import com.lidesheng.hyperlyric.common.UIConstants
 import com.lidesheng.hyperlyric.root.RootApplication
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import top.yukonga.miuix.kmp.basic.SnackbarDuration
+import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import com.lidesheng.hyperlyric.common.RootConstants
-import com.lidesheng.hyperlyric.common.ServiceConstants
-import com.lidesheng.hyperlyric.common.UIConstants
 
 object BackupRestoreManager {
     suspend fun buildBackupJson(context: Context): String = withContext(Dispatchers.IO) {
@@ -48,37 +48,43 @@ object BackupRestoreManager {
         }.toString(2)
     }
 
-    suspend fun restoreFromJson(context: Context, json: String): Boolean = withContext(Dispatchers.IO) {
-        val prefs = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
-        try {
-            val root = JSONObject(json)
-            if (root.optInt("version", -1) < 1) return@withContext false
-            val config = root.getJSONObject("config")
-            prefs.edit {
-                val keys = config.keys()
-                while (keys.hasNext()) {
-                    val key = keys.next()
-                    val value = config.get(key)
-                    if (key == "key_send_normal_notification" || key == "key_send_focus_notification" || key == "key_persistent_foreground"
-                        || key == RootConstants.KEY_HOOK_AI_TRANS_API_KEY) continue
-                    if (key == ServiceConstants.KEY_NOTIFICATION_WHITELIST) {
-                        val raw = value.toString()
-                        val set = if (raw.isBlank()) emptySet() else raw.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
-                        putStringSet(key, set)
-                        continue
-                    }
-                    when (value) {
-                        is Boolean -> putBoolean(key, value)
-                        is Int -> putInt(key, value)
-                        is Double, is Float -> putFloat(key, (value as Number).toFloat())
-                        is Long -> putLong(key, value)
-                        is String -> putString(key, value)
+    suspend fun restoreFromJson(context: Context, json: String): Boolean =
+        withContext(Dispatchers.IO) {
+            val prefs = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
+            try {
+                val root = JSONObject(json)
+                if (root.optInt("version", -1) < 1) return@withContext false
+                val config = root.getJSONObject("config")
+                prefs.edit {
+                    val keys = config.keys()
+                    while (keys.hasNext()) {
+                        val key = keys.next()
+                        val value = config.get(key)
+                        if (key == "key_send_normal_notification" || key == "key_send_focus_notification" || key == "key_persistent_foreground"
+                            || key == RootConstants.KEY_HOOK_AI_TRANS_API_KEY
+                        ) continue
+                        if (key == ServiceConstants.KEY_NOTIFICATION_WHITELIST) {
+                            val raw = value.toString()
+                            val set =
+                                if (raw.isBlank()) emptySet() else raw.split(",").map { it.trim() }
+                                    .filter { it.isNotEmpty() }.toSet()
+                            putStringSet(key, set)
+                            continue
+                        }
+                        when (value) {
+                            is Boolean -> putBoolean(key, value)
+                            is Int -> putInt(key, value)
+                            is Double, is Float -> putFloat(key, (value as Number).toFloat())
+                            is Long -> putLong(key, value)
+                            is String -> putString(key, value)
+                        }
                     }
                 }
+                true
+            } catch (_: Exception) {
+                false
             }
-            true
-        } catch (_: Exception) { false }
-    }
+        }
 }
 
 class BackupRestoreHelper(
@@ -113,7 +119,8 @@ fun rememberBackupRestoreHelper(snackbarHostState: SnackbarHostState): BackupRes
             if (uri == null) return@rememberLauncherForActivityResult
             coroutineScope.launch {
                 try {
-                    val jsonBytes = BackupRestoreManager.buildBackupJson(context).toByteArray(Charsets.UTF_8)
+                    val jsonBytes =
+                        BackupRestoreManager.buildBackupJson(context).toByteArray(Charsets.UTF_8)
                     withContext(Dispatchers.IO) {
                         context.contentResolver.openOutputStream(uri)?.use {
                             it.write(jsonBytes)

@@ -83,12 +83,12 @@ object NotificationMediaCoverStyleHooker {
                     ?: error("No hooker for ${method.declaringClass.name}.${method.name}")
                 handles += xposedModule.hook(method).intercept(hooker)
             }.onFailure { error ->
-                    HookLogger.e(
-                        TAG,
-                        "安装通知中心媒体封面 Hook 失败: " +
+                HookLogger.e(
+                    TAG,
+                    "安装通知中心媒体封面 Hook 失败: " +
                             "method=${method.declaringClass.simpleName}.${method.name}",
-                        error
-                    )
+                    error
+                )
             }
         }
 
@@ -108,8 +108,10 @@ object NotificationMediaCoverStyleHooker {
                 "detach" -> method.parameterCount == 0
                 else -> false
             }
+
             LAYOUT_CONTROLLER_CLASS ->
                 method.name == "loadLayout\$1" && method.parameterCount == 0
+
             else -> false
         }
     }
@@ -130,7 +132,7 @@ object NotificationMediaCoverStyleHooker {
             layouts.forEach { controller ->
                 runCatching {
                     resolveApi(controller.javaClass.classLoader)?.reloadAndApplyLayout(controller)
-                    }.onFailure { HookLogger.e(TAG, "刷新通知中心媒体封面布局失败", it) }
+                }.onFailure { HookLogger.e(TAG, "刷新通知中心媒体封面布局失败", it) }
             }
             val controllers = synchronized(activeControllers) { activeControllers.toList() }
             controllers.forEach { controller ->
@@ -151,7 +153,7 @@ object NotificationMediaCoverStyleHooker {
                     restoringNativeLayout.set(true)
                     resolveApi(controller.javaClass.classLoader)?.reloadAndApplyLayout(controller)
                 } catch (error: Throwable) {
-                HookLogger.e(TAG, "恢复通知中心原生媒体封面布局失败", error)
+                    HookLogger.e(TAG, "恢复通知中心原生媒体封面布局失败", error)
                 } finally {
                     restoringNativeLayout.remove()
                 }
@@ -246,15 +248,18 @@ object NotificationMediaCoverStyleHooker {
                 MediaCoverRotationController.detach(albumImage)
                 state.applyCircle()
             }
+
             RootConstants.NOTIFICATION_MEDIA_COVER_STYLE_ROTATING_CIRCLE -> {
                 state.applyCircle()
                 MediaCoverRotationController.attach(albumImage, isPlaying)
             }
+
             RootConstants.NOTIFICATION_MEDIA_COVER_STYLE_HIDDEN -> {
                 MediaCoverRotationController.detach(albumImage)
                 state.restoreOutlines()
                 if (albumView.visibility != View.GONE) albumView.visibility = View.GONE
             }
+
             else -> restoreStyle(controller)
         }
     }
@@ -508,9 +513,10 @@ object NotificationMediaCoverStyleHooker {
                     holderField = viewControllerClass.getDeclaredField("holder").apply {
                         isAccessible = true
                     },
-                    controllerMediaDataField = viewControllerClass.getDeclaredField("mediaData").apply {
-                        isAccessible = true
-                    },
+                    controllerMediaDataField = viewControllerClass.getDeclaredField("mediaData")
+                        .apply {
+                            isAccessible = true
+                        },
                     albumViewField = holderClass.getDeclaredField("albumView").apply {
                         isAccessible = true
                     },
@@ -523,16 +529,18 @@ object NotificationMediaCoverStyleHooker {
                     layoutContextField = layoutControllerClass.getDeclaredField("context").apply {
                         isAccessible = true
                     },
-                    normalLayoutField = layoutControllerClass.getDeclaredField("normalLayout").apply {
-                        isAccessible = true
-                    },
+                    normalLayoutField = layoutControllerClass.getDeclaredField("normalLayout")
+                        .apply {
+                            isAccessible = true
+                        },
                     normalAlbumLayoutField = layoutControllerClass.getDeclaredField(
                         "normalAlbumLayout"
                     ).apply { isAccessible = true },
                     loadLayoutMethod = loadLayout,
-                    updateLayoutMethod = layoutControllerClass.getDeclaredMethod("updateLayout\$6").apply {
-                        isAccessible = true
-                    },
+                    updateLayoutMethod = layoutControllerClass.getDeclaredMethod("updateLayout\$6")
+                        .apply {
+                            isAccessible = true
+                        },
                     setVisibilityMethod = constraintSetClass.getDeclaredMethod(
                         "setVisibility",
                         Int::class.javaPrimitiveType,

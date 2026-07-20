@@ -18,15 +18,24 @@ internal object FakeIslandTransitionHooker {
                 val fakeView = chain.thisObject as? ViewGroup ?: return@runCatching
                 IslandExpandedMediaAmbientFlowHooker.applyFakeTransitionTheme(fakeView)
                 val generation = FakeIslandTransitionState.ensureActive(fakeView)
-                IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(fakeView, "after fake.onTrackingFakeViewStart")
+                IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(
+                    fakeView,
+                    "after fake.onTrackingFakeViewStart"
+                )
                 fakeView.post {
                     if (FakeIslandTransitionState.isActive(fakeView, generation)) {
-                        IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(fakeView, "post fake.onTrackingFakeViewStart")
+                        IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(
+                            fakeView,
+                            "post fake.onTrackingFakeViewStart"
+                        )
                     }
                 }
                 fakeView.postDelayed({
                     if (FakeIslandTransitionState.isActive(fakeView, generation)) {
-                        IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(fakeView, "retry fake.onTrackingFakeViewStart")
+                        IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(
+                            fakeView,
+                            "retry fake.onTrackingFakeViewStart"
+                        )
                     }
                 }, 48L)
             }.onFailure { e ->
@@ -45,10 +54,16 @@ internal object FakeIslandTransitionHooker {
                 val fakeView = chain.thisObject as? ViewGroup ?: return@runCatching
                 IslandExpandedMediaAmbientFlowHooker.restoreFakeTransitionTheme(fakeView)
                 val generation = FakeIslandTransitionState.ensureActive(fakeView)
-                IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(fakeView, "after fake.updateViewStateWhenOpenAnimStart")
+                IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(
+                    fakeView,
+                    "after fake.updateViewStateWhenOpenAnimStart"
+                )
                 fakeView.post {
                     if (FakeIslandTransitionState.isActive(fakeView, generation)) {
-                        IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(fakeView, "post fake.updateViewStateWhenOpenAnimStart")
+                        IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(
+                            fakeView,
+                            "post fake.updateViewStateWhenOpenAnimStart"
+                        )
                     }
                 }
             }.onFailure { e ->
@@ -67,9 +82,12 @@ internal object FakeIslandTransitionHooker {
                     val fakeView = chain.thisObject as? ViewGroup ?: return@runCatching
                     IslandExpandedMediaAmbientFlowHooker.restoreFakeTransitionTheme(fakeView)
                     FakeIslandTransitionState.ensureActive(fakeView)
-                    IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(fakeView, "before fake.setVisibility(VISIBLE)")
+                    IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(
+                        fakeView,
+                        "before fake.setVisibility(VISIBLE)"
+                    )
                 }.onFailure { e ->
-                HookLogger.e(TAG, "过渡视图显示前冻结视图失败", e)
+                    HookLogger.e(TAG, "过渡视图显示前冻结视图失败", e)
                 }
             }
 
@@ -81,20 +99,26 @@ internal object FakeIslandTransitionHooker {
                     val generation = FakeIslandTransitionState.ensureActive(fakeView)
                     fakeView.post {
                         if (FakeIslandTransitionState.isActive(fakeView, generation)) {
-                            IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(fakeView, "post fake.setVisibility(VISIBLE)")
+                            IslandTextHookerSupport.prepareFrozenFakeIslandForTransition(
+                                fakeView,
+                                "post fake.setVisibility(VISIBLE)"
+                            )
                         }
                     }
                 }.onFailure { e ->
-                HookLogger.e(TAG, "过渡视图显示后冻结视图失败", e)
+                    HookLogger.e(TAG, "过渡视图显示后冻结视图失败", e)
                 }
             } else if (visibility == View.INVISIBLE) {
                 runCatching {
                     val fakeView = chain.thisObject as? ViewGroup ?: return@runCatching
                     IslandExpandedMediaAmbientFlowHooker.restoreFakeTransitionTheme(fakeView)
                     FakeIslandTransitionState.finish(fakeView)
-                    IslandTextHookerSupport.restoreRealIslandAfterFakeTransition(fakeView, "after fake.setVisibility(INVISIBLE)")
+                    IslandTextHookerSupport.restoreRealIslandAfterFakeTransition(
+                        fakeView,
+                        "after fake.setVisibility(INVISIBLE)"
+                    )
                 }.onFailure { e ->
-                HookLogger.e(TAG, "过渡视图隐藏后恢复真实岛失败", e)
+                    HookLogger.e(TAG, "过渡视图隐藏后恢复真实岛失败", e)
                 }
             }
 

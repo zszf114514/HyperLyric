@@ -50,7 +50,7 @@ data class LyricState(
     val notificationAlbumBitmap: Bitmap? = null,
     val notificationAlbumBitmapCircular: Bitmap? = null,
     val islandLeftIconStyle: Int = 0,
-    
+
     val isFetchingLyrics: Boolean = false,
     val isLoadingAlbumArt: Boolean = false,
     val playbackAnchor: PlaybackAnchor = PlaybackAnchor()
@@ -89,20 +89,27 @@ object DynamicLyricData {
     }
 
     fun updateLeftTitles(islandText: String, notificationText: String = "") {
-        _musicState.update { 
+        _musicState.update {
             it.copy(
                 islandTitleLeft = islandText.ifBlank { " " },
                 notificationTitleLeft = notificationText
-            ) 
+            )
         }
     }
 
-    fun updateBitmaps(albumBmp: Bitmap?, notificationAlbumBmp: Bitmap? = null, notificationAlbumBmpCircular: Bitmap? = null) {
-        _musicState.update { it.copy(
-            albumBitmap = albumBmp,
-            notificationAlbumBitmap = notificationAlbumBmp ?: it.notificationAlbumBitmap,
-            notificationAlbumBitmapCircular = notificationAlbumBmpCircular ?: it.notificationAlbumBitmapCircular
-        ) }
+    fun updateBitmaps(
+        albumBmp: Bitmap?,
+        notificationAlbumBmp: Bitmap? = null,
+        notificationAlbumBmpCircular: Bitmap? = null
+    ) {
+        _musicState.update {
+            it.copy(
+                albumBitmap = albumBmp,
+                notificationAlbumBitmap = notificationAlbumBmp ?: it.notificationAlbumBitmap,
+                notificationAlbumBitmapCircular = notificationAlbumBmpCircular
+                    ?: it.notificationAlbumBitmapCircular
+            )
+        }
     }
 
     fun updateIslandLeftIconStyle(style: Int) {

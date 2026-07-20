@@ -240,8 +240,8 @@ internal object IslandExpandedMediaBackgroundController {
             states.values.any { binderState ->
                 binderState.targets.values.any { targetState ->
                     targetState.customApplied &&
-                        targetState.background != null &&
-                        targetState.target.nativeBackgroundViews.any { it === view }
+                            targetState.background != null &&
+                            targetState.target.nativeBackgroundViews.any { it === view }
                 }
             }
         }
@@ -378,7 +378,7 @@ internal object IslandExpandedMediaBackgroundController {
         executor.execute {
             val renderer = runCatching { MediaBackgroundRendererPool.get(classLoader) }
                 .onFailure { error ->
-                HookLogger.e(TAG, "初始化展开态媒体背景渲染器失败", error)
+                    HookLogger.e(TAG, "初始化展开态媒体背景渲染器失败", error)
                 }
                 .getOrNull()
             if (renderer == null) {
@@ -798,8 +798,8 @@ internal object IslandExpandedMediaBackgroundController {
         override fun draw(canvas: Canvas) {
             if (bitmap.isRecycled || bounds.isEmpty) return
             val destinationHeight = (
-                bounds.width().toLong() * viewportHeight / viewportWidth
-                ).toInt().coerceIn(1, bounds.height())
+                    bounds.width().toLong() * viewportHeight / viewportWidth
+                    ).toInt().coerceIn(1, bounds.height())
             destination.set(
                 bounds.left,
                 bounds.top,
@@ -853,11 +853,11 @@ internal object IslandExpandedMediaBackgroundController {
             val availableSourceHeight = bitmap.height - visibleSource.top
             if (availableSourceHeight <= 0) return
             val sourceHeight = (
-                destination.height().toLong() * visibleSource.width() / destination.width()
-                ).toInt().coerceIn(1, availableSourceHeight)
+                    destination.height().toLong() * visibleSource.width() / destination.width()
+                    ).toInt().coerceIn(1, availableSourceHeight)
             val destinationHeight = (
-                sourceHeight.toLong() * destination.width() / visibleSource.width()
-                ).toInt().coerceIn(1, destination.height())
+                    sourceHeight.toLong() * destination.width() / visibleSource.width()
+                    ).toInt().coerceIn(1, destination.height())
             source.set(
                 visibleSource.left,
                 visibleSource.top,

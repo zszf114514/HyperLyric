@@ -108,7 +108,7 @@ class FocusNotificationBuilder(
         // 小岛胶囊内部内容 (封面+圆形进度表)
         val combinePicInfo = JSONObject()
         combinePicInfo.put("picInfo", buildPicInfo(1))
-        
+
         if (showProgress) {
             val progressInfo = JSONObject()
             progressInfo.put("progress", uiState.progress)
@@ -116,7 +116,7 @@ class FocusNotificationBuilder(
             progressInfo.put("isCCW", true)
             combinePicInfo.put("progressInfo", progressInfo)
         }
-        
+
         json.put("combinePicInfo", combinePicInfo)
         return json
     }
@@ -126,7 +126,10 @@ class FocusNotificationBuilder(
         json.put("type", 2)
         json.put("title", uiState.notificationTitleLeft)
         // OS2 使用 songInfo，OS3 使用 lyric (notificationTitleRight)
-        json.put("content", if (uiState.focusNotificationType == 1) uiState.songInfo else uiState.notificationTitleRight)
+        json.put(
+            "content",
+            if (uiState.focusNotificationType == 1) uiState.songInfo else uiState.notificationTitleRight
+        )
 
         if (uiState.songInfoHighlightColorEnabled) {
             val hex = getColorHex(uiState.color)
@@ -152,7 +155,8 @@ class FocusNotificationBuilder(
         val json = JSONObject()
         json.put("progress", uiState.progress)
         val color = if (uiState.progressColorEnabled) getColorHex(uiState.color) else "#3482FF"
-        val colorEnd = if (uiState.progressColorEnabled) getColorHex(uiState.colorEnd) else "#3482FF"
+        val colorEnd =
+            if (uiState.progressColorEnabled) getColorHex(uiState.colorEnd) else "#3482FF"
         json.put("colorProgress", color)
         json.put("colorProgressEnd", colorEnd)
         return json

@@ -6,7 +6,6 @@ import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.BlendMode
 import android.graphics.BlendModeColorFilter
-import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.ColorFilter
 import android.graphics.Paint
@@ -122,11 +121,11 @@ object IslandExpandedMediaAmbientFlowHooker {
                     ?: error("No hooker for ${method.declaringClass.name}.${method.name}")
                 installedHandles += xposedModule.hook(method).intercept(hooker)
             }.onFailure { error ->
-                    HookLogger.e(
-                        TAG,
-                        "安装展开态媒体 Hook 失败: method=${method.declaringClass.simpleName}.${method.name}",
-                        error
-                    )
+                HookLogger.e(
+                    TAG,
+                    "安装展开态媒体 Hook 失败: method=${method.declaringClass.simpleName}.${method.name}",
+                    error
+                )
             }
         }
 
@@ -153,7 +152,7 @@ object IslandExpandedMediaAmbientFlowHooker {
 
             MUSIC_BG_VIEW_CLASS ->
                 (method.name == "start" || method.name == "resume") &&
-                    method.parameterCount == 0
+                        method.parameterCount == 0
 
             SEEK_BAR_HEAD_ALPHA_LISTENER_CLASS ->
                 method.name == "onUpdate" && method.parameterCount == 2
@@ -246,15 +245,18 @@ object IslandExpandedMediaAmbientFlowHooker {
                         applyAppearance(binder, allowCoverColor = false)
                         applyMediaElements(binder)
                     }
+
                     Action.BIND -> {
                         activeBinders.add(binder)
                         applyAppearance(binder, allowCoverColor = true)
                         applyMediaElements(binder)
                     }
+
                     Action.ALBUM -> {
                         applyAppearance(binder, allowCoverColor = true)
                         applyMediaElements(binder)
                     }
+
                     Action.SEAMLESS -> applyMediaElements(binder)
                     Action.DETACH -> Unit
                 }
@@ -275,8 +277,8 @@ object IslandExpandedMediaAmbientFlowHooker {
             if (!SystemUiEnhancementGate.isEnabled()) return chain.proceed()
             val view = chain.thisObject as? View ?: return chain.proceed()
             if ((IslandExpandedMediaBackgroundController.isActive() ||
-                    currentMode() == RootConstants.ISLAND_EXPANDED_MEDIA_AMBIENT_FLOW_MODE_DISABLED ||
-                    isCustomMode(currentMode())) &&
+                        currentMode() == RootConstants.ISLAND_EXPANDED_MEDIA_AMBIENT_FLOW_MODE_DISABLED ||
+                        isCustomMode(currentMode())) &&
                 isExpandedIslandView(view)
             ) {
                 return null
@@ -651,7 +653,7 @@ object IslandExpandedMediaAmbientFlowHooker {
                         runCatching {
                             applyLightExpandedBackground(api, player)
                         }.onFailure {
-                    HookLogger.e(TAG, "应用延后的实时通知背景失败", it)
+                            HookLogger.e(TAG, "应用延后的实时通知背景失败", it)
                         }
                     }
                 }
@@ -912,7 +914,8 @@ object IslandExpandedMediaAmbientFlowHooker {
         api: NativeApi
     ) {
         val drawable = api.getArtwork(binder) ?: return
-        val token = "${System.identityHashCode(drawable)}:${drawable.constantState?.hashCode() ?: 0}"
+        val token =
+            "${System.identityHashCode(drawable)}:${drawable.constantState?.hashCode() ?: 0}"
         if (state.customColorToken == token && state.customArtwork != null) {
             state.customViews.values.toList().forEach {
                 configureCustomFlowView(binder, state, it, api)
@@ -970,7 +973,8 @@ object IslandExpandedMediaAmbientFlowHooker {
 
     private fun scheduleCoverColors(binder: Any, primaryView: View, api: NativeApi) {
         val drawable = api.getArtwork(binder) ?: return
-        val token = "${System.identityHashCode(drawable)}:${drawable.constantState?.hashCode() ?: 0}"
+        val token =
+            "${System.identityHashCode(drawable)}:${drawable.constantState?.hashCode() ?: 0}"
         val state = binderStates.getOrPut(binder) { BinderState() }
         if (state.colorToken == token) {
             state.palette?.let { palette ->
@@ -1242,6 +1246,7 @@ object IslandExpandedMediaAmbientFlowHooker {
 
         fun getMediaElements(holder: Any): IslandExpandedMediaElements {
             val player = getPlayer(holder)
+
             @Suppress("UNCHECKED_CAST")
             val actions = getActionListMethod.invoke(holder) as List<View>
             val actionsId = player.resources.getIdentifier(
@@ -1283,7 +1288,8 @@ object IslandExpandedMediaAmbientFlowHooker {
 
         override fun getBackgroundHosts(binder: Any): List<IslandExpandedMediaBackgroundHost> {
             return getHolders(binder).mapNotNull { holder ->
-                val target = findExpandedBackgroundTarget(getPlayer(holder)) ?: return@mapNotNull null
+                val target =
+                    findExpandedBackgroundTarget(getPlayer(holder)) ?: return@mapNotNull null
                 IslandExpandedMediaBackgroundHost(target, holder, getMiniBar(target))
             }
         }
@@ -1411,11 +1417,13 @@ object IslandExpandedMediaAmbientFlowHooker {
                 val realView = contentView.javaClass.methods.single {
                     it.name == "getRealView" && it.parameterTypes.isEmpty()
                 }.invoke(contentView) as View
+
                 fun realDimension(name: String): Int {
                     return (realView.javaClass.methods.single {
                         it.name == name && it.parameterTypes.isEmpty()
                     }.invoke(realView) as Number).toInt()
                 }
+
                 val left = realDimension("getExpandedViewMarginHorizontal")
                 val top = realDimension("getIslandViewMarginTop")
                 val width = realDimension("getExpandedViewWidth")
@@ -1659,21 +1667,24 @@ object IslandExpandedMediaAmbientFlowHooker {
                     mediaDataIsPlayingField = mediaDataClass.getDeclaredField("isPlaying").apply {
                         isAccessible = true
                     },
-                    mediaDataPackageNameField = mediaDataClass.getDeclaredField("packageName").apply {
-                        isAccessible = true
-                    },
+                    mediaDataPackageNameField = mediaDataClass.getDeclaredField("packageName")
+                        .apply {
+                            isAccessible = true
+                        },
                     seekBarField = holderClass.getDeclaredField("seekBar").apply {
                         isAccessible = true
                     },
                     seekBarPaintField = seekBarClass.getDeclaredField("mPaint").apply {
                         isAccessible = true
                     },
-                    seekBarRuntimeShaderField = seekBarClass.getDeclaredField("runtimeShader").apply {
-                        isAccessible = true
-                    },
-                    seekBarHeadGlowAlphaField = seekBarClass.getDeclaredField("uHeadGlowAlpha").apply {
-                        isAccessible = true
-                    },
+                    seekBarRuntimeShaderField = seekBarClass.getDeclaredField("runtimeShader")
+                        .apply {
+                            isAccessible = true
+                        },
+                    seekBarHeadGlowAlphaField = seekBarClass.getDeclaredField("uHeadGlowAlpha")
+                        .apply {
+                            isAccessible = true
+                        },
                     headAlphaListenerSeekBarField = headAlphaListenerClass.getDeclaredField(
                         "this\$0"
                     ).apply { isAccessible = true },

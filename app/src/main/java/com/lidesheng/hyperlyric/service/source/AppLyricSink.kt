@@ -3,7 +3,9 @@ package com.lidesheng.hyperlyric.service.source
 import android.content.Context
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.graphics.toColorInt
-import com.lidesheng.hyperlyric.BuildConfig
+import com.lidesheng.hyperlyric.common.RootConstants
+import com.lidesheng.hyperlyric.common.ServiceConstants
+import com.lidesheng.hyperlyric.common.UIConstants
 import com.lidesheng.hyperlyric.common.image.AlbumImageHelper
 import com.lidesheng.hyperlyric.lyric.ConfigRepository
 import com.lidesheng.hyperlyric.lyric.DynamicLyricData
@@ -19,9 +21,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
-import com.lidesheng.hyperlyric.common.RootConstants
-import com.lidesheng.hyperlyric.common.ServiceConstants
-import com.lidesheng.hyperlyric.common.UIConstants
 
 class AppLyricSink(
     private val context: Context,
@@ -89,10 +88,16 @@ class AppLyricSink(
         }
 
         val sp = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
-        val enableDynamicIsland = sp.getBoolean(RootConstants.KEY_HOOK_ENABLE_DYNAMIC_ISLAND, RootConstants.DEFAULT_HOOK_ENABLE_DYNAMIC_ISLAND)
+        val enableDynamicIsland = sp.getBoolean(
+            RootConstants.KEY_HOOK_ENABLE_DYNAMIC_ISLAND,
+            RootConstants.DEFAULT_HOOK_ENABLE_DYNAMIC_ISLAND
+        )
         val pauseListening = !enableDynamicIsland
         val isWhitelisted = ConfigRepository.whitelistState.value.contains(data.currentPackageName)
-        LogManager.d("AppLyricSink", "processSyncData: 超级岛开关=$enableDynamicIsland, 白名单通过=$isWhitelisted, pkg=${data.currentPackageName}")
+        LogManager.d(
+            "AppLyricSink",
+            "processSyncData: 超级岛开关=$enableDynamicIsland, 白名单通过=$isWhitelisted, pkg=${data.currentPackageName}"
+        )
 
         if (pauseListening || !isWhitelisted) {
             isCurrentlyPlaying = false
@@ -111,7 +116,8 @@ class AppLyricSink(
 
         val now = System.currentTimeMillis()
         if (now - lastPermissionCheckTime > permissionCheckInterval) {
-            cachedNotificationEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
+            cachedNotificationEnabled =
+                NotificationManagerCompat.from(context).areNotificationsEnabled()
             lastPermissionCheckTime = now
         }
         if (!cachedNotificationEnabled) {
@@ -124,11 +130,21 @@ class AppLyricSink(
         val isSongChanged = data.isNewSong || currentSongIdentifier != data.identifier
 
         if (isSongChanged) {
-            val progressColorEnabled = sp.getBoolean(ServiceConstants.KEY_NOTIFICATION_PROGRESS_COLOR, ServiceConstants.DEFAULT_NOTIFICATION_PROGRESS_COLOR)
-            val highlightColorEnabled = sp.getBoolean(ServiceConstants.KEY_NOTIFICATION_HIGHLIGHT_COLOR, ServiceConstants.DEFAULT_NOTIFICATION_HIGHLIGHT_COLOR)
-            val songInfoHighlightColorEnabled = sp.getBoolean(ServiceConstants.KEY_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR, ServiceConstants.DEFAULT_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR)
+            val progressColorEnabled = sp.getBoolean(
+                ServiceConstants.KEY_NOTIFICATION_PROGRESS_COLOR,
+                ServiceConstants.DEFAULT_NOTIFICATION_PROGRESS_COLOR
+            )
+            val highlightColorEnabled = sp.getBoolean(
+                ServiceConstants.KEY_NOTIFICATION_HIGHLIGHT_COLOR,
+                ServiceConstants.DEFAULT_NOTIFICATION_HIGHLIGHT_COLOR
+            )
+            val songInfoHighlightColorEnabled = sp.getBoolean(
+                ServiceConstants.KEY_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR,
+                ServiceConstants.DEFAULT_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR
+            )
 
-            val shouldExtract = progressColorEnabled || highlightColorEnabled || songInfoHighlightColorEnabled
+            val shouldExtract =
+                progressColorEnabled || highlightColorEnabled || songInfoHighlightColorEnabled
 
             val colors = if (shouldExtract) {
                 AlbumImageHelper.extractColors(data.albumBitmap)
@@ -136,7 +152,15 @@ class AppLyricSink(
                 val default = "#E0E0E0".toColorInt()
                 AlbumImageHelper.ExtractedColors(default, default)
             }
-            LogManager.d("AppLyricSink", "正在提取封面取色: 主色=${String.format("#%06X", 0xFFFFFF and colors.main)}, 次色=${String.format("#%06X", 0xFFFFFF and colors.secondary)}")
+            LogManager.d(
+                "AppLyricSink",
+                "正在提取封面取色: 主色=${
+                    String.format(
+                        "#%06X",
+                        0xFFFFFF and colors.main
+                    )
+                }, 次色=${String.format("#%06X", 0xFFFFFF and colors.secondary)}"
+            )
             DynamicLyricData.updateColor(colors.main, colors.secondary)
         }
 
@@ -164,7 +188,10 @@ class AppLyricSink(
         isCurrentlyPlaying = data.isPlaying
         currentSyncData = data
 
-        val lyricSource = sp.getInt(ServiceConstants.KEY_SERVICE_LYRIC_SOURCE, ServiceConstants.DEFAULT_SERVICE_LYRIC_SOURCE)
+        val lyricSource = sp.getInt(
+            ServiceConstants.KEY_SERVICE_LYRIC_SOURCE,
+            ServiceConstants.DEFAULT_SERVICE_LYRIC_SOURCE
+        )
 
         // 2. 本地元数据与在线歌词获取和解析（如果在歌曲生命周期中延迟到达或需要重新解析）
         val source = sourceManager.getSource(lyricSource)
@@ -177,7 +204,7 @@ class AppLyricSink(
         val currentRawHash = currentRawLyric?.hashCode() ?: 0
 
         val needFetchLyrics = (cachedLyricLines == null && fetchJob == null) ||
-                              (currentRawLyric != null && currentRawHash != cachedLyricHash)
+                (currentRawLyric != null && currentRawHash != cachedLyricHash)
 
         if (needFetchLyrics && lyricSource != ServiceConstants.LYRIC_SOURCE_TITLE) {
             fetchJob?.cancel()
@@ -201,17 +228,24 @@ class AppLyricSink(
                         lyricScheduler.updateLyrics(rawLines, isSongChanged)
                         lyricScheduler.updateSyncData(data)
                         lyricScheduler.startSchedulers(isSongChanged, playStateChanged)
-                        notificationPresenter.updateState(DynamicLyricData.currentState, force = true)
+                        notificationPresenter.updateState(
+                            DynamicLyricData.currentState,
+                            force = true
+                        )
                     } else {
                         // 歌词拉取完成但为空，代表“歌词源无数据”静态状态
                         cachedLyricLines = emptyList()
                         cachedLyricHash = currentRawHash
                         lyricScheduler.updateLyrics(null, isSongChanged)
 
-                        val noLyricText = context.getString(com.lidesheng.hyperlyric.R.string.no_lyric_data)
+                        val noLyricText =
+                            context.getString(com.lidesheng.hyperlyric.R.string.no_lyric_data)
                         lastDispatchedLrc = noLyricText
                         notificationPresenter.dispatchLyricContent(noLyricText, data, false)
-                        notificationPresenter.updateState(DynamicLyricData.currentState, force = true)
+                        notificationPresenter.updateState(
+                            DynamicLyricData.currentState,
+                            force = true
+                        )
                     }
                 }
             }
@@ -234,16 +268,23 @@ class AppLyricSink(
                     if (isSongChanged || playStateChanged || titleChanged) {
                         lastDispatchedLrc = data.dynamicTitle
                         notificationPresenter.dispatchLyricContent(data.dynamicTitle, data, false)
-                        notificationPresenter.updateState(DynamicLyricData.currentState, force = isSongChanged || playStateChanged)
+                        notificationPresenter.updateState(
+                            DynamicLyricData.currentState,
+                            force = isSongChanged || playStateChanged
+                        )
                     }
                 } else {
                     // “歌词源无数据”静态通知：仅在状态改变或歌曲切换时发送，不跑 Ticker 调度器
-                    val noLyricText = context.getString(com.lidesheng.hyperlyric.R.string.no_lyric_data)
+                    val noLyricText =
+                        context.getString(com.lidesheng.hyperlyric.R.string.no_lyric_data)
                     val textChanged = noLyricText != lastDispatchedLrc
                     if (isSongChanged || playStateChanged || textChanged) {
                         lastDispatchedLrc = noLyricText
                         notificationPresenter.dispatchLyricContent(noLyricText, data, false)
-                        notificationPresenter.updateState(DynamicLyricData.currentState, force = isSongChanged || playStateChanged)
+                        notificationPresenter.updateState(
+                            DynamicLyricData.currentState,
+                            force = isSongChanged || playStateChanged
+                        )
                     }
                 }
 

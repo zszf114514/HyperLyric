@@ -14,10 +14,14 @@ internal object IslandWidthHooker {
                 if (!IslandProbeUtils.isSuperIslandEnabled()) return@runCatching
                 val contentView = chain.thisObject as? ViewGroup ?: return@runCatching
                 val currentData = IslandProbeUtils.getCurrentIslandData(contentView)
-                val mediaInfo = IslandProbeUtils.extractMediaIslandInfo(currentData) ?: return@runCatching
+                val mediaInfo =
+                    IslandProbeUtils.extractMediaIslandInfo(currentData) ?: return@runCatching
                 if (!IslandTextHookerSupport.isCurrentLyricIsland(mediaInfo)) return@runCatching
                 if (!IslandTextHookerSupport.shouldRenderInjectedIsland()) {
-                    IslandTextHookerSupport.clearInjectedIsland(contentView, suppressRelayout = true)
+                    IslandTextHookerSupport.clearInjectedIsland(
+                        contentView,
+                        suppressRelayout = true
+                    )
                     return@runCatching
                 }
 
@@ -28,7 +32,7 @@ internal object IslandWidthHooker {
                     IslandLyricTextInjector.refreshCurrentContent(contentView)
                 }
             }.onFailure { e ->
-            HookLogger.e(TAG, "计算大岛宽度前准备歌词视图失败", e)
+                HookLogger.e(TAG, "计算大岛宽度前准备歌词视图失败", e)
             }
 
             return chain.proceed()

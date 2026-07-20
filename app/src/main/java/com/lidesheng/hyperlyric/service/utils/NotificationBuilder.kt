@@ -1,9 +1,5 @@
 package com.lidesheng.hyperlyric.service.utils
 
-import com.lidesheng.hyperlyric.utils.LogManager
-import com.lidesheng.hyperlyric.common.ServiceConstants
-import com.lidesheng.hyperlyric.common.UIConstants
-import com.lidesheng.hyperlyric.R
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -13,9 +9,13 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.os.Bundle
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
-import androidx.core.app.NotificationCompat
+import com.lidesheng.hyperlyric.R
+import com.lidesheng.hyperlyric.common.ServiceConstants
+import com.lidesheng.hyperlyric.common.UIConstants
+import com.lidesheng.hyperlyric.utils.LogManager
 
 object NotificationBuilder {
     private const val CHANNEL_ID = "hyper_lyric_live_v4"
@@ -83,7 +83,7 @@ object NotificationBuilder {
             }
             notificationManager.createNotificationChannel(channel)
         }
-        
+
         if (notificationManager.getNotificationChannel(CHANNEL_ID_FOCUS) == null) {
             val focusChannel = NotificationChannel(
                 CHANNEL_ID_FOCUS,
@@ -112,9 +112,16 @@ object NotificationBuilder {
         }
 
         val smallIconCompat = if (selectedBitmap != null) {
-            getLabelIcon(selectedBitmap) ?: androidx.core.graphics.drawable.IconCompat.createWithResource(context, R.drawable.lyrictile)
+            getLabelIcon(selectedBitmap)
+                ?: androidx.core.graphics.drawable.IconCompat.createWithResource(
+                    context,
+                    R.drawable.lyrictile
+                )
         } else {
-            androidx.core.graphics.drawable.IconCompat.createWithResource(context, R.drawable.lyrictile)
+            androidx.core.graphics.drawable.IconCompat.createWithResource(
+                context,
+                R.drawable.lyrictile
+            )
         }
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -150,7 +157,9 @@ object NotificationBuilder {
                     segments.add(segment)
                 }
                 if (remaining > 0) {
-                    segments.add(NotificationCompat.ProgressStyle.Segment(remaining).setColor(0x40FFFFFF))
+                    segments.add(
+                        NotificationCompat.ProgressStyle.Segment(remaining).setColor(0x40FFFFFF)
+                    )
                 }
 
                 val style = NotificationCompat.ProgressStyle()
@@ -175,7 +184,10 @@ object NotificationBuilder {
     ): Notification {
         val paramIslandJson = FocusNotificationBuilder(uiState, showProgress).build()
 
-        val smallIconCompat = androidx.core.graphics.drawable.IconCompat.createWithResource(context, R.drawable.lyrictile)
+        val smallIconCompat = androidx.core.graphics.drawable.IconCompat.createWithResource(
+            context,
+            R.drawable.lyrictile
+        )
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID_FOCUS)
             .setSmallIcon(smallIconCompat)
@@ -194,7 +206,7 @@ object NotificationBuilder {
         val extras = Bundle()
         extras.putBoolean("mFocusNotification", true)
         extras.putString("miui.focus.param", paramIslandJson)
-        
+
         if (uiState.color != 0) extras.putInt("mipush_focus_color", uiState.color)
 
         val picsBundle = Bundle()
@@ -213,11 +225,10 @@ object NotificationBuilder {
         }
 
         extras.putBundle("miui.focus.pics", picsBundle)
-        
+
         builder.addExtras(extras)
         return builder.build()
     }
-
 
 
     fun cancelFocusNotification(notificationManager: NotificationManager) {
@@ -237,10 +248,12 @@ object NotificationBuilder {
     }
 
 
-
     private fun getClickPendingIntent(context: Context, targetPackageName: String): PendingIntent? {
         val prefs = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
-        val action = prefs.getInt(ServiceConstants.KEY_NOTIFICATION_CLICK_ACTION, ServiceConstants.DEFAULT_NOTIFICATION_CLICK_ACTION)
+        val action = prefs.getInt(
+            ServiceConstants.KEY_NOTIFICATION_CLICK_ACTION,
+            ServiceConstants.DEFAULT_NOTIFICATION_CLICK_ACTION
+        )
 
         return when (action) {
             1 -> {
@@ -253,7 +266,10 @@ object NotificationBuilder {
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                     )
                 } else {
-                    val mainIntent = Intent(context, com.lidesheng.hyperlyric.ui.MainActivity::class.java).apply {
+                    val mainIntent = Intent(
+                        context,
+                        com.lidesheng.hyperlyric.ui.MainActivity::class.java
+                    ).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                     }
                     PendingIntent.getActivity(
@@ -264,6 +280,7 @@ object NotificationBuilder {
                     )
                 }
             }
+
             2 -> {
                 val intent = context.packageManager.getLaunchIntentForPackage(targetPackageName)
                 if (intent != null) {
@@ -284,6 +301,7 @@ object NotificationBuilder {
                     )
                 }
             }
+
             else -> {
                 val intent = Intent("com.lidesheng.hyperlyric.ACTION_TOGGLE_PLAYBACK")
                 intent.setPackage(context.packageName)

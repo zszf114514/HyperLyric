@@ -28,8 +28,10 @@ class LyricScheduler(
 
     @Volatile
     private var currentLyricLines: List<LrcLine>? = null
+
     @Volatile
     private var currentSyncData: SyncData? = null
+
     @Volatile
     private var lastDispatchedLrc: String = ""
 
@@ -96,7 +98,8 @@ class LyricScheduler(
                 val currentPos = with(DynamicLyricData) { musicState.value.getCurrentPosition() }
 
                 val currentLineIndex = lines.indexOfLast { it.startTimeMs <= currentPos }
-                val targetLine = if (currentLineIndex != -1) lines[currentLineIndex].content else data.dynamicTitle
+                val targetLine =
+                    if (currentLineIndex != -1) lines[currentLineIndex].content else data.dynamicTitle
 
                 if (targetLine != lastDispatchedLrc) {
                     lastDispatchedLrc = targetLine
@@ -112,7 +115,10 @@ class LyricScheduler(
     private fun launchProgressScheduler() {
         progressJob?.cancel()
         val sp = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
-        val showProgress = sp.getBoolean(ServiceConstants.KEY_NOTIFICATION_SHOW_PROGRESS, ServiceConstants.DEFAULT_NOTIFICATION_SHOW_PROGRESS)
+        val showProgress = sp.getBoolean(
+            ServiceConstants.KEY_NOTIFICATION_SHOW_PROGRESS,
+            ServiceConstants.DEFAULT_NOTIFICATION_SHOW_PROGRESS
+        )
         if (!showProgress) return
         LogManager.d("LyricScheduler", "启动播放进度调度器")
 
@@ -124,7 +130,8 @@ class LyricScheduler(
                 if (!data.isPlaying || duration <= 1000) break
 
                 val currentPos = with(DynamicLyricData) { musicState.value.getCurrentPosition() }
-                val currentPercent = ((currentPos.toDouble() / duration.toDouble()) * 100).toInt().coerceIn(0, 100)
+                val currentPercent =
+                    ((currentPos.toDouble() / duration.toDouble()) * 100).toInt().coerceIn(0, 100)
 
                 if (currentPercent != lastPercent) {
                     listener.onProgressTick(currentPercent.toFloat())

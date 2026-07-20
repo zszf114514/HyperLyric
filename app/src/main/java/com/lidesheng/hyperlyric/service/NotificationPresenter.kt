@@ -2,7 +2,6 @@ package com.lidesheng.hyperlyric.service
 
 import android.app.Notification
 import android.app.NotificationManager
-import com.lidesheng.hyperlyric.utils.LogManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -17,13 +16,14 @@ import com.lidesheng.hyperlyric.common.lyric.LyricSplitter
 import com.lidesheng.hyperlyric.lyric.ConfigRepository
 import com.lidesheng.hyperlyric.lyric.DynamicLyricData
 import com.lidesheng.hyperlyric.service.source.SyncData
+import com.lidesheng.hyperlyric.service.utils.NotificationBuilder
+import com.lidesheng.hyperlyric.service.utils.shizuku.ShizukuManager
+import com.lidesheng.hyperlyric.utils.LogManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
-import com.lidesheng.hyperlyric.service.utils.shizuku.ShizukuManager
-import com.lidesheng.hyperlyric.service.utils.NotificationBuilder
 
 /**
  * 通知展示调度中心。
@@ -49,15 +49,24 @@ class NotificationPresenter(
 
     private val isBypassFocusLimitEnabled: Boolean
         get() = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
-            .getBoolean(ServiceConstants.KEY_BYPASS_FOCUS_NOTIFICATION_LIMIT, ServiceConstants.DEFAULT_BYPASS_FOCUS_NOTIFICATION_LIMIT)
+            .getBoolean(
+                ServiceConstants.KEY_BYPASS_FOCUS_NOTIFICATION_LIMIT,
+                ServiceConstants.DEFAULT_BYPASS_FOCUS_NOTIFICATION_LIMIT
+            )
 
     private val isDisableLyricSplit: Boolean
         get() = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
-            .getBoolean(ServiceConstants.KEY_NOTIFICATION_ISLAND_DISABLE_LYRIC_SPLIT, ServiceConstants.DEFAULT_NOTIFICATION_ISLAND_DISABLE_LYRIC_SPLIT)
+            .getBoolean(
+                ServiceConstants.KEY_NOTIFICATION_ISLAND_DISABLE_LYRIC_SPLIT,
+                ServiceConstants.DEFAULT_NOTIFICATION_ISLAND_DISABLE_LYRIC_SPLIT
+            )
 
     private val notificationType: Int
         get() = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
-            .getInt(ServiceConstants.KEY_NOTIFICATION_TYPE, ServiceConstants.DEFAULT_NOTIFICATION_TYPE)
+            .getInt(
+                ServiceConstants.KEY_NOTIFICATION_TYPE,
+                ServiceConstants.DEFAULT_NOTIFICATION_TYPE
+            )
 
     // ─── 播控广播接收器 ───────────────────────────────────
     private val playbackToggleReceiver = object : BroadcastReceiver() {
@@ -65,9 +74,21 @@ class NotificationPresenter(
             if (intent?.action == "com.lidesheng.hyperlyric.ACTION_TOGGLE_PLAYBACK") {
                 val audioManager = ctx?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
                 val eventTime = android.os.SystemClock.uptimeMillis()
-                val downEvent = KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0)
+                val downEvent = KeyEvent(
+                    eventTime,
+                    eventTime,
+                    KeyEvent.ACTION_DOWN,
+                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+                    0
+                )
                 audioManager?.dispatchMediaKeyEvent(downEvent)
-                val upEvent = KeyEvent(eventTime, eventTime, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 0)
+                val upEvent = KeyEvent(
+                    eventTime,
+                    eventTime,
+                    KeyEvent.ACTION_UP,
+                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+                    0
+                )
                 audioManager?.dispatchMediaKeyEvent(upEvent)
             }
         }
@@ -97,22 +118,30 @@ class NotificationPresenter(
      * 内部完成：开关检查、白名单过滤、状态去重、息屏降频、防抖，最终发射通知。
      */
     fun updateState(globalState: com.lidesheng.hyperlyric.lyric.LyricState, force: Boolean) {
-        val isWhitelisted = ConfigRepository.whitelistState.value.contains(globalState.targetPackageName)
+        val isWhitelisted =
+            ConfigRepository.whitelistState.value.contains(globalState.targetPackageName)
         if (!isWhitelisted) {
             clearNotifications()
             return
         }
 
         val sp = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
-        if (!sp.getBoolean(RootConstants.KEY_HOOK_ENABLE_DYNAMIC_ISLAND, RootConstants.DEFAULT_HOOK_ENABLE_DYNAMIC_ISLAND)) {
+        if (!sp.getBoolean(
+                RootConstants.KEY_HOOK_ENABLE_DYNAMIC_ISLAND,
+                RootConstants.DEFAULT_HOOK_ENABLE_DYNAMIC_ISLAND
+            )
+        ) {
             clearNotifications()
             return
         }
 
         val duration = globalState.duration
         val safeDuration = if (duration > 0) duration else 100L
-        val currentPos = with(DynamicLyricData) { globalState.getCurrentPosition() }.coerceIn(0, safeDuration)
-        val progressPercent = if (safeDuration > 1000) ((currentPos.toDouble() / safeDuration.toDouble()) * 100).roundToInt().coerceIn(0, 100) else 0
+        val currentPos =
+            with(DynamicLyricData) { globalState.getCurrentPosition() }.coerceIn(0, safeDuration)
+        val progressPercent =
+            if (safeDuration > 1000) ((currentPos.toDouble() / safeDuration.toDouble()) * 100).roundToInt()
+                .coerceIn(0, 100) else 0
 
         val currentUiState = NotificationBuilder.UiState(
             title = globalState.islandTitleRight,
@@ -131,17 +160,42 @@ class NotificationPresenter(
             disableLyricSplit = isDisableLyricSplit,
             notificationAlbumBitmap = globalState.notificationAlbumBitmap?.takeIf { !it.isRecycled },
             notificationAlbumBitmapCircular = globalState.notificationAlbumBitmapCircular?.takeIf { !it.isRecycled },
-            islandLeftIconStyle = sp.getInt(ServiceConstants.KEY_ISLAND_LEFT_ICON, ServiceConstants.DEFAULT_ISLAND_LEFT_ICON),
-            focusNotificationType = sp.getInt(ServiceConstants.KEY_NOTIFICATION_FOCUS_STYLE, ServiceConstants.DEFAULT_NOTIFICATION_FOCUS_STYLE),
-            showAlbumArt = sp.getBoolean(ServiceConstants.KEY_NOTIFICATION_ALBUM, ServiceConstants.DEFAULT_NOTIFICATION_ALBUM),
-            highlightColorEnabled = sp.getBoolean(ServiceConstants.KEY_NOTIFICATION_HIGHLIGHT_COLOR, ServiceConstants.DEFAULT_NOTIFICATION_HIGHLIGHT_COLOR),
-            songInfoHighlightColorEnabled = sp.getBoolean(ServiceConstants.KEY_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR, ServiceConstants.DEFAULT_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR),
-            progressColorEnabled = sp.getBoolean(ServiceConstants.KEY_NOTIFICATION_PROGRESS_COLOR, ServiceConstants.DEFAULT_NOTIFICATION_PROGRESS_COLOR),
-            focusShowNotification = sp.getBoolean(ServiceConstants.KEY_NOTIFICATION_FOCUS_SHOW, ServiceConstants.DEFAULT_NOTIFICATION_FOCUS_SHOW)
+            islandLeftIconStyle = sp.getInt(
+                ServiceConstants.KEY_ISLAND_LEFT_ICON,
+                ServiceConstants.DEFAULT_ISLAND_LEFT_ICON
+            ),
+            focusNotificationType = sp.getInt(
+                ServiceConstants.KEY_NOTIFICATION_FOCUS_STYLE,
+                ServiceConstants.DEFAULT_NOTIFICATION_FOCUS_STYLE
+            ),
+            showAlbumArt = sp.getBoolean(
+                ServiceConstants.KEY_NOTIFICATION_ALBUM,
+                ServiceConstants.DEFAULT_NOTIFICATION_ALBUM
+            ),
+            highlightColorEnabled = sp.getBoolean(
+                ServiceConstants.KEY_NOTIFICATION_HIGHLIGHT_COLOR,
+                ServiceConstants.DEFAULT_NOTIFICATION_HIGHLIGHT_COLOR
+            ),
+            songInfoHighlightColorEnabled = sp.getBoolean(
+                ServiceConstants.KEY_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR,
+                ServiceConstants.DEFAULT_NOTIFICATION_SONG_INFO_HIGHLIGHT_COLOR
+            ),
+            progressColorEnabled = sp.getBoolean(
+                ServiceConstants.KEY_NOTIFICATION_PROGRESS_COLOR,
+                ServiceConstants.DEFAULT_NOTIFICATION_PROGRESS_COLOR
+            ),
+            focusShowNotification = sp.getBoolean(
+                ServiceConstants.KEY_NOTIFICATION_FOCUS_SHOW,
+                ServiceConstants.DEFAULT_NOTIFICATION_FOCUS_SHOW
+            )
         )
 
-        val isScreenOn = (context.getSystemService(Context.POWER_SERVICE) as? PowerManager)?.isInteractive == true
-        val showProgressSetting = sp.getBoolean(ServiceConstants.KEY_NOTIFICATION_SHOW_PROGRESS, ServiceConstants.DEFAULT_NOTIFICATION_SHOW_PROGRESS)
+        val isScreenOn =
+            (context.getSystemService(Context.POWER_SERVICE) as? PowerManager)?.isInteractive == true
+        val showProgressSetting = sp.getBoolean(
+            ServiceConstants.KEY_NOTIFICATION_SHOW_PROGRESS,
+            ServiceConstants.DEFAULT_NOTIFICATION_SHOW_PROGRESS
+        )
 
         if (!force && lastUiState != null) {
             if (currentUiState == lastUiState) {
@@ -152,11 +206,17 @@ class NotificationPresenter(
             if (progressOnly) {
                 // 如果当前关闭了进度条显示，或者屏幕处于关闭状态，则不因进度变化触发通知
                 if (!showProgressSetting || !isScreenOn) {
-                    LogManager.d("NotificationPresenter", "updateState 跳过: 仅进度变化, 进度条开关=$showProgressSetting, 屏幕=$isScreenOn")
+                    LogManager.d(
+                        "NotificationPresenter",
+                        "updateState 跳过: 仅进度变化, 进度条开关=$showProgressSetting, 屏幕=$isScreenOn"
+                    )
                     return
                 }
             }
-            LogManager.d("NotificationPresenter", "updateState: 强制=$force, 仅进度变化=$progressOnly, 播放中=${currentUiState.isPlaying}")
+            LogManager.d(
+                "NotificationPresenter",
+                "updateState: 强制=$force, 仅进度变化=$progressOnly, 播放中=${currentUiState.isPlaying}"
+            )
         }
 
         if (currentUiState.isPlaying) {
@@ -193,22 +253,39 @@ class NotificationPresenter(
                 islandLeftIconStyle == other.islandLeftIconStyle
     }
 
-    private fun dispatchNotifications(uiState: NotificationBuilder.UiState, duration: Long, isScreenOn: Boolean) {
+    private fun dispatchNotifications(
+        uiState: NotificationBuilder.UiState,
+        duration: Long,
+        isScreenOn: Boolean
+    ) {
         val sp = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
-        val showProgressSetting = sp.getBoolean(ServiceConstants.KEY_NOTIFICATION_SHOW_PROGRESS, ServiceConstants.DEFAULT_NOTIFICATION_SHOW_PROGRESS)
+        val showProgressSetting = sp.getBoolean(
+            ServiceConstants.KEY_NOTIFICATION_SHOW_PROGRESS,
+            ServiceConstants.DEFAULT_NOTIFICATION_SHOW_PROGRESS
+        )
         val actualShowProgress = isScreenOn && showProgressSetting
-        LogManager.d("NotificationPresenter", "正在发送通知: 类型=${if (notificationType == 1) "焦点" else "普通"}, bypass=$isBypassFocusLimitEnabled, 进度=$actualShowProgress")
+        LogManager.d(
+            "NotificationPresenter",
+            "正在发送通知: 类型=${if (notificationType == 1) "焦点" else "普通"}, bypass=$isBypassFocusLimitEnabled, 进度=$actualShowProgress"
+        )
 
         when (notificationType) {
             0 -> {
                 // 实时通知
-                val notification = NotificationBuilder.buildNormalNotification(context, uiState, duration, actualShowProgress)
+                val notification = NotificationBuilder.buildNormalNotification(
+                    context,
+                    uiState,
+                    duration,
+                    actualShowProgress
+                )
                 notifyWrapper(NotificationBuilder.NORMAL_NOTIFICATION_ID, notification)
                 NotificationBuilder.cancelFocusNotification(notificationManager)
             }
+
             1 -> {
                 // 焦点通知
-                val focusNotification = NotificationBuilder.buildFocusNotification(context, uiState, actualShowProgress)
+                val focusNotification =
+                    NotificationBuilder.buildFocusNotification(context, uiState, actualShowProgress)
                 if (isBypassFocusLimitEnabled) {
                     networkCutJob?.cancel()
                     val seq = ++networkCutSeq
@@ -217,19 +294,22 @@ class NotificationPresenter(
                         try {
                             // 1. 闪断 XMSF 联网
                             ShizukuManager.setXmsfNetworkingEnabled(context, false)
-                            
+
                             // 2. 极速在主线程发射通知
                             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                                notifyWrapper(NotificationBuilder.FOCUS_NOTIFICATION_ID, focusNotification)
+                                notifyWrapper(
+                                    NotificationBuilder.FOCUS_NOTIFICATION_ID,
+                                    focusNotification
+                                )
                             }
-                            
+
                             // 3. 保持盲区防抖窗口 (100ms)
                             try {
                                 kotlinx.coroutines.delay(networkCutDurationMs)
                             } catch (_: kotlinx.coroutines.CancellationException) {
                                 // 被新发生的发送任务 cancel，自动延续断网状态
                             }
-                            
+
                             // 4. 到期安全自动恢复网络
                             if (seq == networkCutSeq) {
                                 ShizukuManager.setXmsfNetworkingEnabled(context, true)
@@ -275,12 +355,27 @@ class NotificationPresenter(
         val songLyric = if (hasScrollLyrics) targetText else data.dynamicTitle
         val pref = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
 
-        val islandLeftIconStyle = pref.getInt(ServiceConstants.KEY_ISLAND_LEFT_ICON, ServiceConstants.DEFAULT_ISLAND_LEFT_ICON)
+        val islandLeftIconStyle = pref.getInt(
+            ServiceConstants.KEY_ISLAND_LEFT_ICON,
+            ServiceConstants.DEFAULT_ISLAND_LEFT_ICON
+        )
         val showIslandLeftAlbum = islandLeftIconStyle in 0..2
-        val showAlbumArt = pref.getBoolean(ServiceConstants.KEY_NOTIFICATION_ALBUM, ServiceConstants.DEFAULT_NOTIFICATION_ALBUM)
-        val disableLyricSplit = pref.getBoolean(ServiceConstants.KEY_NOTIFICATION_ISLAND_DISABLE_LYRIC_SPLIT, ServiceConstants.DEFAULT_NOTIFICATION_ISLAND_DISABLE_LYRIC_SPLIT) || notificationType == 0
-        val limitMaxWidth = pref.getBoolean(ServiceConstants.KEY_NOTIFICATION_ISLAND_LIMIT_WIDTH, ServiceConstants.DEFAULT_NOTIFICATION_ISLAND_LIMIT_WIDTH)
-        val maxWidth = pref.getInt(ServiceConstants.KEY_NOTIFICATION_ISLAND_MAX_WIDTH, ServiceConstants.DEFAULT_NOTIFICATION_ISLAND_MAX_WIDTH)
+        val showAlbumArt = pref.getBoolean(
+            ServiceConstants.KEY_NOTIFICATION_ALBUM,
+            ServiceConstants.DEFAULT_NOTIFICATION_ALBUM
+        )
+        val disableLyricSplit = pref.getBoolean(
+            ServiceConstants.KEY_NOTIFICATION_ISLAND_DISABLE_LYRIC_SPLIT,
+            ServiceConstants.DEFAULT_NOTIFICATION_ISLAND_DISABLE_LYRIC_SPLIT
+        ) || notificationType == 0
+        val limitMaxWidth = pref.getBoolean(
+            ServiceConstants.KEY_NOTIFICATION_ISLAND_LIMIT_WIDTH,
+            ServiceConstants.DEFAULT_NOTIFICATION_ISLAND_LIMIT_WIDTH
+        )
+        val maxWidth = pref.getInt(
+            ServiceConstants.KEY_NOTIFICATION_ISLAND_MAX_WIDTH,
+            ServiceConstants.DEFAULT_NOTIFICATION_ISLAND_MAX_WIDTH
+        )
 
         val splitResult = lyricSplitter.split(
             songLyric,
@@ -298,7 +393,10 @@ class NotificationPresenter(
         val finalNotificationLeft = splitResult.notificationLeft
         val finalNotificationRight = splitResult.notificationRight
 
-        val titleStyle = pref.getInt(ServiceConstants.KEY_NOTIFICATION_TITLE_STYLE, ServiceConstants.DEFAULT_NOTIFICATION_TITLE_STYLE)
+        val titleStyle = pref.getInt(
+            ServiceConstants.KEY_NOTIFICATION_TITLE_STYLE,
+            ServiceConstants.DEFAULT_NOTIFICATION_TITLE_STYLE
+        )
         val songInfo = when (titleStyle) {
             0 -> ""
             1 -> data.identityTitle
@@ -309,12 +407,15 @@ class NotificationPresenter(
             6 -> "${data.identityArtist} - ${data.identityAlbum}"
             else -> ""
         }
-        LogManager.d("NotificationPresenter", "分发歌词: islandLeft=$finalIslandLeft, islandRight=$finalIslandRight, songInfo=$songInfo")
+        LogManager.d(
+            "NotificationPresenter",
+            "分发歌词: islandLeft=$finalIslandLeft, islandRight=$finalIslandRight, songInfo=$songInfo"
+        )
 
         val shouldUpdateBitmap = data.isNewSong ||
-                                finalIslandLeft != lastDispatchedIslandLeft ||
-                                data.isPlaying != lastDispatchedIsPlaying ||
-                                showIslandLeftAlbum != lastDispatchedShowAlbum
+                finalIslandLeft != lastDispatchedIslandLeft ||
+                data.isPlaying != lastDispatchedIsPlaying ||
+                showIslandLeftAlbum != lastDispatchedShowAlbum
 
         if (shouldUpdateBitmap) {
             lastDispatchedIslandLeft = finalIslandLeft
@@ -322,10 +423,22 @@ class NotificationPresenter(
             lastDispatchedShowAlbum = showIslandLeftAlbum
         }
 
-        DynamicLyricData.updateBitmaps(data.albumBitmap, data.notificationAlbumBitmap, data.notificationAlbumBitmapCircular)
+        DynamicLyricData.updateBitmaps(
+            data.albumBitmap,
+            data.notificationAlbumBitmap,
+            data.notificationAlbumBitmapCircular
+        )
         DynamicLyricData.updateIslandLeftIconStyle(islandLeftIconStyle)
         DynamicLyricData.updateLeftTitles(finalIslandLeft, finalNotificationLeft)
-        DynamicLyricData.updateRightTitles(finalIslandRight,
-            finalNotificationRight, songLyric, songInfo, data.duration, data.isPlaying, data.currentPackageName, showIslandLeftAlbum)
+        DynamicLyricData.updateRightTitles(
+            finalIslandRight,
+            finalNotificationRight,
+            songLyric,
+            songInfo,
+            data.duration,
+            data.isPlaying,
+            data.currentPackageName,
+            showIslandLeftAlbum
+        )
     }
 }

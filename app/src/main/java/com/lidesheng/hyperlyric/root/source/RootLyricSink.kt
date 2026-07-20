@@ -4,17 +4,17 @@ import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import com.lidesheng.hyperlyric.lyric.source.LyricSink
-import com.lidesheng.hyperlyric.root.LyriconDataBridge
-import com.lidesheng.hyperlyric.root.island.IslandSlotContentAssembler
-import com.lidesheng.hyperlyric.root.island.renderer.IslandRenderer
-import com.lidesheng.hyperlyric.root.aitrans.AITranslator
-import com.lidesheng.hyperlyric.root.utils.HookLogger
 import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.lyric.model.Song
 import com.lidesheng.hyperlyric.lyric.model.interfaces.IRichLyricLine
+import com.lidesheng.hyperlyric.lyric.source.LyricSink
 import com.lidesheng.hyperlyric.lyric.style.AiTranslationConfigs
 import com.lidesheng.hyperlyric.lyric.style.AiTranslationProvider
+import com.lidesheng.hyperlyric.root.LyriconDataBridge
+import com.lidesheng.hyperlyric.root.aitrans.AITranslator
+import com.lidesheng.hyperlyric.root.island.IslandSlotContentAssembler
+import com.lidesheng.hyperlyric.root.island.renderer.IslandRenderer
+import com.lidesheng.hyperlyric.root.utils.HookLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -66,7 +66,7 @@ class RootLyricSink(
 
     override fun onLyricLine(line: Any?) {
         if (line is IRichLyricLine) {
-    
+
             LyriconDataBridge.updateLyricLine(line)
             renderer.updateLyricLine()
         }
@@ -130,7 +130,10 @@ class RootLyricSink(
         if (positionDispatchScheduled) return
 
         positionDispatchScheduled = true
-        mainHandler.postDelayed(positionDispatchRunnable, MIN_POSITION_DISPATCH_INTERVAL_MS - elapsed)
+        mainHandler.postDelayed(
+            positionDispatchRunnable,
+            MIN_POSITION_DISPATCH_INTERVAL_MS - elapsed
+        )
     }
 
     private fun dispatchPosition(position: Long, now: Long = SystemClock.uptimeMillis()) {
@@ -163,7 +166,10 @@ class RootLyricSink(
                     HookLogger.d("RootLyricSink", "歌曲 ${song.name}（中文占比 $percentage)")
                 }
                 if (autoIgnoreChinese && ratio > 0.5f) {
-                    HookLogger.d("RootLyricSink", "歌曲 ${song.name}（中文占比 $percentage），已自动跳过AI翻译")
+                    HookLogger.d(
+                        "RootLyricSink",
+                        "歌曲 ${song.name}（中文占比 $percentage），已自动跳过AI翻译"
+                    )
                     return@launch
                 }
                 val skipExisting = prefs.getBoolean(
@@ -175,7 +181,8 @@ class RootLyricSink(
                     RootConstants.DEFAULT_HOOK_AI_TRANS_FORCE_OVERRIDE
                 )
                 if (skipExisting && !forceOverride) {
-                    val hasTranslation = song.lyrics?.any { !it.translation.isNullOrBlank() } == true
+                    val hasTranslation =
+                        song.lyrics?.any { !it.translation.isNullOrBlank() } == true
                     if (hasTranslation) {
                         HookLogger.d("RootLyricSink", "歌曲 ${song.name} 已有翻译，跳过AI翻译")
                         return@launch
@@ -207,20 +214,48 @@ class RootLyricSink(
     }
 
     private fun buildAiTranslationConfigs(prefs: SharedPreferences): AiTranslationConfigs {
-        val providerName = prefs.getString(RootConstants.KEY_HOOK_AI_TRANS_PROVIDER, AiTranslationProvider.OPENAI.name)
+        val providerName = prefs.getString(
+            RootConstants.KEY_HOOK_AI_TRANS_PROVIDER,
+            AiTranslationProvider.OPENAI.name
+        )
             ?: AiTranslationProvider.OPENAI.name
-        val provider = try { AiTranslationProvider.valueOf(providerName) } catch (_: Exception) { AiTranslationProvider.OPENAI }
+        val provider = try {
+            AiTranslationProvider.valueOf(providerName)
+        } catch (_: Exception) {
+            AiTranslationProvider.OPENAI
+        }
 
         return AiTranslationConfigs(
             provider = providerName,
-            targetLanguage = prefs.getString(RootConstants.KEY_HOOK_AI_TRANS_TARGET_LANG, RootConstants.DEFAULT_HOOK_AI_TRANS_TARGET_LANG) ?: RootConstants.DEFAULT_HOOK_AI_TRANS_TARGET_LANG,
+            targetLanguage = prefs.getString(
+                RootConstants.KEY_HOOK_AI_TRANS_TARGET_LANG,
+                RootConstants.DEFAULT_HOOK_AI_TRANS_TARGET_LANG
+            ) ?: RootConstants.DEFAULT_HOOK_AI_TRANS_TARGET_LANG,
             apiKey = prefs.getString(RootConstants.KEY_HOOK_AI_TRANS_API_KEY, "") ?: "",
-            model = prefs.getString(RootConstants.KEY_HOOK_AI_TRANS_MODEL, RootConstants.DEFAULT_HOOK_AI_TRANS_MODEL).orEmpty().ifBlank { provider.model },
-            baseUrl = prefs.getString(RootConstants.KEY_HOOK_AI_TRANS_BASE_URL, RootConstants.DEFAULT_HOOK_AI_TRANS_BASE_URL).orEmpty().ifBlank { provider.url },
-            prompt = prefs.getString(RootConstants.KEY_HOOK_AI_TRANS_PROMPT, RootConstants.DEFAULT_HOOK_AI_TRANS_PROMPT) ?: RootConstants.DEFAULT_HOOK_AI_TRANS_PROMPT,
-            temperature = prefs.getFloat(RootConstants.KEY_HOOK_AI_TRANS_TEMPERATURE, AiTranslationConfigs.DEFAULT_TEMPERATURE),
-            topP = prefs.getFloat(RootConstants.KEY_HOOK_AI_TRANS_TOP_P, AiTranslationConfigs.DEFAULT_TOP_P),
-            maxTokens = prefs.getInt(RootConstants.KEY_HOOK_AI_TRANS_MAX_TOKENS, AiTranslationConfigs.DEFAULT_MAX_TOKENS)
+            model = prefs.getString(
+                RootConstants.KEY_HOOK_AI_TRANS_MODEL,
+                RootConstants.DEFAULT_HOOK_AI_TRANS_MODEL
+            ).orEmpty().ifBlank { provider.model },
+            baseUrl = prefs.getString(
+                RootConstants.KEY_HOOK_AI_TRANS_BASE_URL,
+                RootConstants.DEFAULT_HOOK_AI_TRANS_BASE_URL
+            ).orEmpty().ifBlank { provider.url },
+            prompt = prefs.getString(
+                RootConstants.KEY_HOOK_AI_TRANS_PROMPT,
+                RootConstants.DEFAULT_HOOK_AI_TRANS_PROMPT
+            ) ?: RootConstants.DEFAULT_HOOK_AI_TRANS_PROMPT,
+            temperature = prefs.getFloat(
+                RootConstants.KEY_HOOK_AI_TRANS_TEMPERATURE,
+                AiTranslationConfigs.DEFAULT_TEMPERATURE
+            ),
+            topP = prefs.getFloat(
+                RootConstants.KEY_HOOK_AI_TRANS_TOP_P,
+                AiTranslationConfigs.DEFAULT_TOP_P
+            ),
+            maxTokens = prefs.getInt(
+                RootConstants.KEY_HOOK_AI_TRANS_MAX_TOKENS,
+                AiTranslationConfigs.DEFAULT_MAX_TOKENS
+            )
         )
     }
 

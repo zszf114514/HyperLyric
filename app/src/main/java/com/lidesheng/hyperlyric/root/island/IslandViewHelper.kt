@@ -25,12 +25,13 @@ object IslandViewHelper {
         try {
             val res = root.resources
             val parent = findViewByName(root, parentName) as? ViewGroup
-            
+
             if (parent != null) {
                 for (pkg in SYSTEMUI_PKG_NAMES) {
                     val id = res.getIdentifier(containerName, "id", pkg)
                     if (id != 0) {
-                        parent.findViewById<View>(id)?.visibility = if (show) View.VISIBLE else View.GONE
+                        parent.findViewById<View>(id)?.visibility =
+                            if (show) View.VISIBLE else View.GONE
                     }
                 }
             }
@@ -43,11 +44,16 @@ object IslandViewHelper {
      * 清除超级岛文本容器的边距
      */
     @SuppressLint("DiscouragedApi")
-    fun clearTextContainerMargin(root: ViewGroup, parentName: String, clearStart: Boolean, clearEnd: Boolean) {
+    fun clearTextContainerMargin(
+        root: ViewGroup,
+        parentName: String,
+        clearStart: Boolean,
+        clearEnd: Boolean
+    ) {
         try {
             val res = root.resources
             val parent = findViewByName(root, parentName) as? ViewGroup
-            
+
             if (parent != null) {
                 for (pkg in SYSTEMUI_PKG_NAMES) {
                     val id = res.getIdentifier("island_container_module_text", "id", pkg)
@@ -82,10 +88,20 @@ object IslandViewHelper {
         hideInjectedView(rootView, IslandProbeUtils.RIGHT_TEST_WRAPPER_TAG)
         hideInjectedView(rootView, "HYPERLYRIC_TEST_VIEW_WRAPPER_LEFT")
         hideInjectedView(rootView, "HYPERLYRIC_TEST_VIEW_WRAPPER_RIGHT")
- 
+
         // 恢复系统原有组件的可见性
-        toggleContainer(rootView, "island_container_module_image_text_1", "island_container_module_icon", true)
-        toggleContainer(rootView, "island_container_module_image_text_2", "island_container_module_icon", true)
+        toggleContainer(
+            rootView,
+            "island_container_module_image_text_1",
+            "island_container_module_icon",
+            true
+        )
+        toggleContainer(
+            rootView,
+            "island_container_module_image_text_2",
+            "island_container_module_icon",
+            true
+        )
 
         restoreTextContainerMargins(rootView, "island_container_module_image_text_1")
         restoreTextContainerMargins(rootView, "island_container_module_image_text_2")
@@ -114,9 +130,11 @@ object IslandViewHelper {
             val slotId = res.getIdentifier(parentName, "id", "miui.systemui.plugin")
             if (slotId == 0) return
             val parent = rootView.findViewById<ViewGroup>(slotId) ?: return
-            
-            val textSlotId = res.getIdentifier("island_container_module_text", "id", "miui.systemui.plugin")
-            val container = if (textSlotId != 0) (parent.findViewById(textSlotId) ?: parent) else parent
+
+            val textSlotId =
+                res.getIdentifier("island_container_module_text", "id", "miui.systemui.plugin")
+            val container =
+                if (textSlotId != 0) (parent.findViewById(textSlotId) ?: parent) else parent
 
             for (i in 0 until container.childCount) {
                 val child = container.getChildAt(i)
@@ -138,18 +156,20 @@ object IslandViewHelper {
      */
     fun triggerSystemRelayout(islandView: ViewGroup) {
         if (isRelayouting.get() == true) return
-        HookLogger.d("IslandViewHelper","正在触发布局刷新")
+        HookLogger.d("IslandViewHelper", "正在触发布局刷新")
         isRelayouting.set(true)
         try {
             runCatching {
                 val viewClass = islandView.javaClass
                 // 优先尝试 updateBigIslandViewWidth
-                val updateWidthMethod = viewClass.methods.find { it.name == "updateBigIslandViewWidth" }
+                val updateWidthMethod =
+                    viewClass.methods.find { it.name == "updateBigIslandViewWidth" }
                 if (updateWidthMethod != null) {
                     updateWidthMethod.invoke(islandView)
                 } else {
                     // 兜底尝试 calculateBigIslandWidth
-                    viewClass.methods.find { it.name == "calculateBigIslandWidth" }?.invoke(islandView)
+                    viewClass.methods.find { it.name == "calculateBigIslandWidth" }
+                        ?.invoke(islandView)
                 }
             }.onFailure { e ->
                 HookLogger.e("IslandViewHelper", "超级岛布局刷新失败", e)

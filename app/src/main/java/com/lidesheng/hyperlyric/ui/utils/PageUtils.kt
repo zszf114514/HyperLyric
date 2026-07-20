@@ -1,6 +1,5 @@
 package com.lidesheng.hyperlyric.ui.utils
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
@@ -47,7 +45,8 @@ fun pageContentPadding(
 ): PaddingValues {
     val topPadding = innerPadding.calculateTopPadding() + extraTop
     val bottomPadding = if (isWideScreen) {
-        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + outerPadding.calculateBottomPadding()
+        WindowInsets.navigationBars.asPaddingValues()
+            .calculateBottomPadding() + outerPadding.calculateBottomPadding()
     } else {
         outerPadding.calculateBottomPadding()
     }

@@ -20,8 +20,10 @@ internal class LyricLineAssembler(
 ) {
     private val wordBuilder = RelativeWordBuilder()
 
-    fun updateFlags(displayTranslation: Boolean, displayRoma: Boolean,
-                    enableRelativeProgress: Boolean, enableRelativeHighlight: Boolean) {
+    fun updateFlags(
+        displayTranslation: Boolean, displayRoma: Boolean,
+        enableRelativeProgress: Boolean, enableRelativeHighlight: Boolean
+    ) {
         this.displayTranslation = displayTranslation
         this.displayRoma = displayRoma
         this.enableRelativeProgress = enableRelativeProgress
@@ -76,6 +78,7 @@ internal class LyricLineAssembler(
                         generated = words !== source.secondaryWords
                     }
                 }
+
                 displayTranslation && (!source.translation.isNullOrBlank()
                         || !source.translationWords.isNullOrEmpty()) -> {
                     text = source.translation
@@ -83,6 +86,7 @@ internal class LyricLineAssembler(
                     metadata = lyricMetadataOf("translation" to "true")
                     generated = words !== source.translationWords
                 }
+
                 displayRoma -> {
                     text = source.roma
                     words = wordBuilder.build(source, source.roma, null)
@@ -100,7 +104,12 @@ internal class LyricLineAssembler(
                         || line.words?.firstOrNull()?.begin?.let { (it - source.begin) < 500 } == true
                 )
 
-        return SecondaryResult(line, alwaysShow, generated && !enableRelativeHighlight, isNextLinePreview)
+        return SecondaryResult(
+            line,
+            alwaysShow,
+            generated && !enableRelativeHighlight,
+            isNextLinePreview
+        )
     }
 }
 

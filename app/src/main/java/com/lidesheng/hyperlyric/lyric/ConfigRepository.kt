@@ -15,7 +15,9 @@ object ConfigRepository {
 
     fun initWhitelist(context: Context) {
         val prefs = context.getSharedPreferences(UIConstants.PREF_NAME, Context.MODE_PRIVATE)
-        val savedSet = prefs.getStringSet(ServiceConstants.KEY_NOTIFICATION_WHITELIST, emptySet())?.toSet() ?: emptySet()
+        val savedSet =
+            prefs.getStringSet(ServiceConstants.KEY_NOTIFICATION_WHITELIST, emptySet())?.toSet()
+                ?: emptySet()
         _whitelistState.value = savedSet
     }
 

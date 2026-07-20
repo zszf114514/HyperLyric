@@ -6,8 +6,9 @@ import android.content.ContextWrapper
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
-import com.lidesheng.hyperlyric.utils.LogManager
+import androidx.core.content.edit
 import com.lidesheng.hyperlyric.BuildConfig
+import com.lidesheng.hyperlyric.utils.LogManager
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
@@ -18,7 +19,6 @@ import rikka.shizuku.SystemServiceHelper
 import rikka.sui.Sui
 import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.ConcurrentHashMap
-import androidx.core.content.edit
 
 class ShizukuContext(base: Context) : ContextWrapper(base) {
     override fun getOpPackageName(): String = "com.android.shell"
@@ -59,8 +59,16 @@ object ShizukuManager {
     )
 
     private val serviceBackends = listOf(
-        ServiceBackend("Connectivity", $$"android.net.IConnectivityManager$Stub", Context.CONNECTIVITY_SERVICE),
-        ServiceBackend("NetworkManagement", $$"android.os.INetworkManagementService$Stub", "network_management")
+        ServiceBackend(
+            "Connectivity",
+            $$"android.net.IConnectivityManager$Stub",
+            Context.CONNECTIVITY_SERVICE
+        ),
+        ServiceBackend(
+            "NetworkManagement",
+            $$"android.os.INetworkManagementService$Stub",
+            "network_management"
+        )
     )
 
     suspend fun checkShizukuPermission(): Boolean {
@@ -93,9 +101,15 @@ object ShizukuManager {
 
     private fun disableBypassFocusLimit(context: Context) {
         try {
-            val prefs = context.getSharedPreferences("com.lidesheng.hyperlyric_preferences", Context.MODE_PRIVATE)
+            val prefs = context.getSharedPreferences(
+                "com.lidesheng.hyperlyric_preferences",
+                Context.MODE_PRIVATE
+            )
             if (prefs.getBoolean("key_bypass_focus_notification_limit", false)) {
-                LogManager.i(TAG, "检测到 Shizuku 服务离线，已自动回退关闭 [key_bypass_focus_notification_limit] 选项")
+                LogManager.i(
+                    TAG,
+                    "检测到 Shizuku 服务离线，已自动回退关闭 [key_bypass_focus_notification_limit] 选项"
+                )
                 prefs.edit { putBoolean("key_bypass_focus_notification_limit", false) }
             }
         } catch (e: Throwable) {
@@ -152,7 +166,10 @@ object ShizukuManager {
         for (backend in serviceBackends) {
             try {
                 val service = getHookedService(backend)
-                LogManager.d(TAG, "正在尝试 ${backend.label} 后端: UID=$uid, enabled=$enabled (本地 Hook)")
+                LogManager.d(
+                    TAG,
+                    "正在尝试 ${backend.label} 后端: UID=$uid, enabled=$enabled (本地 Hook)"
+                )
 
                 if (!enabled) {
                     callMethodResilient(
@@ -161,7 +178,10 @@ object ShizukuManager {
                         OEM_DENY_CHAIN,
                         true
                     )
-                    LogManager.d(TAG, "在拦截 UID=$uid 之前, 已通过 ${backend.label} 启用防火墙链 $OEM_DENY_CHAIN (本地 Hook)")
+                    LogManager.d(
+                        TAG,
+                        "在拦截 UID=$uid 之前, 已通过 ${backend.label} 启用防火墙链 $OEM_DENY_CHAIN (本地 Hook)"
+                    )
                 }
 
                 val methodUsed = callMethodResilient(
@@ -198,7 +218,7 @@ object ShizukuManager {
 
             val stubClass = Class.forName(backend.stubClassName)
             val asInterfaceMethod = stubClass.getMethod("asInterface", IBinder::class.java)
-            val service = asInterfaceMethod.invoke(null, wrapper) 
+            val service = asInterfaceMethod.invoke(null, wrapper)
                 ?: throw RuntimeException("无法通过 asInterface 转换服务 Binder: ${backend.stubClassName}")
 
             hookedServiceCache[backend.stubClassName] = service
@@ -211,7 +231,8 @@ object ShizukuManager {
         val methods = clazz.methods
 
         for (methodName in methodNames) {
-            val targetMethod = methods.find { it.name == methodName && it.parameterCount == args.size }
+            val targetMethod =
+                methods.find { it.name == methodName && it.parameterCount == args.size }
             if (targetMethod != null) {
                 targetMethod.isAccessible = true
                 val finalArgs = Array(args.size) { i ->

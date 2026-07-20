@@ -43,7 +43,11 @@ object CoverColorHelper {
 
     fun currentMediaKey(): String? = activeMediaKey
 
-    fun extractColors(bitmap: Bitmap, useGradient: Boolean, songKey: String? = null): Pair<IntArray, IntArray> {
+    fun extractColors(
+        bitmap: Bitmap,
+        useGradient: Boolean,
+        songKey: String? = null
+    ): Pair<IntArray, IntArray> {
         val key = buildKey(useGradient, songKey)
         val artworkSignature = bitmap.artworkSignature()
 

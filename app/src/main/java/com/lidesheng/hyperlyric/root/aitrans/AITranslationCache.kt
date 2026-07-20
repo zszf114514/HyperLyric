@@ -142,7 +142,10 @@ internal class AITranslationCache(
         }
 
         override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-            HookLogger.w(TAG, "升级翻译缓存数据库: old=$oldVersion, new=$newVersion, action=recreate")
+            HookLogger.w(
+                TAG,
+                "升级翻译缓存数据库: old=$oldVersion, new=$newVersion, action=recreate"
+            )
             db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
             onCreate(db)
         }

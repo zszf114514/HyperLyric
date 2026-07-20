@@ -4,28 +4,28 @@ import android.app.Application
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import com.lidesheng.hyperlyric.lyric.source.SourceManager
-import com.lidesheng.hyperlyric.root.island.FakeIslandTransitionHooker
-import com.lidesheng.hyperlyric.root.island.IslandAlbumCoverStyleHooker
-import com.lidesheng.hyperlyric.root.island.IslandMusicWaveColorHooker
-import com.lidesheng.hyperlyric.root.island.IslandProgressGlowController
-import com.lidesheng.hyperlyric.root.island.IslandModuleRestoreHooker
-import com.lidesheng.hyperlyric.root.island.SystemUIHookRegistry
-import com.lidesheng.hyperlyric.root.island.IslandWidthHooker
-import com.lidesheng.hyperlyric.root.island.RealIslandHooker
-import com.lidesheng.hyperlyric.root.mediacard.notification.NotificationMediaAmbientFlowHooker
-import com.lidesheng.hyperlyric.root.mediacard.notification.NotificationMediaCoverStyleHooker
-import com.lidesheng.hyperlyric.root.mediacard.island.IslandExpandedMediaAmbientFlowHooker
-import com.lidesheng.hyperlyric.root.mediacard.notification.background.MediaBackgroundRendererPool
-import com.lidesheng.hyperlyric.root.island.renderer.BaseIslandRenderer
-import com.lidesheng.hyperlyric.root.source.LyriconSource
-import com.lidesheng.hyperlyric.root.source.LyricInfoSource
-import com.lidesheng.hyperlyric.root.source.RootLyricSink
-import com.lidesheng.hyperlyric.root.source.SuperLyricSource
-import com.lidesheng.hyperlyric.root.aitrans.AITranslator
-import com.lidesheng.hyperlyric.root.utils.HookLogger
 import com.lidesheng.hyperlyric.common.RootConstants
 import com.lidesheng.hyperlyric.common.UIConstants
+import com.lidesheng.hyperlyric.lyric.source.SourceManager
+import com.lidesheng.hyperlyric.root.aitrans.AITranslator
+import com.lidesheng.hyperlyric.root.island.FakeIslandTransitionHooker
+import com.lidesheng.hyperlyric.root.island.IslandAlbumCoverStyleHooker
+import com.lidesheng.hyperlyric.root.island.IslandModuleRestoreHooker
+import com.lidesheng.hyperlyric.root.island.IslandMusicWaveColorHooker
+import com.lidesheng.hyperlyric.root.island.IslandProgressGlowController
+import com.lidesheng.hyperlyric.root.island.IslandWidthHooker
+import com.lidesheng.hyperlyric.root.island.RealIslandHooker
+import com.lidesheng.hyperlyric.root.island.SystemUIHookRegistry
+import com.lidesheng.hyperlyric.root.island.renderer.BaseIslandRenderer
+import com.lidesheng.hyperlyric.root.mediacard.island.IslandExpandedMediaAmbientFlowHooker
+import com.lidesheng.hyperlyric.root.mediacard.notification.NotificationMediaAmbientFlowHooker
+import com.lidesheng.hyperlyric.root.mediacard.notification.NotificationMediaCoverStyleHooker
+import com.lidesheng.hyperlyric.root.mediacard.notification.background.MediaBackgroundRendererPool
+import com.lidesheng.hyperlyric.root.source.LyricInfoSource
+import com.lidesheng.hyperlyric.root.source.LyriconSource
+import com.lidesheng.hyperlyric.root.source.RootLyricSink
+import com.lidesheng.hyperlyric.root.source.SuperLyricSource
+import com.lidesheng.hyperlyric.root.utils.HookLogger
 import io.github.libxposed.api.XposedInterface.Chain
 import io.github.libxposed.api.XposedInterface.Hooker
 import io.github.libxposed.api.XposedModule
@@ -106,7 +106,8 @@ class HookEntry : XposedModule() {
     }
 
     private var _prefs: android.content.SharedPreferences? = null
-    private var prefListener: android.content.SharedPreferences.OnSharedPreferenceChangeListener? = null
+    private var prefListener: android.content.SharedPreferences.OnSharedPreferenceChangeListener? =
+        null
     private var runtimeApp: Application? = null
     private var lyricsOnlyAfterHotReload = false
 
@@ -122,7 +123,10 @@ class HookEntry : XposedModule() {
         super.onModuleLoaded(param)
         instance = this
         HookLogger.module = this
-        HookLogger.i("HookEntry", "模块加载完成，当前应用版本${com.lidesheng.hyperlyric.BuildConfig.VERSION_CODE}-${com.lidesheng.hyperlyric.BuildConfig.VERSION_NAME}")
+        HookLogger.i(
+            "HookEntry",
+            "模块加载完成，当前应用版本${com.lidesheng.hyperlyric.BuildConfig.VERSION_CODE}-${com.lidesheng.hyperlyric.BuildConfig.VERSION_NAME}"
+        )
     }
 
     override fun onHotReloading(param: HotReloadingParam): Boolean {
@@ -183,12 +187,12 @@ class HookEntry : XposedModule() {
 
     override fun onPackageLoaded(param: PackageLoadedParam) {
         val processName = runCatching { android.app.Application.getProcessName() }.getOrNull() ?: ""
-        
+
         // 仅在主进程注入
         if (processName.contains(":")) return
-        
+
         val packageName = param.packageName
-        
+
         if (packageName == "com.android.systemui") {
             if (!lyricsOnlyAfterHotReload) {
                 IslandExpandedMediaAmbientFlowHooker.hook(this, param.defaultClassLoader)
@@ -198,29 +202,32 @@ class HookEntry : XposedModule() {
             try {
                 UnlockIslandWhitelist.hook(this, param.defaultClassLoader)
             } catch (e: Exception) {
-                 if (e is ClassNotFoundException || e is NoSuchMethodException) {
-                     HookLogger.w("HookEntry","此系统版本不支持超级岛下拉小窗白名单")
-                 } else {
-                     HookLogger.e("HookEntry", "超级岛下拉小窗白名单注入失败", e)
-                 }
+                if (e is ClassNotFoundException || e is NoSuchMethodException) {
+                    HookLogger.w("HookEntry", "此系统版本不支持超级岛下拉小窗白名单")
+                } else {
+                    HookLogger.e("HookEntry", "超级岛下拉小窗白名单注入失败", e)
+                }
             }
             try {
                 UnlockFocusWhitelist.hook(this, param.defaultClassLoader)
             } catch (e: Exception) {
-                 if (e is ClassNotFoundException || e is NoSuchMethodException) {
-                     HookLogger.w("HookEntry","此系统版本不支持解锁焦点通知白名单")
-                 } else {
-                     HookLogger.e("HookEntry", "焦点通知白名单注入失败", e)
-                 }
+                if (e is ClassNotFoundException || e is NoSuchMethodException) {
+                    HookLogger.w("HookEntry", "此系统版本不支持解锁焦点通知白名单")
+                } else {
+                    HookLogger.e("HookEntry", "焦点通知白名单注入失败", e)
+                }
             }
 
             val isSuperIslandEnabled = SystemUiEnhancementGate.isEnabled()
-            
+
             if (!isSuperIslandEnabled) {
                 HookLogger.i("HookEntry", "小米系统界面增强已禁用")
             }
 
-            activeMode = prefs.getInt(RootConstants.KEY_HOOK_LYRIC_MODE, RootConstants.DEFAULT_HOOK_LYRIC_MODE)
+            activeMode = prefs.getInt(
+                RootConstants.KEY_HOOK_LYRIC_MODE,
+                RootConstants.DEFAULT_HOOK_LYRIC_MODE
+            )
             HookLogger.i("HookEntry", "超级岛歌词模式: mode=$activeMode")
 
             // 劫持 Application.onCreate 以初始化 Lyricon Receiver 所需的环境
@@ -234,7 +241,11 @@ class HookEntry : XposedModule() {
                 if (e is ClassNotFoundException || e is NoSuchMethodException) {
                     HookLogger.w("HookEntry", "跳过生命周期 Hook: target=Application.onCreate")
                 } else {
-                    HookLogger.e("HookEntry", "安装生命周期 Hook 失败: target=Application.onCreate", e)
+                    HookLogger.e(
+                        "HookEntry",
+                        "安装生命周期 Hook 失败: target=Application.onCreate",
+                        e
+                    )
                 }
             }
 
@@ -250,7 +261,11 @@ class HookEntry : XposedModule() {
                 if (e is ClassNotFoundException || e is NoSuchMethodException) {
                     HookLogger.w("HookEntry", "跳过插件加载 Hook: target=BaseDexClassLoader")
                 } else {
-                    HookLogger.e("HookEntry", "安装插件加载 Hook 失败: target=BaseDexClassLoader", e)
+                    HookLogger.e(
+                        "HookEntry",
+                        "安装插件加载 Hook 失败: target=BaseDexClassLoader",
+                        e
+                    )
                 }
             }
 
@@ -294,112 +309,127 @@ class HookEntry : XposedModule() {
                 sourceManager?.start()
             }
 
-            prefListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-                if (key?.startsWith(RootConstants.KEY_HOOK_LYRICON_PROVIDER_DELAY_PREFIX) == true) {
-                    lyriconSource.onPreferenceChanged(key)
+            prefListener =
+                android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                    if (key?.startsWith(RootConstants.KEY_HOOK_LYRICON_PROVIDER_DELAY_PREFIX) == true) {
+                        lyriconSource.onPreferenceChanged(key)
+                    }
+                    when (key) {
+                        RootConstants.KEY_HOOK_LYRIC_SOURCE -> {
+                            val newSourceId =
+                                prefs.getString(key, RootConstants.DEFAULT_HOOK_LYRIC_SOURCE)
+                                    ?: RootConstants.DEFAULT_HOOK_LYRIC_SOURCE
+                            if (!SystemUiEnhancementGate.isEnabled()) {
+                                return@OnSharedPreferenceChangeListener
+                            }
+                            HookLogger.i("HookEntry", "切换歌词源: source=$newSourceId")
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                sourceManager?.switchSource(newSourceId)
+                            }
+                        }
+
+                        RootConstants.KEY_HOOK_LYRIC_MODE -> {
+                            val newMode = prefs.getInt(key, RootConstants.DEFAULT_HOOK_LYRIC_MODE)
+                            if (newMode == activeMode) return@OnSharedPreferenceChangeListener
+                            HookLogger.i("HookEntry", "切换歌词模式: mode=$newMode")
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                activeMode = newMode
+                                BaseIslandRenderer.refreshActiveIsland()
+                            }
+                        }
+
+                        RootConstants.KEY_HOOK_ENABLE_SUPER_ISLAND -> {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                updateSystemUiEnhancements(SystemUiEnhancementGate.isEnabled())
+                            }
+                        }
+
+                        RootConstants.KEY_HOOK_ISLAND_ALBUM_COVER_STYLE,
+                        RootConstants.KEY_HOOK_ISLAND_LEFT_ALBUM -> {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                IslandAlbumCoverStyleHooker.refresh()
+                                BaseIslandRenderer.refreshActiveIsland()
+                            }
+                        }
+
+                        RootConstants.KEY_HOOK_ISLAND_MUSIC_WAVE_COLOR,
+                        RootConstants.KEY_HOOK_ISLAND_MUSIC_WAVE_GRADIENT -> {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                IslandAlbumCoverStyleHooker.refresh()
+                                IslandMusicWaveColorHooker.refresh()
+                            }
+                        }
+
+                        RootConstants.KEY_HOOK_ISLAND_RIGHT_ICON -> {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                IslandAlbumCoverStyleHooker.refresh()
+                                IslandMusicWaveColorHooker.refresh()
+                                BaseIslandRenderer.refreshActiveIsland()
+                            }
+                        }
+
+                        RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_CARD_THEME -> {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                NotificationMediaAmbientFlowHooker.refreshCardTheme()
+                            }
+                        }
+
+                        RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_AMBIENT_FLOW_MODE -> {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                NotificationMediaAmbientFlowHooker.refreshBackgroundStyle()
+                            }
+                        }
+
+                        RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_STYLE,
+                        RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_BLUR,
+                        RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_COLOR_ANIMATION,
+                        RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_AUTO_INVERT,
+                        RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_SOFT_COVER_TONE -> {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                NotificationMediaAmbientFlowHooker.refreshBackgroundStyle()
+                            }
+                        }
+
+                        RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_COVER_STYLE,
+                        RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_HIDE_COVER_SOURCE,
+                        RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_HIDE_DEVICE_SWITCH -> {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                NotificationMediaCoverStyleHooker.refresh()
+                            }
+                        }
+
+                        RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_CARD_THEME,
+                        RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_AMBIENT_FLOW_MODE -> {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                IslandExpandedMediaAmbientFlowHooker.refreshCardTheme()
+                            }
+                        }
+
+                        RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE,
+                        RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_BLUR,
+                        RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_COLOR_ANIMATION,
+                        RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_AUTO_INVERT,
+                        RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_SOFT_COVER_TONE -> {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                IslandExpandedMediaAmbientFlowHooker.refreshBackgroundStyle()
+                            }
+                        }
+
+                        RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_COVER_STYLE,
+                        RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_HIDE_COVER_SOURCE,
+                        RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_HIDE_DEVICE_SWITCH -> {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                IslandExpandedMediaAmbientFlowHooker.refreshMediaElements()
+                            }
+                        }
+
+                        in SUPER_ISLAND_RUNTIME_REFRESH_KEYS -> {
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                BaseIslandRenderer.refreshActiveIsland()
+                            }
+                        }
+                    }
                 }
-                when (key) {
-                    RootConstants.KEY_HOOK_LYRIC_SOURCE -> {
-                        val newSourceId = prefs.getString(key, RootConstants.DEFAULT_HOOK_LYRIC_SOURCE)
-                            ?: RootConstants.DEFAULT_HOOK_LYRIC_SOURCE
-                        if (!SystemUiEnhancementGate.isEnabled()) {
-                            return@OnSharedPreferenceChangeListener
-                        }
-                        HookLogger.i("HookEntry", "切换歌词源: source=$newSourceId")
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            sourceManager?.switchSource(newSourceId)
-                        }
-                    }
-                    RootConstants.KEY_HOOK_LYRIC_MODE -> {
-                        val newMode = prefs.getInt(key, RootConstants.DEFAULT_HOOK_LYRIC_MODE)
-                        if (newMode == activeMode) return@OnSharedPreferenceChangeListener
-                        HookLogger.i("HookEntry", "切换歌词模式: mode=$newMode")
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            activeMode = newMode
-                            BaseIslandRenderer.refreshActiveIsland()
-                        }
-                    }
-                    RootConstants.KEY_HOOK_ENABLE_SUPER_ISLAND -> {
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            updateSystemUiEnhancements(SystemUiEnhancementGate.isEnabled())
-                        }
-                    }
-                    RootConstants.KEY_HOOK_ISLAND_ALBUM_COVER_STYLE,
-                    RootConstants.KEY_HOOK_ISLAND_LEFT_ALBUM -> {
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            IslandAlbumCoverStyleHooker.refresh()
-                            BaseIslandRenderer.refreshActiveIsland()
-                        }
-                    }
-                    RootConstants.KEY_HOOK_ISLAND_MUSIC_WAVE_COLOR,
-                    RootConstants.KEY_HOOK_ISLAND_MUSIC_WAVE_GRADIENT -> {
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            IslandAlbumCoverStyleHooker.refresh()
-                            IslandMusicWaveColorHooker.refresh()
-                        }
-                    }
-                    RootConstants.KEY_HOOK_ISLAND_RIGHT_ICON -> {
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            IslandAlbumCoverStyleHooker.refresh()
-                            IslandMusicWaveColorHooker.refresh()
-                            BaseIslandRenderer.refreshActiveIsland()
-                        }
-                    }
-                    RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_CARD_THEME -> {
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            NotificationMediaAmbientFlowHooker.refreshCardTheme()
-                        }
-                    }
-                    RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_AMBIENT_FLOW_MODE -> {
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            NotificationMediaAmbientFlowHooker.refreshBackgroundStyle()
-                        }
-                    }
-                    RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_STYLE,
-                    RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_BLUR,
-                    RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_COLOR_ANIMATION,
-                    RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_BACKGROUND_AUTO_INVERT,
-                    RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_SOFT_COVER_TONE -> {
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            NotificationMediaAmbientFlowHooker.refreshBackgroundStyle()
-                        }
-                    }
-                    RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_COVER_STYLE,
-                    RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_HIDE_COVER_SOURCE,
-                    RootConstants.KEY_HOOK_NOTIFICATION_MEDIA_HIDE_DEVICE_SWITCH -> {
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            NotificationMediaCoverStyleHooker.refresh()
-                        }
-                    }
-                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_CARD_THEME,
-                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_AMBIENT_FLOW_MODE -> {
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            IslandExpandedMediaAmbientFlowHooker.refreshCardTheme()
-                        }
-                    }
-                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_STYLE,
-                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_BLUR,
-                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_COLOR_ANIMATION,
-                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_BACKGROUND_AUTO_INVERT,
-                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_SOFT_COVER_TONE -> {
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            IslandExpandedMediaAmbientFlowHooker.refreshBackgroundStyle()
-                        }
-                    }
-                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_COVER_STYLE,
-                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_HIDE_COVER_SOURCE,
-                    RootConstants.KEY_HOOK_ISLAND_EXPANDED_MEDIA_HIDE_DEVICE_SWITCH -> {
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            IslandExpandedMediaAmbientFlowHooker.refreshMediaElements()
-                        }
-                    }
-                    in SUPER_ISLAND_RUNTIME_REFRESH_KEYS -> {
-                        android.os.Handler(android.os.Looper.getMainLooper()).post {
-                            BaseIslandRenderer.refreshActiveIsland()
-                        }
-                    }
-                }
-            }
             prefListener?.let {
                 prefs.registerOnSharedPreferenceChangeListener(it)
             }
@@ -407,8 +437,8 @@ class HookEntry : XposedModule() {
             HookLogger.i(
                 "HookEntry",
                 "系统环境初始化完成: enabled=${SystemUiEnhancementGate.isEnabled()}, " +
-                    "source=${sourceManager?.getActiveSource()?.displayName ?: "inactive"}, " +
-                    "mode=$activeMode"
+                        "source=${sourceManager?.getActiveSource()?.displayName ?: "inactive"}, " +
+                        "mode=$activeMode"
             )
         } catch (e: Exception) {
             HookLogger.e("HookEntry", "系统环境初始化失败", e)
@@ -474,22 +504,31 @@ class HookEntry : XposedModule() {
         return when {
             owner == "android.app.Application" && name == "onCreate" ->
                 AppCreateHooker()
+
             name == "updateBigIslandView" ->
                 RealIslandHooker.UpdateBigIslandViewHook()
+
             name == "calculateBigIslandWidth" ->
                 IslandWidthHooker.CalculateWidthHook()
+
             name == "hideIslandLayout" || name == "showIslandLayout" ->
                 RealIslandHooker.LayoutVisibilityHook(name)
+
             name == "onTrackingFakeViewStart" ->
                 FakeIslandTransitionHooker.TrackingStartHook()
+
             name == "updateViewStateWhenOpenAnimStart" ->
                 FakeIslandTransitionHooker.PrepareVisibleHook()
+
             owner.endsWith("DynamicIslandContentFakeView") && name == "setVisibility" ->
                 FakeIslandTransitionHooker.VisibilityHook()
+
             owner.endsWith("IslandTemplateBuilder") && name == "updateModuleView" ->
                 IslandModuleRestoreHooker.UpdateModuleViewHook()
+
             owner.endsWith("IslandModuleViewHolderAdapter") && name == "updateView" ->
                 IslandModuleRestoreHooker.AdapterUpdateViewHook()
+
             else -> null
         }
     }

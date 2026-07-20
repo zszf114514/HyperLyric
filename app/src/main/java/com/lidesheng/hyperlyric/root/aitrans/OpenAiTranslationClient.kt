@@ -1,10 +1,10 @@
 ﻿package com.lidesheng.hyperlyric.root.aitrans
 
-import com.lidesheng.hyperlyric.root.utils.HookLogger
 import com.lidesheng.hyperlyric.common.extensions.json
 import com.lidesheng.hyperlyric.common.extensions.toJson
 import com.lidesheng.hyperlyric.lyric.model.Song
 import com.lidesheng.hyperlyric.lyric.style.AiTranslationConfigs
+import com.lidesheng.hyperlyric.root.utils.HookLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -58,7 +58,10 @@ internal object OpenAiTranslationClient {
         var connection: HttpURLConnection? = null
         try {
             val url = URL(apiUrl)
-        HookLogger.d("OpenAiTranslationClient", "发送翻译请求: model=${configs.model}, url=$apiUrl")
+            HookLogger.d(
+                "OpenAiTranslationClient",
+                "发送翻译请求: model=${configs.model}, url=$apiUrl"
+            )
 
             connection = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
@@ -78,14 +81,15 @@ internal object OpenAiTranslationClient {
                 val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
                 val responseObj = json.decodeFromString<OpenAiChatResponse>(responseBody)
                 val content = responseObj.choices.firstOrNull()?.message?.content ?: run {
-                HookLogger.w("OpenAiTranslationClient", "翻译响应为空")
+                    HookLogger.w("OpenAiTranslationClient", "翻译响应为空")
                     return@withContext null
                 }
-            HookLogger.d("OpenAiTranslationClient", "翻译请求完成: code=$responseCode")
+                HookLogger.d("OpenAiTranslationClient", "翻译请求完成: code=$responseCode")
                 AITranslationResponseParser.parse(content, requestIndices)
             } else {
-                val errorBody = connection.errorStream?.bufferedReader()?.use { it.readText() } ?: "无错误信息"
-            HookLogger.e("OpenAiTranslationClient", "翻译请求失败: code=$responseCode")
+                val errorBody =
+                    connection.errorStream?.bufferedReader()?.use { it.readText() } ?: "无错误信息"
+                HookLogger.e("OpenAiTranslationClient", "翻译请求失败: code=$responseCode")
                 null
             }
         } catch (e: CancellationException) {

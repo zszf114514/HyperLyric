@@ -33,10 +33,16 @@ class MetadataSource(
     private var lastEmittedDynamicTitle = ""
 
     val lyricUpdateFlow =
-        MutableSharedFlow<SyncData>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+        MutableSharedFlow<SyncData>(
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
 
     val newSongFlow =
-        MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+        MutableSharedFlow<Unit>(
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        )
 
     private val mediaCallback = object : MediaController.Callback() {
         override fun onMetadataChanged(metadata: MediaMetadata?) {
@@ -65,7 +71,8 @@ class MetadataSource(
     fun connect() {
         if (mediaSessionManager != null) return
         try {
-            val manager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+            val manager =
+                context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
             val listener = MediaSessionManager.OnActiveSessionsChangedListener { controllers ->
                 updateCurrentController(controllers)
             }
@@ -134,7 +141,10 @@ class MetadataSource(
         val playingController = controllers.find {
             it.playbackState?.state == PlaybackState.STATE_PLAYING
         }
-        LogManager.d(TAG, "控制器更新: 数量=${controllers.size}, 播放中=${playingController?.packageName}")
+        LogManager.d(
+            TAG,
+            "控制器更新: 数量=${controllers.size}, 播放中=${playingController?.packageName}"
+        )
 
         if (playingController != null) {
             val alreadyTracking =
@@ -177,11 +187,17 @@ class MetadataSource(
         }
 
         val metadata = controller.metadata ?: run {
-            LogManager.d(TAG, "syncToGlobalData 跳过: metadata 为 null, pkg=${controller.packageName}")
+            LogManager.d(
+                TAG,
+                "syncToGlobalData 跳过: metadata 为 null, pkg=${controller.packageName}"
+            )
             return
         }
         val playbackState = controller.playbackState ?: run {
-            LogManager.d(TAG, "syncToGlobalData 跳过: playbackState 为 null, pkg=${controller.packageName}")
+            LogManager.d(
+                TAG,
+                "syncToGlobalData 跳过: playbackState 为 null, pkg=${controller.packageName}"
+            )
             return
         }
         val currentPackageName = controller.packageName ?: ""
@@ -205,11 +221,19 @@ class MetadataSource(
         } catch (_: Exception) {
             null
         }
-        val lyricRaw = try { metadata.getString("android.media.metadata.LYRIC") } catch (_: Exception) { null }
+        val lyricRaw = try {
+            metadata.getString("android.media.metadata.LYRIC")
+        } catch (_: Exception) {
+            null
+        }
 
         val newIdentifier = "$currentPackageName-$artist-$album-$duration"
-        val isNewSong = (newIdentifier != currentSongIdentifier) || DynamicLyricData.currentState.albumBitmap == null
-        LogManager.d(TAG, "同步元数据: pkg=$currentPackageName, 标题=$rawTitle, 艺术家=$artist, 专辑=$album, 时长=${duration}ms, 新歌=$isNewSong")
+        val isNewSong =
+            (newIdentifier != currentSongIdentifier) || DynamicLyricData.currentState.albumBitmap == null
+        LogManager.d(
+            TAG,
+            "同步元数据: pkg=$currentPackageName, 标题=$rawTitle, 艺术家=$artist, 专辑=$album, 时长=${duration}ms, 新歌=$isNewSong"
+        )
 
         if (isNewSong) {
             currentSongIdentifier = newIdentifier

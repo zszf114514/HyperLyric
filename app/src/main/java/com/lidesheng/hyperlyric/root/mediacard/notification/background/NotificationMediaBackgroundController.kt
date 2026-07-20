@@ -313,7 +313,7 @@ internal object NotificationMediaBackgroundController {
         return runCatching { MediaBackgroundRendererPool.get(classLoader) }
             .onFailure { error ->
                 unavailableLoaders.add(classLoader)
-            HookLogger.w(TAG, "通知中心 Monet 背景接口不可用: reason=${error.message}")
+                HookLogger.w(TAG, "通知中心 Monet 背景接口不可用: reason=${error.message}")
             }
             .getOrNull()
     }

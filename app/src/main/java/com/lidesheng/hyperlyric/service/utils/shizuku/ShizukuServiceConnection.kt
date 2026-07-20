@@ -3,15 +3,15 @@
 import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.IBinder
-import com.lidesheng.hyperlyric.utils.LogManager
 import com.lidesheng.hyperlyric.BuildConfig
-import com.lidesheng.hyperlyric.IPrivilegedService
 import com.lidesheng.hyperlyric.IPrivilegedLogCallback
-import rikka.shizuku.Shizuku
+import com.lidesheng.hyperlyric.IPrivilegedService
+import com.lidesheng.hyperlyric.utils.LogManager
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
+import rikka.shizuku.Shizuku
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.time.Duration.Companion.milliseconds
@@ -27,7 +27,8 @@ object ShizukuServiceConnection {
     private const val PING_INTERVAL_MS = 5000L  // Only ping every 5 seconds to avoid overhead
     private const val BIND_TIMEOUT_MS = 10000L  // 10 second timeout for service binding
 
-    @Volatile private var logCallbackEnabled = true
+    @Volatile
+    private var logCallbackEnabled = true
     private val logCallback = object : IPrivilegedLogCallback.Stub() {
         override fun log(level: Int, tag: String?, message: String?) {
             val safeTag = tag ?: "PrivilegedService"
@@ -63,7 +64,10 @@ object ShizukuServiceConnection {
                     lastPingAttempt = now
                     cachedService = null
                 } else {
-                    LogManager.d(TAG, "正在使用缓存 of Service (距离上次 ping 已过 ${now - lastPingAttempt}ms)")
+                    LogManager.d(
+                        TAG,
+                        "正在使用缓存 of Service (距离上次 ping 已过 ${now - lastPingAttempt}ms)"
+                    )
                     return cached
                 }
             }
@@ -124,7 +128,10 @@ object ShizukuServiceConnection {
                 }
 
                 val args = Shizuku.UserServiceArgs(
-                    ComponentName(BuildConfig.APPLICATION_ID, PrivilegedServiceImpl::class.java.name)
+                    ComponentName(
+                        BuildConfig.APPLICATION_ID,
+                        PrivilegedServiceImpl::class.java.name
+                    )
                 )
                     .daemon(true)
                     .processNameSuffix("privileged")

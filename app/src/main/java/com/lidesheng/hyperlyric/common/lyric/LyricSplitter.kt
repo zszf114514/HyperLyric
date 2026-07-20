@@ -28,7 +28,8 @@ class LyricSplitter(
         val maxWidth: Int
     )
 
-    private val defaultSizePx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 13f, displayMetrics)
+    private val defaultSizePx =
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 13f, displayMetrics)
 
     private fun scalePxToInternalLimit(targetLimitPx: Float): Float {
         return targetLimitPx * (paint.textSize / defaultSizePx.coerceAtLeast(1f))
@@ -41,7 +42,7 @@ class LyricSplitter(
         if (title.isBlank()) return SplitResult("", "HyperLyric", "", "HyperLyric")
 
         val totalWidth = paint.measureText(title)
-        
+
         var islandLeft: String
         var islandRight: String
 
@@ -49,7 +50,7 @@ class LyricSplitter(
             // ================= 模式 1：限制最大宽度（智能平衡 + 截断） =================
             val maxWidthPX = scalePxToInternalLimit(config.maxWidth.toFloat())
             val halfLimitPX = maxWidthPX / 2f
-            
+
             val leftMaxPX = if (config.showIslandLeftAlbum) {
                 (halfLimitPX - scalePxToInternalLimit(80f)).coerceAtLeast(0f)
             } else {
@@ -58,8 +59,10 @@ class LyricSplitter(
 
             if (totalWidth <= maxWidthPX) {
                 // 短歌词：执行理想的对半分逻辑（比如 "爱在西" | "元前"）
-                val targetLeftWidth = if (config.showIslandLeftAlbum) (totalWidth / 2f) - scalePxToInternalLimit(60f) else totalWidth / 2f
-                val cutIndex = computeSplitIndexByPixel(title, targetLeftWidth.coerceAtLeast(0f), leftMaxPX)
+                val targetLeftWidth =
+                    if (config.showIslandLeftAlbum) (totalWidth / 2f) - scalePxToInternalLimit(60f) else totalWidth / 2f
+                val cutIndex =
+                    computeSplitIndexByPixel(title, targetLeftWidth.coerceAtLeast(0f), leftMaxPX)
                 islandLeft = title.substring(0, cutIndex).trim()
                 islandRight = title.substring(cutIndex).trim()
             } else {
@@ -67,7 +70,7 @@ class LyricSplitter(
                 val cutIndex = computeSplitIndexByPixel(title, leftMaxPX, leftMaxPX)
                 islandLeft = title.substring(0, cutIndex).trim()
                 val remainingText = title.substring(cutIndex).trim()
-                
+
                 // 右侧也要根据剩余限额进行截断（halfLimitPX）
                 val rightIndex = computeSplitIndexByPixel(remainingText, halfLimitPX, halfLimitPX)
                 islandRight = remainingText.substring(0, rightIndex).trim()
@@ -76,14 +79,19 @@ class LyricSplitter(
             // ================= 模式 2：标准模式（原有逻辑） =================
             val cutLimitRaw = if (config.showIslandLeftAlbum) 650f else 720f
             val leftTextLimitRaw = if (config.showIslandLeftAlbum) 280f else 360f
-            
+
             val cutLimitPX = scalePxToInternalLimit(cutLimitRaw)
             val leftTextLimitPX = scalePxToInternalLimit(leftTextLimitRaw)
-            
+
             if (totalWidth <= cutLimitPX) {
                 // 短歌词对分环绕
-                val targetLeftWidth = if (config.showIslandLeftAlbum) (totalWidth / 2f) - scalePxToInternalLimit(60f) else totalWidth / 2f
-                val cutIndex = computeSplitIndexByPixel(title, targetLeftWidth.coerceAtLeast(0f), leftTextLimitPX)
+                val targetLeftWidth =
+                    if (config.showIslandLeftAlbum) (totalWidth / 2f) - scalePxToInternalLimit(60f) else totalWidth / 2f
+                val cutIndex = computeSplitIndexByPixel(
+                    title,
+                    targetLeftWidth.coerceAtLeast(0f),
+                    leftTextLimitPX
+                )
                 islandLeft = title.substring(0, cutIndex).trim()
                 islandRight = title.substring(cutIndex).trim()
             } else {
@@ -123,7 +131,8 @@ class LyricSplitter(
             nLeft = title
             nRight = " "
         } else {
-            val cutIndex = computeSplitIndexByPixel(title, focusNotificationLimitPX, focusNotificationLimitPX)
+            val cutIndex =
+                computeSplitIndexByPixel(title, focusNotificationLimitPX, focusNotificationLimitPX)
             nLeft = title.substring(0, cutIndex).trim()
             nRight = title.substring(cutIndex).trim()
         }
@@ -131,7 +140,11 @@ class LyricSplitter(
         return SplitResult(islandLeft, islandRight, nLeft, nRight)
     }
 
-    private fun computeSplitIndexByPixel(title: String, targetWidthPx: Float, maxLeftPx: Float): Int {
+    private fun computeSplitIndexByPixel(
+        title: String,
+        targetWidthPx: Float,
+        maxLeftPx: Float
+    ): Int {
         var splitIndex = paint.breakText(title, true, targetWidthPx, null)
 
         if (splitIndex < title.length && paint.measureText(title, 0, splitIndex) < targetWidthPx) {
@@ -139,7 +152,7 @@ class LyricSplitter(
                 splitIndex++
             }
         }
-        
+
         splitIndex = splitIndex.coerceIn(0, title.length)
         return adjustForWordBoundary(title, splitIndex, maxLeftPx)
     }

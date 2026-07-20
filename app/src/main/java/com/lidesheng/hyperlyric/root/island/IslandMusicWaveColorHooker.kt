@@ -85,7 +85,7 @@ internal object IslandMusicWaveColorHooker {
 
             val setLottieColorMethod = holderClass.declaredMethods.firstOrNull {
                 it.name == "setLottieColor" &&
-                    it.parameterTypes.contentEquals(arrayOf(Bitmap::class.java))
+                        it.parameterTypes.contentEquals(arrayOf(Bitmap::class.java))
             }
             if (setLottieColorMethod != null) {
                 setLottieColorMethod.isAccessible = true
@@ -162,7 +162,7 @@ internal object IslandMusicWaveColorHooker {
         )
         val nextInputToken =
             "${System.identityHashCode(bitmap)}:${bitmap.generationId}:" +
-                "${bitmap.width}x${bitmap.height}:$useGradient"
+                    "${bitmap.width}x${bitmap.height}:$useGradient"
         if (inputToken == nextInputToken) {
             if (pendingToken != null) return
             val token = desiredToken
@@ -208,7 +208,7 @@ internal object IslandMusicWaveColorHooker {
                         useGradient
                     )
                 } catch (e: Throwable) {
-            HookLogger.e(TAG, "提取音频律动颜色失败", e)
+                    HookLogger.e(TAG, "提取音频律动颜色失败", e)
                     null
                 } finally {
                     sample.recycle()
@@ -341,11 +341,11 @@ internal object IslandMusicWaveColorHooker {
 
                 runOnMain {
                     runCatching { scheduleOptimizedColors(bitmap, sharedPrefs) }.onFailure { e ->
-            HookLogger.e(TAG, "应用音频律动颜色失败", e)
+                        HookLogger.e(TAG, "应用音频律动颜色失败", e)
                     }
                 }
             }.onFailure { e ->
-            HookLogger.e(TAG, "读取原生音频律动颜色失败", e)
+                HookLogger.e(TAG, "读取原生音频律动颜色失败", e)
             }
             return result
         }
@@ -371,7 +371,7 @@ internal object IslandMusicWaveColorHooker {
                 }
                 lottieView.invalidate()
             }.onFailure { e ->
-            HookLogger.e(TAG, "刷新音频律动动画失败", e)
+                HookLogger.e(TAG, "刷新音频律动动画失败", e)
             }
             return result
         }

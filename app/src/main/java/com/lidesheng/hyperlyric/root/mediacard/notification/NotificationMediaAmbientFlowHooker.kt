@@ -49,11 +49,13 @@ object NotificationMediaAmbientFlowHooker {
         Collections.newSetFromMap(WeakHashMap<Any, Boolean>())
     )
     private val themeStates = Collections.synchronizedMap(WeakHashMap<Any, ControllerThemeState>())
-    private val nativeApis = Collections.synchronizedMap(WeakHashMap<ClassLoader, NativeMusicBgApi>())
+    private val nativeApis =
+        Collections.synchronizedMap(WeakHashMap<ClassLoader, NativeMusicBgApi>())
     private val themeApis = Collections.synchronizedMap(WeakHashMap<ClassLoader, CardThemeApi>())
     private val nativeUnavailableClassLoaders = Collections.synchronizedSet(
         Collections.newSetFromMap(WeakHashMap<ClassLoader, Boolean>())
     )
+
     @Volatile
     private var colorExecutor = newColorExecutor()
 
@@ -105,7 +107,7 @@ object NotificationMediaAmbientFlowHooker {
             installedNativeUpdates.containsAll(NATIVE_BACKGROUND_UPDATE_METHODS)
         )
         if (!installedNativeUpdates.containsAll(NATIVE_BACKGROUND_UPDATE_METHODS)) {
-                HookLogger.w(TAG, "通知中心原生背景接口不完整，跳过自定义背景 Hook")
+            HookLogger.w(TAG, "通知中心原生背景接口不完整，跳过自定义背景 Hook")
         }
 
         runCatching {
@@ -117,7 +119,7 @@ object NotificationMediaAmbientFlowHooker {
                 installed++
             }
         }.onFailure { error ->
-                HookLogger.w(TAG, "通知中心进度条接口不可用: reason=${error.message}")
+            HookLogger.w(TAG, "通知中心进度条接口不可用: reason=${error.message}")
         }
 
         if (installed == 0) {
@@ -215,6 +217,7 @@ object NotificationMediaAmbientFlowHooker {
                         activeControllers.add(controller)
                         syncView(controller)
                     }
+
                     Action.BIND -> {
                         activeControllers.add(controller)
                         NotificationMediaBackgroundController.onBind(
@@ -223,6 +226,7 @@ object NotificationMediaAmbientFlowHooker {
                         )
                         bind(controller, chain.args.firstOrNull())
                     }
+
                     Action.DETACH -> Unit
                 }
             }.onFailure { error ->
@@ -387,7 +391,7 @@ object NotificationMediaAmbientFlowHooker {
                     }
                 }
             }.getOrElse { error ->
-            HookLogger.e(TAG, "提取通知中心媒体封面颜色失败", error)
+                HookLogger.e(TAG, "提取通知中心媒体封面颜色失败", error)
                 null
             }
             view.post {
@@ -440,14 +444,15 @@ object NotificationMediaAmbientFlowHooker {
             outlineProvider = mediaBg.outlineProvider
             clipToOutline = true
         }
-        val layoutParams = MediaFlowOverlayLayout.createConstraintFill(mediaBg.layoutParams) ?: run {
-            HookLogger.w(
-                TAG,
-                "无法创建独立媒体背景约束，跳过流光视图"
-            )
-            stopView(view, nativeApi)
-            return null
-        }
+        val layoutParams =
+            MediaFlowOverlayLayout.createConstraintFill(mediaBg.layoutParams) ?: run {
+                HookLogger.w(
+                    TAG,
+                    "无法创建独立媒体背景约束，跳过流光视图"
+                )
+                stopView(view, nativeApi)
+                return null
+            }
         val index = (parent.indexOfChild(mediaBg) + 1).coerceAtMost(parent.childCount)
         parent.addView(view, index, layoutParams)
         state.colorRequest.incrementAndGet()
@@ -573,11 +578,11 @@ object NotificationMediaAmbientFlowHooker {
         return runCatching { NativeMusicBgApi.create(classLoader) }
             .onSuccess { api ->
                 nativeApis[classLoader] = api
-            HookLogger.d(TAG, "使用原生 MusicBgView 渲染器")
+                HookLogger.d(TAG, "使用原生 MusicBgView 渲染器")
             }
             .onFailure { error ->
                 nativeUnavailableClassLoaders.add(classLoader)
-            HookLogger.w(TAG, "原生 MusicBgView 不可用: reason=${error.message}")
+                HookLogger.w(TAG, "原生 MusicBgView 不可用: reason=${error.message}")
             }
             .getOrNull()
     }
@@ -605,9 +610,9 @@ object NotificationMediaAmbientFlowHooker {
         while (current != null) {
             val methods = current.declaredMethods.filter { method ->
                 method.name == name &&
-                    !method.isBridge &&
-                    !method.isSynthetic &&
-                    !Modifier.isAbstract(method.modifiers)
+                        !method.isBridge &&
+                        !method.isSynthetic &&
+                        !Modifier.isAbstract(method.modifiers)
             }
             if (methods.isNotEmpty()) return methods
             current = current.superclass
@@ -636,7 +641,7 @@ object NotificationMediaAmbientFlowHooker {
             RootConstants.MEDIA_CARD_THEME_ALWAYS_LIGHT -> true
             RootConstants.MEDIA_CARD_THEME_ALWAYS_DARK -> false
             else -> context.resources.configuration.uiMode and
-                Configuration.UI_MODE_NIGHT_MASK != Configuration.UI_MODE_NIGHT_YES
+                    Configuration.UI_MODE_NIGHT_MASK != Configuration.UI_MODE_NIGHT_YES
         }
         return if (light) MediaFlowTone.LIGHT else MediaFlowTone.DARK
     }
@@ -689,8 +694,10 @@ object NotificationMediaAmbientFlowHooker {
             val themedContext = when (theme) {
                 RootConstants.MEDIA_CARD_THEME_ALWAYS_LIGHT ->
                     originalContext.withNightMode(Configuration.UI_MODE_NIGHT_NO)
+
                 RootConstants.MEDIA_CARD_THEME_ALWAYS_DARK ->
                     originalContext.withNightMode(Configuration.UI_MODE_NIGHT_YES)
+
                 else -> originalContext
             }
 
@@ -820,8 +827,8 @@ object NotificationMediaAmbientFlowHooker {
                 val drawableUtils = classLoader.loadClass("com.miui.utils.DrawableUtils")
                 val drawableToBitmap = drawableUtils.declaredMethods.single { method ->
                     method.name == "drawable2Bitmap" &&
-                        method.parameterTypes.contentEquals(arrayOf(Drawable::class.java)) &&
-                        method.returnType == Bitmap::class.java
+                            method.parameterTypes.contentEquals(arrayOf(Drawable::class.java)) &&
+                            method.returnType == Bitmap::class.java
                 }.apply { isAccessible = true }
 
                 val miPalette = classLoader.loadClass("miuix.mipalette.MiPalette")
